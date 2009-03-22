@@ -1,0 +1,325 @@
+Constant Story "UnicodeTest";
+Constant Headline "^Not a game.^";
+
+! Unit test for character and line input events.
+
+Include "Parser";
+Include "VerbLib";
+
+Global has_unicode;
+Global main_window = true;
+
+Constant BUFLEN = 80;
+Array char_buf ->  BUFLEN;
+Array word_buf --> BUFLEN;
+
+[ Initialise;
+	location = Kitchen;
+	has_unicode = glk($0004, 15, 0); ! gestalt, Unicode
+];
+
+Object Kitchen "Input Room"
+  with
+	description [;
+		print "This is an input room. A sign reads, ~GET any of these
+			inputs to test it.~";
+		print " Below the sign is a story-window button";
+		if (main_window)
+			print " (lit)";
+		print " and a status-window button";
+		if (~~main_window)
+			print " (lit)";
+		".";
+	],
+  has light;
+
+Object -> StoryButton "story-window button"
+  with
+	name 'story' 'window' 'button' 'story-window',
+	description "This button lets you test input in the story window
+		(the default).",
+	before [;
+		Push:
+			if (main_window)
+				"The ", (name) self, " remains lit.";
+			main_window = true;
+			"The ", (name) self, " lights up. Input tests will now read from
+				the story window again.";
+	],
+  has scenery;
+  
+Object -> StatusButton "status-window button"
+  with
+	name 'status' 'window' 'button' 'status-window',
+	description "This button lets you test input in the status window.",
+	before [;
+		Push:
+			if (~~main_window)
+				"The ", (name) self, " remains lit.";
+			if (~~gg_statuswin)
+				"This interpreter has no status window.";
+			main_window = false;
+			"The ", (name) self, " lights up. Input tests will now read from
+				the status window.";
+	],
+  has scenery;
+  
+Object -> CharObj "character input"
+  with
+	name 'plain' 'char' 'character' 'input',
+	description "Read one plain (one-byte) character. (~Char~ for short.)",
+	before [  win res;
+		Examine:
+			if (verb_word == 'read')
+				<<Take self>>;
+		Take:
+			print "Enter character:^>>";
+			win = SelectWindow();
+			if (~~win)
+				rtrue;
+			glk($00D2, win); ! request_char_event
+			while (true) {
+				glk($00C0, gg_event); ! select
+				if (gg_event-->0 == 2 && gg_event-->1 == win) {
+					res = gg_event-->2;
+					break;
+				}
+			}
+			glk($002F, gg_mainwin); ! set_window
+			print "^";
+			DisplayChar(res);
+			rtrue;
+	],
+  has static;
+
+Object -> UniCharObj "unicode character input"
+  with
+	name 'unicode' 'unichar' 'char' 'character' 'input',
+	article "a",
+	parse_name [ wd num gotit;
+		wd = NextWord();
+		while (WordInProperty(wd, self, name)) {
+			if (wd == 'unicode' or 'unichar')
+				gotit = true;
+			num++;
+			wd = NextWord();
+		}
+		if (~~gotit)
+			return 0;
+		return num;
+	],
+	description "Read one Unicode character. (~Unichar~ for short.)",
+	before [  win res;
+		Examine:
+			if (verb_word == 'read')
+				<<Take self>>;
+		Take:
+			if (~~has_unicode)
+				"This Glk library doesn't support Unicode.";
+			print "Enter character (uni):^>>";
+			win = SelectWindow();
+			if (~~win)
+				rtrue;
+			glk($0140, win); ! request_char_event_uni
+			while (true) {
+				glk($00C0, gg_event); ! select
+				if (gg_event-->0 == 2 && gg_event-->1 == win) {
+					res = gg_event-->2;
+					break;
+				}
+			}
+			glk($002F, gg_mainwin); ! set_window
+			print "^";
+			DisplayChar(res);
+			rtrue;
+	],
+  has static;
+
+Object -> LineObj "line input"
+  with
+	name 'plain' 'line' 'input',
+	description "Read a line of plain (one-byte) characters.",
+	before [  win count;
+		Examine:
+			if (verb_word == 'read')
+				<<Take self>>;
+		Take:
+			print "Enter line:^>>";
+			win = SelectWindow();
+			if (~~win)
+				rtrue;
+			glk($00D0, win, char_buf, BUFLEN, 0); ! request_line_event
+			while (true) {
+				glk($00C0, gg_event); ! select
+				if (gg_event-->0 == 3 && gg_event-->1 == win) {
+					count = gg_event-->2;
+					break;
+				}
+			}
+			if (win == gg_statuswin) {
+				glk($002F, gg_mainwin); ! set_window
+				new_line;
+			}
+			DisplayLine(count);
+			rtrue;
+	],
+  has static;
+
+Object -> UniLineObj "unicode line input"
+  with
+	name 'unicode' 'uniline' 'line' 'input',
+	article "a",
+	parse_name [ wd num gotit;
+		wd = NextWord();
+		while (WordInProperty(wd, self, name)) {
+			if (wd == 'unicode' or 'uniline')
+				gotit = true;
+			num++;
+			wd = NextWord();
+		}
+		if (~~gotit)
+			return 0;
+		return num;
+	],
+	description "Read a line of Unicode characters. (~Uniline~ for short.)",
+	before [  win count;
+		Examine:
+			if (verb_word == 'read')
+				<<Take self>>;
+		Take:
+			if (~~has_unicode)
+				"This Glk library doesn't support Unicode.";
+			print "Enter line (uni):^>>";
+			win = SelectWindow();
+			if (~~win)
+				rtrue;
+			glk($0141, win, word_buf, BUFLEN, 0); ! request_line_event_uni
+			while (true) {
+				glk($00C0, gg_event); ! select
+				if (gg_event-->0 == 3 && gg_event-->1 == win) {
+					count = gg_event-->2;
+					break;
+				}
+			}
+			if (win == gg_statuswin) {
+				glk($002F, gg_mainwin); ! set_window
+				new_line;
+			}
+			DisplayUniLine(count);
+			rtrue;
+	],
+  has static;
+
+[ SelectWindow;
+	if (main_window)
+		return gg_mainwin;
+
+	print " (see status window)";
+	glk($002F, gg_statuswin); ! set_window
+	glk($002A, gg_statuswin); ! window_clear
+	glk($002B, gg_statuswin, 0, 0); ! window_move_cursor
+	print ">";
+	return gg_statuswin;
+];
+  
+[ Hex val   byte initial ix;
+	print "$";
+	initial = true;
+	for (ix=0 : ix<8 : ix++) {
+		@ushiftr val 28 byte;
+		@shiftl val 4 val;
+		byte = byte & $0F;
+		if (byte == 0 && initial && ix < 7)
+			continue;
+		initial = false;
+		if (byte <= 9)
+			print (char) (byte+'0');
+		else
+			print (char) (byte-10+'A');
+	}
+];
+  
+[ DisplayChar res;
+	print "Got character (dec) ", res, ", (hex) ", (Hex) res, ": ";
+	if (res < 0)
+		print (SpecialKeyName) res;
+	else if (res == $20)
+		print "<space>";
+	else if (res >= $0 && res < $100)
+		glk($0080, res); ! put_char
+	else {
+		if (has_unicode)
+			glk($0128, res); ! put_char_uni
+		else
+			print "<unicode>";
+	}
+	new_line;
+];
+
+[ DisplayLine len  ix ch;
+	for (ix=0 : ix<len : ix++) {
+		ch = char_buf->ix;
+		word_buf-->ix = ch;
+	}
+	DisplayUniLine(len);
+];
+
+[ DisplayUniLine len  ix ch;
+	print "Got ", len, " characters:^";
+	for (ix=0 : ix<len : ix++) {
+		ch = word_buf-->ix;
+		if (ch == $20)
+			print "<space>";
+		else if (ch >= $0 && ch < $100)
+			glk($0080, ch); ! put_char
+		else {
+			if (has_unicode)
+				glk($0128, ch); ! put_char_uni
+			else
+				print "<unicode>";
+		}
+		print " ";
+	}
+	new_line;
+	print "Hex: ";
+	for (ix=0 : ix<len : ix++) {
+		ch = word_buf-->ix;
+		print (Hex) ch, " ";
+	}
+	new_line;
+];
+
+[ SpecialKeyName res;
+	print "<";
+	switch (res) {
+		$ffffffff: print "unknown";
+		$fffffffe: print "left";
+		$fffffffd: print "right";
+		$fffffffc: print "up";
+		$fffffffb: print "down";
+		$fffffffa: print "return";
+		$fffffff9: print "delete";
+		$fffffff8: print "escape";
+		$fffffff7: print "tab";
+		$fffffff6: print "page-up";
+		$fffffff5: print "page-down";
+		$fffffff4: print "home";
+		$fffffff3: print "end";
+		$ffffffef: print "f1";
+		$ffffffee: print "f2";
+		$ffffffed: print "f3";
+		$ffffffec: print "f4";
+		$ffffffeb: print "f5";
+		$ffffffea: print "f6";
+		$ffffffe9: print "f7";
+		$ffffffe8: print "f8";
+		$ffffffe7: print "f9";
+		$ffffffe6: print "f10";
+		$ffffffe5: print "f11";
+		$ffffffe4: print "f12";
+		default: print "???";
+	}
+	print ">";
+];
+	
+Include "Grammar";

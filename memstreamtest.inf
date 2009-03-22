@@ -1,0 +1,186 @@
+Constant Story "MemStreamTest";
+Constant Headline "^Not a game.^";
+
+! Unit test for the glk_stream_open_memory() and glk_stream_open_memory_uni()
+! calls.
+
+Include "Parser";
+Include "VerbLib";
+
+[ Initialise;
+	location = Kitchen;
+	selfobj.description = "You're some kind of person.";
+];
+
+Object Kitchen "Stream Room"
+  with
+    description [;
+		print "A voice booooms out: Try ~stream OBJECT~ to send its
+			description to a byte array (glk_stream_open_memory).
+			Try ~streamuni OBJECT~ to send its description to
+			a Unicode character array (glk_stream_open_memory_uni).^";
+	],
+  has light;
+
+Object -> grape "grape"
+  with
+	name 'grape',
+	description "It's a grape.";
+
+Object -> umlauts "umlauts"
+  with
+	name 'some' 'umlaut' 'umlauts',
+	article "some",
+	description "Capital AEIOU with umlauts: @:A@:E@:I@:O@:U",
+  has pluralname;
+
+Object -> pie "Greek pie"
+  with
+	name 'greek' 'pi' 'pie',
+	description "It's a Greek @{3C0}, made with feta and ink.";
+  
+Object -> quotes "quotes"
+  with
+	name 'some' 'quote' 'quotes',
+	article "some",
+	description "Some text with curly quotes:
+		@{2018}single curly quotes@{2019} @{201C}double curly quotes@{201D}",
+  has pluralname;
+
+Object -> longthing "long string"
+  with
+	name 'long' 'piece' 'of' 'string',
+	description "It's a very long piece of string. So long, in fact, that
+		its description will certainly overflow the 128-character output
+		array. It should be truncated cleanly.";
+
+Include "Grammar";
+
+Verb 'stream'
+	* noun -> Stream;
+
+Verb 'streamuni' 'uni'
+	* noun -> StreamUni;
+
+[ StreamSub;
+	DescToStream(noun);
+];
+
+[ StreamUniSub  res;
+	res = glk($0004, 15, 0); ! gestalt
+	if (res == 0)
+		"This interpreter does not support Unicode Glk calls!";
+	DescToStreamUni(noun);
+];
+
+Array closeresult --> 2;
+
+Constant BUFLEN 128;
+
+Array chararray -> (BUFLEN+1);
+Array uniarray --> (BUFLEN+1);
+
+[ DescToStream obj  str oldstr ix ch;
+	for (ix=0 : ix<BUFLEN : ix++)
+		chararray->ix = 0;
+	chararray->BUFLEN = 127; ! guard character
+
+	oldstr = glk($0048); ! stream_get_current
+	str = glk($0043, chararray, BUFLEN, 1, 0); ! stream_open_memory
+	if (str == 0) {
+		"Unable to open memory stream.";
+	}
+
+	glk($0047, str); ! stream_set_current
+	obj.description();
+	glk($0047, oldstr); ! stream_set_current
+	glk($0044, str, closeresult); ! stream_close
+
+	if (closeresult-->0 ~= 0)
+		print "ERROR: Stream records ", closeresult-->0, " chars read --
+			should be zero.^";
+	print "(Sent to char stream: ", closeresult-->1, " chars)^";
+
+	ix = closeresult-->1;
+	if (ix > BUFLEN) ix = BUFLEN;
+	glk($0084, chararray, ix); ! put_buffer
+	
+	print "^Character by character: ";
+	for (ix=0 : ix<BUFLEN : ix++) {
+		ch = chararray->ix;
+		if (ch == 0)
+			break;
+		print " ";
+		if (ch == 10)
+			print "(newline)";
+		else if (ch < 32 || ch >= 127)
+			print "(",ch,")";
+		else
+			print (char) ch;
+	}
+
+	for ( : ix<BUFLEN : ix++) {
+		ch = chararray->ix;
+		if (ch ~= 0) {
+			print " (rest is not zeroes -- ERROR)";
+			break;
+		}
+	}
+
+	new_line;
+	if (chararray->BUFLEN ~= 127)
+		print "ERROR: Guard character was overwritten!^";
+];
+
+
+[ DescToStreamUni obj  str oldstr ix ch;
+	for (ix=0 : ix<BUFLEN : ix++)
+		uniarray-->ix = 0;
+	uniarray-->BUFLEN = 127; ! guard character
+
+	oldstr = glk($0048); ! stream_get_current
+	str = glk($0139, uniarray, BUFLEN, 1, 0); ! stream_open_memory_uni
+	if (str == 0) {
+		"Unable to open memory stream.";
+	}
+
+	glk($0047, str); ! stream_set_current
+	obj.description();
+	glk($0047, oldstr); ! stream_set_current
+	glk($0044, str, closeresult); ! stream_close
+
+	if (closeresult-->0 ~= 0)
+		print "ERROR: Stream records ", closeresult-->0, " chars read --
+			should be zero.^";
+	print "(Sent to unicode char stream: ", closeresult-->1, " chars)^";
+
+	ix = closeresult-->1;
+	if (ix > BUFLEN) ix = BUFLEN;
+	glk($012A, uniarray, ix); ! put_buffer_uni
+	
+	print "^Character by character: ";
+	for (ix=0 : ix<BUFLEN : ix++) {
+		ch = uniarray-->ix;
+		if (ch == 0)
+			break;
+		print " ";
+		if (ch == 10)
+			print "(newline)";
+		else if (ch < 32 || ch >= 127)
+			print "(",ch,")";
+		else
+			print (char) ch;
+	}
+
+	for ( : ix<BUFLEN : ix++) {
+		ch = uniarray-->ix;
+		if (ch ~= 0) {
+			print " (rest is not zeroes -- ERROR)";
+			break;
+		}
+	}
+
+	new_line;
+	if (uniarray-->BUFLEN ~= 127)
+		print "ERROR: Guard character was overwritten!^";
+];

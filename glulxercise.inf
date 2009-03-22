@@ -1,0 +1,2399 @@
+Constant Story "Glulxercise";
+Constant Headline "A Glulx interpreter unit test^";
+
+Constant GG_MAINWIN_ROCK     201;
+Constant GG_SAVESTR_ROCK     301;
+Constant GG_SCRIPTSTR_ROCK   302;
+Constant GG_SCRIPTFREF_ROCK  401;
+
+Global gg_mainwin = 0;
+Global gg_savestr = 0;
+Global gg_scriptfref = 0;
+Global gg_scriptstr = 0;
+
+Array gg_event --> 4;
+Array gg_arguments --> 8;
+
+!Constant HDR_MAGICNUMBER   $00;     ! long word
+Constant HDR_GLULXVERSION  $04;     ! long word
+!Constant HDR_RAMSTART      $08;     ! long word
+!Constant HDR_EXTSTART      $0C;     ! long word
+!Constant HDR_ENDMEM        $10;     ! long word
+!Constant HDR_STACKSIZE     $14;     ! long word
+!Constant HDR_STARTFUNC     $18;     ! long word
+!Constant HDR_DECODINGTBL   $1C;     ! long word
+!Constant HDR_CHECKSUM      $20;     ! long word
+!Constant ROM_INFO          $24;     ! four ASCII characters
+!Constant ROM_MEMORYLAYOUT  $28;     ! long word
+!Constant ROM_INFORMVERSION $2C;     ! four ASCII characters
+!Constant ROM_COMPVERSION   $30;     ! four ASCII characters
+Constant ROM_GAMERELEASE   $34;     ! short word
+Constant ROM_GAMESERIAL    $36;     ! six ASCII characters
+
+Constant INPUT_BUFFER_LEN = 260;    ! No extra byte necessary
+Constant MAX_BUFFER_WORDS = 20;
+Constant PARSE_BUFFER_LEN = 244;    ! 4 + MAX_BUFFER_WORDS*4;
+
+Array  buffer    buffer INPUT_BUFFER_LEN;
+Array  parse     --> PARSE_BUFFER_LEN/WORDSIZE;
+
+Global failures = 0;
+Global total_failures = 0;
+
+[ Main   ix;
+	GGInitialise();
+
+	! deal with some compiler warnings
+	ix = PrintShortName;
+	
+	new_line;
+	Banner();
+	new_line;
+
+	LookSub();
+	TestLoop();
+	
+	print "^Goodbye.^";
+];
+
+[ GGInitialise res;
+	@gestalt 4 2 res; ! Test if this interpreter has Glk.
+	if (res == 0) {
+	  ! Without Glk, we're entirely screwed.
+	  quit;
+	}
+	! Set the VM's I/O system to be Glk.
+	@setiosys 2 0;
+
+	! First, we must go through all the Glk objects that exist, and see
+	! if we created any of them. One might think this strange, since the
+	! program has just started running, but remember that the player might
+	! have just typed "restart".
+
+	GGRecoverObjects();
+
+	! Now, gg_mainwin might already be set. If not, set it.
+
+	if (gg_mainwin == 0) {
+		! Open the story window.
+		gg_mainwin = glk($0023, 0, 0, 0, 3, GG_MAINWIN_ROCK); ! window_open
+		if (gg_mainwin == 0) {
+			! If we can't even open one window, there's no point in going on.
+			quit;
+		}
+	}
+	else {
+		! There was already a story window. We should erase it.
+		glk($002A, gg_mainwin); ! window_clear
+	}
+
+	glk($002F, gg_mainwin); ! set_window
+];
+
+[ GGRecoverObjects id;
+	! If GGRecoverObjects() has been called, all these stored IDs are
+	! invalid, so we start by clearing them all out.
+	! (In fact, after a restoreundo, some of them may still be good.
+	! For simplicity, though, we assume the general case.)
+	gg_mainwin = 0;
+	gg_scriptfref = 0;
+	gg_scriptstr = 0;
+	gg_savestr = 0;
+
+	id = glk($0040, 0, gg_arguments); ! stream_iterate
+	while (id) {
+		switch (gg_arguments-->0) {
+			GG_SAVESTR_ROCK: gg_savestr = id;
+			GG_SCRIPTSTR_ROCK: gg_scriptstr = id;
+		}
+		id = glk($0040, id, gg_arguments); ! stream_iterate
+	}
+
+	id = glk($0020, 0, gg_arguments); ! window_iterate
+	while (id) {
+		switch (gg_arguments-->0) {
+			GG_MAINWIN_ROCK: gg_mainwin = id;
+		}
+		id = glk($0020, id, gg_arguments); ! window_iterate
+	}
+
+	id = glk($0064, 0, gg_arguments); ! fileref_iterate
+	while (id) {
+		switch (gg_arguments-->0) {
+			GG_SCRIPTFREF_ROCK: gg_scriptfref = id;
+		}
+		id = glk($0064, id, gg_arguments); ! fileref_iterate
+	}
+];
+
+[ Keyboard;
+	while (true) {
+		print ">";
+		KeyboardPrimitive(buffer, parse);
+		if (parse-->0)
+			break;
+	}
+];
+
+[ KeyboardPrimitive  a_buffer a_table done;
+	done = false;
+	glk($00D0, gg_mainwin, a_buffer+WORDSIZE, INPUT_BUFFER_LEN-WORDSIZE, 0); ! request_line_event
+	while (~~done) {
+		glk($00C0, gg_event); ! select
+		switch (gg_event-->0) {
+		  3: ! evtype_LineInput
+			if (gg_event-->1 == gg_mainwin) {
+				a_buffer-->0 = gg_event-->2;
+				done = true;
+			}
+		}
+	}
+	Tokenise__(a_buffer,a_table);
+];
+
+Array gg_tokenbuf -> DICT_WORD_SIZE;
+
+[ Tokenise__ buf tab
+	cx numwords len bx ix wx wpos wlen val res dictlen entrylen;
+	len = buf-->0;
+	buf = buf+WORDSIZE;
+
+	! First, split the buffer up into words. We use the standard Infocom
+	! list of word separators (comma, period, double-quote).
+
+	cx = 0;
+	numwords = 0;
+	while (cx < len) {
+		while (cx < len && buf->cx == ' ') cx++;
+		if (cx >= len) break;
+		bx = cx;
+		if (buf->cx == '.' or ',' or '"') cx++;
+		else {
+			while (cx < len && buf->cx ~= ' ' or '.' or ',' or '"') cx++;
+		}
+		tab-->(numwords*3+2) = (cx-bx);
+		tab-->(numwords*3+3) = WORDSIZE+bx;
+		numwords++;
+		if (numwords >= MAX_BUFFER_WORDS) break;
+	}
+	tab-->0 = numwords;
+
+	! Now we look each word up in the dictionary.
+
+	dictlen = #dictionary_table-->0;
+	entrylen = DICT_WORD_SIZE + 7;
+
+	for (wx=0 : wx<numwords : wx++) {
+		wlen = tab-->(wx*3+2);
+		wpos = tab-->(wx*3+3);
+
+		! Copy the word into the gg_tokenbuf array, clipping to DICT_WORD_SIZE
+		! characters and lower case.
+		if (wlen > DICT_WORD_SIZE) wlen = DICT_WORD_SIZE;
+		cx = wpos - WORDSIZE;
+		for (ix=0 : ix<wlen : ix++) gg_tokenbuf->ix = glk($00A0, buf->(cx+ix));
+		for (: ix<DICT_WORD_SIZE : ix++) gg_tokenbuf->ix = 0;
+
+		val = #dictionary_table + WORDSIZE;
+		@binarysearch gg_tokenbuf DICT_WORD_SIZE val entrylen dictlen 1 1 res;
+		tab-->(wx*3+1) = res;
+	}
+];
+
+[ Banner  i ix;
+   if (Story ~= 0) {
+		glk($0086, 3); ! set header style
+		print (string) Story;
+		glk($0086, 0); ! set normal style
+	}
+	if (Headline ~= 0) print ": ", (string) Headline;
+	print "Release ";
+	@aloads ROM_GAMERELEASE 0 i;
+	print i;
+	print " / Serial number ";
+	for (i=0 : i<6 : i++) print (char) ROM_GAMESERIAL->i;
+	print " / Inform v"; inversion;
+	print ", compiler options ";
+	i = false;
+	#Ifdef STRICT_MODE;
+	print "S"; i++;
+	#Endif; ! STRICT_MODE
+	#Ifdef INFIX;
+	print "X"; i++;
+	#Ifnot;
+	#Ifdef DEBUG;
+	print "D"; i++;
+	#Endif; ! DEBUG
+	#Endif; ! INFIX
+	if (~~i) print "(none)";
+	new_line;
+
+	@gestalt 1 0 ix;
+	print "Interpreter version ", ix / $10000, ".", (ix & $FF00) / $100,
+	".", ix & $FF, " / ";
+	@gestalt 0 0 ix;
+	print "VM ", ix / $10000, ".", (ix & $FF00) / $100, ".", ix & $FF, " / ";
+	ix = HDR_GLULXVERSION-->0;
+	print "game file format ", ix / $10000, ".", (ix & $FF00) / $100, ".", ix & $FF, "^";
+];
+
+[ TestLoop    wd paddr plen ix obj found;
+	while (true) {
+		new_line;
+		if (failures) {
+			print failures, " uncounted test failures!^^";
+			failures = 0;
+		}
+		
+		Keyboard();
+		wd = parse-->1;
+
+		if (wd == 'quit' or 'q//')
+			return;
+
+		found = nothing;
+		
+		objectloop (obj ofclass TestClass) {
+			paddr = obj.&name;
+			plen = obj.#name / WORDSIZE;
+			for (ix=0 : ix<plen : ix++) {
+				if (paddr-->ix == wd) {
+					found = obj;
+					break;
+				}
+			}
+			if (found)
+				break;
+		}
+
+		if (~~found) {
+			print "I don't understand that command.^";
+			continue;
+		}
+
+		found.testfunc();
+	}
+];
+
+Attribute meta;
+
+Class TestClass
+  with
+	short_name 0,
+	testfunc TestNothing;
+
+[ PrintShortName obj;
+	if (obj provides short_name && obj.short_name) {
+		print (string) obj.short_name;
+		rtrue;
+	}
+	if (obj ofclass TestClass) {
+		print (address) obj.name;
+		rtrue;
+	}
+	print (object) obj;
+];
+
+[ Hex val   byte initial ix;
+	print "$";
+	initial = true;
+	for (ix=0 : ix<8 : ix++) {
+		@ushiftr val 28 byte;
+		@shiftl val 4 val;
+		byte = byte & $0F;
+		if (byte == 0 && initial && ix < 7)
+			continue;
+		initial = false;
+		if (byte <= 9)
+			print (char) (byte+'0');
+		else
+			print (char) (byte-10+'A');
+	}
+];
+
+[ check val wanted;
+	if (val == wanted) {
+		print val;
+		rtrue;
+	}
+	failures++;
+	print val, " (should be ", wanted, " FAIL)";
+	rfalse;
+];
+
+[ check_hex val wanted;
+	if (val == wanted) {
+		print (Hex) val;
+		rtrue;
+	}
+	failures++;
+	print (Hex) val, " (should be ", (Hex) wanted, " FAIL)";
+	rfalse;
+];
+
+[ count_failures   val;
+	print "^";
+	if (failures) {
+		val = failures;
+		total_failures = total_failures + failures;
+		failures = 0;
+		print_ret val, " tests failed.";
+	}
+	else {
+		"Passed.";
+	}
+];
+
+TestClass LookAction
+	with name 'look' 'l//' 'help' '?//',
+	testfunc LookSub,
+	has meta;
+	
+TestClass AllAction
+	with name 'all',
+	testfunc [ obj startfail res;
+		print "All tests:^";
+		startfail = total_failures;
+		objectloop (obj ofclass TestClass) {
+			if (obj has meta) 
+				continue;
+			print "^";
+			obj.testfunc();
+		}
+		res = total_failures - startfail;
+		if (res == 0)
+			"^All tests passed.";
+		else
+			print_ret "^", res, " tests failed overall.";
+	],
+	has meta;
+	
+[ TestNothing;
+	"Nothing happens.";
+];
+
+[ LookSub obj ix;
+	print "A voice booooms out: Welcome to the test chamber.^^";
+	print "Type ~help~ to repeat this message, ~quit~ to exit,
+		~all~ to run all tests, or one of the following test options: ";
+
+	ix = 0;
+	objectloop (obj ofclass TestClass) {
+		if (obj has meta)
+			continue;
+		if (ix) print ", ";
+		print "~", (name) obj, "~";
+		ix++;
+	}
+	new_line;
+	if (total_failures) {
+		print "^", total_failures, " tests have failed so far in this run.^";
+	}
+];
+
+Global testglobal;
+Global testglobal2;
+
+TestClass OperandTest
+	with name 'operand' 'operands',
+	testfunc [ val;
+		print "Basic operand access:^^";
+
+		@nop; ! we have to test it somewhere.
+
+		! discards have no effect
+		@copy testglobal 0;
+		@copy val 0;
+		@copy $12356 0;
+		@copy 99 sp;
+		@copy sp 0;
+		@stkcount val;
+		print "stkcount="; check(val, 0); print "^";
+
+		@copy 0 val;
+		print "Constants: zero="; check(val, 0); print ", ";
+		@copy (-1) val;
+		print "-1="; check(val, -1); print ", ";
+		@copy (16) val;
+		print "16="; check(val, 16); print ", ";
+		@copy (-$81) val;
+		print "-$81="; check_hex(val, -$81); print ", ";
+		@copy ($100) val;
+		print "$100="; check_hex(val, $100); print ", ";
+		@copy (-$8000) val;
+		print "-$8000="; check_hex(val, -$8000); print ", ";
+		@copy ($10000) val;
+		print "$10000="; check_hex(val, $10000); print ", ";
+		@copy ($7FFFFFFF) val;
+		print "$7FFFFFFF="; check_hex(val, $7FFFFFFF); print ", ";
+		@copy ($80000000) val;
+		print "$80000000="; check_hex(val, $80000000); print "^";
+
+		@add 0 0 val;
+		print "Constants: zero="; check(val, 0); print ", ";
+		@add 0 (-1) val;
+		print "-1="; check(val, -1); print ", ";
+		@add 0 (16) val;
+		print "16="; check(val, 16); print ", ";
+		@add 0 (-$81) val;
+		print "-$81="; check_hex(val, -$81); print ", ";
+		@add 0 ($100) val;
+		print "$100="; check_hex(val, $100); print ", ";
+		@add 0 (-$8000) val;
+		print "-$8000="; check_hex(val, -$8000); print ", ";
+		@add 0 ($10000) val;
+		print "$10000="; check_hex(val, $10000); print ", ";
+		@add 0 ($7FFFFFFF) val;
+		print "$7FFFFFFF="; check_hex(val, $7FFFFFFF); print ", ";
+		@add 0 ($80000000) val;
+		print "$80000000="; check_hex(val, $80000000); print "^";
+
+		testglobal = 123;
+		@copy testglobal val;
+		print "Global to local 123="; check(val, 123);
+		print "="; check(#globals_array --> #g$testglobal, 123); print ", ";
+		val = 321;
+		@copy val testglobal;
+		val = 0;
+		@copy testglobal val;
+		print "local to global 321="; check(val, 321);
+		print "="; check(#globals_array --> #g$testglobal, 321); print "^";
+
+		@copy 456 sp;
+		val = 0;
+		@copy sp val;
+		print "Stack: 456="; check(val, 456); print ", ";
+
+		@copy 933 sp;
+		val = noop();
+		@copy sp val;
+		print "Stack: 933="; check(val, 933); print "^";
+
+		testglobal = 123;
+		@copy testglobal sp;
+		val = 0;
+		@copy sp val;
+		print "Global to stack: 123="; check(val, 123); print "^";
+
+		@copy 789 sp;
+		@copy sp sp; ! might as well check this case
+		@copy sp val;
+		print "Stack to stack: 789="; check(val, 789); print ", ";
+
+		@copy 1234 sp;
+		val = noop();
+		@copy sp sp; ! might as well check this case
+		@copy sp val;
+		print "Stack to stack: 1234="; check(val, 1234); print "^";
+
+		count_failures();
+	];
+
+TestClass ArithTest
+	with name 'arith',
+	testfunc [ val;
+		print "Integer arithmetic:^^";
+		
+		@add 2 2 val;
+		print "2+2="; check(val, 4); print ", ";
+		@add (-2) (-3) val;
+		print "-2+-3="; check(val, -5); print ", ";
+		@add 3 (-4) val;
+		print "3+-4="; check(val, -1); print ", ";
+		@add (-4) 5 val;
+		print "-4+5="; check(val, 1); print ", ";
+		@add $7FFFFFFF $7FFFFFFE val;
+		print "$7FFFFFFF+$7FFFFFFE="; check(val, -3); print ", ";
+		@add $80000000 $80000000 val;
+		print "$80000000+$80000000="; check(val, 0); print "^";
+		testglobal = 6; testglobal2 = 8;
+		@add testglobal testglobal2 val;
+		print "Globals 6+8="; check(val, 14); print "^";
+		
+		@sub 2 2 val;
+		print "2-2="; check(val, 0); print ", ";
+		@sub (-2) 3 val;
+		print "-2-3="; check(val, -5); print ", ";
+		@sub 3 4 val;
+		print "3-4="; check(val, -1); print ", ";
+		@sub (-4) (-5) val;
+		print "-4-(-5)="; check(val, 1); print ", ";
+		@sub $7FFFFFFF $7FFFFFFE val;
+		print "$7FFFFFFF-$7FFFFFFE="; check(val, 1); print ", ";
+		@sub $80000000 $80000001 val;
+		print "$80000000-$80000001="; check(val, -1); print ", ";
+		@sub $7FFFFFFF $80000001 val;
+		print "$7FFFFFFF-$80000001="; check(val, -2); print "^";
+		testglobal = 6; testglobal2 = 8;
+		@sub testglobal testglobal2 val;
+		print "Globals 6-8="; check(val, -2); print "^";
+		
+		@mul 2 2 val;
+		print "2*2="; check(val, 4); print ", ";
+		@mul (-2) (-3) val;
+		print "-2*-3="; check(val, 6); print ", ";
+		@mul 3 (-4) val;
+		print "3*-4="; check(val, -12); print ", ";
+		@mul (-4) 5 val;
+		print "-4*5="; check(val, -20); print ", ";
+		@mul $10000 $10000 val;
+		print "$10000*$10000 (trunc)="; check(val, 0); print ", ";
+		@mul 311537 335117 val;
+		print "311537*335117 (trunc)="; check_hex(val, 1322129725); print "^";
+		testglobal = -6; testglobal2 = -8;
+		@mul testglobal testglobal2 val;
+		print "Globals -6*-8="; check(val, 48); print "^";
+		
+		@div 12 3 val;
+		print "12/3="; check(val, 4); print ", ";
+		@div 11 2 val;
+		print "11/2="; check(val, 5); print ", ";
+		@div (-11) 2 val;
+		print "-11/2="; check(val, -5); print ", ";
+		@div 11 (-2) val;
+		print "11/-2="; check(val, -5); print ", ";
+		@div (-11) (-2) val;
+		print "-11/-2="; check(val, 5); print ", ";
+		@div $7fffffff 2 val;
+		print "$7fffffff/2="; check_hex(val, $3fffffff); print ", ";
+		@div $7fffffff (-2) val;
+		print "$7fffffff/-2="; check_hex(val, -$3fffffff); print ", ";
+		@div (-$7fffffff) 2 val;
+		print "-$7fffffff/2="; check_hex(val, -$3fffffff); print ", ";
+		@div $80000000 2 val; !####?
+		print "$80000000/2="; check_hex(val, $40000000); print ", ";
+		@div $80000000 1 val;
+		print "$80000000/1="; check_hex(val, $80000000); print "^";
+		testglobal = -48; testglobal2 = -8;
+		@div testglobal testglobal2 val;
+		print "Globals -48/-8="; check(val, 6); print "^";
+		
+		@mod 12 3 val;
+		print "12%3="; check(val, 0); print ", ";
+		@mod 13 5 val;
+		print "13%5="; check(val, 3); print ", ";
+		@mod (-13) 5 val;
+		print "-13%5="; check(val, -3); print ", ";
+		@mod 13 (-5) val;
+		print "13%-5="; check(val, 3); print ", ";
+		@mod (-13) (-5) val;
+		print "-13%-5="; check(val, -3); print ", ";
+		@mod $80000001 7 val;
+		print "$80000001%7="; check(val, -1); print ", ";
+		@mod $80000000 2 val;
+		print "$80000000%2="; check(val, 0); print ", ";
+		@mod $80000000 1 val;
+		print "$80000000%1="; check(val, 0); print "^";
+		testglobal = 49; testglobal2 = -8;
+		@mod testglobal testglobal2 val;
+		print "Globals -49%-8="; check(val, 1); print "^";
+
+		@neg 0 val;
+		print "-(0)="; check(val, 0); print ", ";
+		@neg 5 val;
+		print "-(5)="; check(val, -5); print ", ";
+		@neg (-5) val;
+		print "-(-5)="; check(val, 5); print ", ";
+		@neg $7FFFFFFF val;
+		print "-($7FFFFFFF)="; check(val, $80000001); print ", ";
+		@neg $80000000 val;
+		print "-($80000000)="; check_hex(val, $80000000); print "^";
+		
+		count_failures();
+	];
+
+TestClass BitwiseTest
+	with name 'bitwise' 'bits' 'bit',
+	testfunc [ val;
+		print "Bitwise arithmetic:^^";
+		
+		@bitand 0 0 val;
+		print "0&0="; check_hex(val, 0); print ", ";
+		@bitand $FFFFFFFF 0 val;
+		print "$FFFFFFFF&0="; check_hex(val, 0); print ", ";
+		@bitand $FFFFFFFF $FFFFFFFF val;
+		print "$FFFFFFFF&$FFFFFFFF="; check_hex(val, $FFFFFFFF); print ", ";
+		@bitand $0137FFFF $FFFF7310 val;
+		print "$0137FFFF&$FFFF7310="; check_hex(val, $01377310); print ", ";
+		@bitand $35 $56 val;
+		print "$35&56="; check_hex(val, $14); print "^";
+		
+		@bitor 0 0 val;
+		print "0|0="; check_hex(val, 0); print ", ";
+		@bitor $FFFFFFFF 0 val;
+		print "$FFFFFFFF|0="; check_hex(val, $FFFFFFFF); print ", ";
+		@bitor $FFFFFFFF $FFFFFFFF val;
+		print "$FFFFFFFF|$FFFFFFFF="; check_hex(val, $FFFFFFFF); print ", ";
+		@bitor $01370000 $00007310 val;
+		print "$01370000|$00007310="; check_hex(val, $01377310); print ", ";
+		@bitor $35 $56 val;
+		print "$35|56="; check_hex(val, $77); print "^";
+		
+		@bitxor 0 0 val;
+		print "0", "@@94", "0="; check_hex(val, 0); print ", ";
+		@bitxor $FFFFFFFF 0 val;
+		print "$FFFFFFFF", "@@94", "0="; check_hex(val, $FFFFFFFF); print ", ";
+		@bitxor $FFFFFFFF $FFFFFFFF val;
+		print "$FFFFFFFF", "@@94", "$FFFFFFFF="; check_hex(val, 0); print ", ";
+		@bitxor $0137FFFF $00007310 val;
+		print "$0137FFFF", "@@94", "$00007310="; check_hex(val, $01378CEF); print ", ";
+		@bitxor $35 $56 val;
+		print "$35", "@@94", "56="; check_hex(val, $63); print "^";
+		
+		@bitnot 0 val;
+		print "!0="; check_hex(val, $FFFFFFFF); print ", ";
+		@bitnot 1 val;
+		print "!1="; check_hex(val, $FFFFFFFE); print ", ";
+		@bitnot $F val;
+		print "!$F="; check_hex(val, $FFFFFFF0); print ", ";
+		@bitnot $80000000 val;
+		print "!$80000000="; check_hex(val, $7FFFFFFF); print "^";
+		
+		count_failures();
+	];
+
+TestClass ShiftTest
+	with name 'shift',
+	testfunc [ val res ix;
+		print "Bit shifts:^^";
+
+		@shiftl $1001 0 val;
+		print "$1001<<0="; check_hex(val, $1001); print ", ";
+		@shiftl $1001 1 val;
+		print "$1001<<1="; check_hex(val, $2002); print ", ";
+		@shiftl $1001 4 val;
+		print "$1001<<4="; check_hex(val, $10010); print ", ";
+		@shiftl $1001 10 val;
+		print "$1001<<10="; check_hex(val, $400400); print ", ";
+		@shiftl $1001 16 val;
+		print "$1001<<16="; check_hex(val, $10010000); print ", ";
+		@shiftl $1001 24 val;
+		print "$1001<<24="; check_hex(val, $01000000); print ", ";
+		@shiftl $1001 31 val;
+		print "$1001<<31="; check_hex(val, $80000000); print ", ";
+		@shiftl $1001 32 val;
+		print "$1001<<32="; check_hex(val, 0); print ", ";
+		@shiftl $1001 (-1) val;
+		print "$1001<<-1="; check_hex(val, 0); print "^";
+		@shiftl (-2) 0 val;
+		print "-2<<0="; check(val, -2); print ", ";
+		@shiftl (-2) 1 val;
+		print "-2<<1="; check(val, -4); print ", ";
+		@shiftl (-2) 7 val;
+		print "-2<<7="; check(val, -256); print ", ";
+		@shiftl (-2) 31 val;
+		print "-2<<31="; check(val, 0); print "^";
+
+		testglobal = 1;
+		res = 1;
+		for (ix=0 : ix<32 : ix++) {
+			@shiftl testglobal ix val;
+			print "1<<", ix, "="; check_hex(val, res); print ", ";
+			res = res+res;
+		}
+		@shiftl testglobal ix val;
+		print "1<<", ix, "="; check(val, 0); print ", ";
+		ix = -1;
+		@shiftl testglobal ix val;
+		print "1<<", ix, "="; check(val, 0); print "^";
+		
+		@ushiftr $1001 0 val;
+		print "$1001u>>0="; check_hex(val, $1001); print ", ";
+		@ushiftr $1001 1 val;
+		print "$1001u>>1="; check_hex(val, $800); print ", ";
+		@ushiftr $1001 2 val;
+		print "$1001u>>2="; check_hex(val, $400); print ", ";
+		@ushiftr $1001 6 val;
+		print "$1001u>>6="; check_hex(val, $40); print ", ";
+		@ushiftr $1001 12 val;
+		print "$1001u>>12="; check_hex(val, $1); print ", ";
+		@ushiftr $1001 13 val;
+		print "$1001u>>13="; check_hex(val, $0); print ", ";
+		@ushiftr $1001 31 val;
+		print "$1001u>>31="; check_hex(val, $0); print ", ";
+		@ushiftr $1001 32 val;
+		print "$1001u>>32="; check_hex(val, $0); print "^";
+		
+		@ushiftr $7FFFFFFF 0 val;
+		print "$7FFFFFFFu>>0="; check_hex(val, $7FFFFFFF); print ", ";
+		@ushiftr $7FFFFFFF 1 val;
+		print "$7FFFFFFFu>>1="; check_hex(val, $3FFFFFFF); print ", ";
+		@ushiftr $7FFFFFFF 2 val;
+		print "$7FFFFFFFu>>2="; check_hex(val, $1FFFFFFF); print ", ";
+		@ushiftr $7FFFFFFF 6 val;
+		print "$7FFFFFFFu>>6="; check_hex(val, $1FFFFFF); print ", ";
+		@ushiftr $7FFFFFFF 12 val;
+		print "$7FFFFFFFu>>12="; check_hex(val, $7FFFF); print ", ";
+		@ushiftr $7FFFFFFF 13 val;
+		print "$7FFFFFFFu>>13="; check_hex(val, $3FFFF); print ", ";
+		@ushiftr $7FFFFFFF 30 val;
+		print "$7FFFFFFFu>>30="; check_hex(val, $1); print ", ";
+		@ushiftr $7FFFFFFF 31 val;
+		print "$7FFFFFFFu>>31="; check_hex(val, $0); print ", ";
+		@ushiftr $7FFFFFFF 32 val;
+		print "$7FFFFFFFu>>32="; check_hex(val, $0); print "^";
+		
+		@ushiftr (-1) 0 val;
+		print "-1u>>0="; check_hex(val, -1); print ", ";
+		@ushiftr (-1) 1 val;
+		print "-1u>>1="; check_hex(val, $7FFFFFFF); print ", ";
+		@ushiftr (-1) 2 val;
+		print "-1u>>2="; check_hex(val, $3FFFFFFF); print ", ";
+		@ushiftr (-1) 6 val;
+		print "-1u>>6="; check_hex(val, $3FFFFFF); print ", ";
+		@ushiftr (-1) 12 val;
+		print "-1u>>12="; check_hex(val, $FFFFF); print ", ";
+		@ushiftr (-1) 13 val;
+		print "-1u>>13="; check_hex(val, $7FFFF); print ", ";
+		@ushiftr (-1) 30 val;
+		print "-1u>>30="; check_hex(val, $3); print ", ";
+		@ushiftr (-1) 31 val;
+		print "-1u>>31="; check_hex(val, $1); print ", ";
+		@ushiftr (-1) 32 val;
+		print "-1u>>32="; check_hex(val, $0); print ", ";
+		@ushiftr (-1) 33 val;
+		print "-1u>>33="; check_hex(val, $0); print ", ";
+		@ushiftr (-1) (-1) val;
+		print "-1u>>-1="; check_hex(val, $0); print "^";
+		
+		testglobal = -1;
+		res = $7fffffff;
+		for (ix=1 : ix<32 : ix++) {
+			@ushiftr testglobal ix val;
+			print "-1u>>", ix, "="; check_hex(val, res); print ", ";
+			res = res / 2;
+		}
+		@ushiftr testglobal ix val;
+		print "-1u>>", ix, "="; check(val, 0); print ", ";
+		ix = -1;
+		@ushiftr testglobal ix val;
+		print "-1u>>", ix, "="; check(val, 0); print "^";
+		
+		@sshiftr $1001 0 val;
+		print "$1001s>>0="; check_hex(val, $1001); print ", ";
+		@sshiftr $1001 1 val;
+		print "$1001s>>1="; check_hex(val, $800); print ", ";
+		@sshiftr $1001 2 val;
+		print "$1001s>>2="; check_hex(val, $400); print ", ";
+		@sshiftr $1001 6 val;
+		print "$1001s>>6="; check_hex(val, $40); print ", ";
+		@sshiftr $1001 12 val;
+		print "$1001s>>12="; check_hex(val, $1); print ", ";
+		@sshiftr $1001 13 val;
+		print "$1001s>>13="; check_hex(val, $0); print ", ";
+		@sshiftr $1001 31 val;
+		print "$1001s>>31="; check_hex(val, $0); print ", ";
+		@sshiftr $1001 32 val;
+		print "$1001s>>32="; check_hex(val, $0); print "^";
+		
+		@sshiftr $7FFFFFFF 0 val;
+		print "$7FFFFFFFs>>0="; check_hex(val, $7FFFFFFF); print ", ";
+		@sshiftr $7FFFFFFF 1 val;
+		print "$7FFFFFFFs>>1="; check_hex(val, $3FFFFFFF); print ", ";
+		@sshiftr $7FFFFFFF 2 val;
+		print "$7FFFFFFFs>>2="; check_hex(val, $1FFFFFFF); print ", ";
+		@sshiftr $7FFFFFFF 6 val;
+		print "$7FFFFFFFs>>6="; check_hex(val, $1FFFFFF); print ", ";
+		@sshiftr $7FFFFFFF 12 val;
+		print "$7FFFFFFFs>>12="; check_hex(val, $7FFFF); print ", ";
+		@sshiftr $7FFFFFFF 13 val;
+		print "$7FFFFFFFs>>13="; check_hex(val, $3FFFF); print ", ";
+		@sshiftr $7FFFFFFF 30 val;
+		print "$7FFFFFFFs>>30="; check_hex(val, $1); print ", ";
+		@sshiftr $7FFFFFFF 31 val;
+		print "$7FFFFFFFs>>31="; check_hex(val, $0); print ", ";
+		@sshiftr $7FFFFFFF 32 val;
+		print "$7FFFFFFFs>>32="; check_hex(val, $0); print "^";
+		
+		@sshiftr (-1) 0 val;
+		print "-1s>>0="; check(val, -1); print ", ";
+		@sshiftr (-1) 1 val;
+		print "-1s>>1="; check(val, -1); print ", ";
+		@sshiftr (-1) 31 val;
+		print "-1s>>31="; check(val, -1); print ", ";
+		@sshiftr (-1) 32 val;
+		print "-1s>>32="; check(val, -1); print ", ";
+		@sshiftr (-1) 33 val;
+		print "-1s>>33="; check(val, -1); print ", ";
+		@sshiftr (-1) (-1) val;
+		print "-1s>>-1="; check(val, -1); print "^";
+
+		@sshiftr (-1000) 0 val;
+		print "-1000s>>0="; check(val, -1000); print ", ";
+		@sshiftr (-1000) 1 val;
+		print "-1000s>>1="; check(val, -500); print ", ";
+		@sshiftr (-1000) 2 val;
+		print "-1000s>>2="; check(val, -250); print ", ";
+		@sshiftr (-1000) 4 val;
+		print "-1000s>>4="; check(val, -63); print ", ";
+		@sshiftr (-1000) 6 val;
+		print "-1000s>>6="; check(val, -16); print ", ";
+		@sshiftr (-1000) 9 val;
+		print "-1000s>>9="; check(val, -2); print ", ";
+		@sshiftr (-1000) 31 val;
+		print "-1000s>>31="; check(val, -1); print ", ";
+		@sshiftr (-1000) 32 val;
+		print "-1000s>>32="; check(val, -1); print ", ";
+		@sshiftr (-1000) 33 val;
+		print "-1000s>>33="; check(val, -1); print ", ";
+		@sshiftr (-1000) (-1) val;
+		print "-1000s>>-1="; check(val, -1); print "^";
+		
+		testglobal = -1;
+		for (ix=0 : ix<32 : ix++) {
+			@sshiftr testglobal ix val;
+			print "-1s>>", ix, "="; check(val, -1); print ", ";
+		}
+		@sshiftr testglobal ix val;
+		print "-1s>>", ix, "="; check(val, -1); print ", ";
+		ix = -1;
+		@sshiftr testglobal ix val;
+		print "-1s>>", ix, "="; check(val, -1); print "^";
+		
+		count_failures();
+	];
+
+TestClass TruncCopyTest
+	with name 'trunc' 'truncating' 'copy',
+	testfunc [ val;
+		print "Truncating copies:^^";
+
+		! I6 doesn't let us test 2-byte and 1-byte local variables
+		
+		testglobal2 = $01020304;
+		@copys $12345678 testglobal2;
+		@copy testglobal2 val;
+		print "$12345678 s:> glob $01020304="; check_hex(val, $56780304); print ", ";
+		@copys $80818283 sp;
+		@copy sp val;
+		print "$80818283 s:> stack="; check_hex(val, $8283); print ", ";
+		testglobal = $fedcba98;
+		testglobal2 = $02030405;
+		@copys testglobal testglobal2;
+		@copy testglobal2 val;
+		print "glob $fedcba98 s:> glob $02030405="; check_hex(val, $fedc0405); print ", ";
+		testglobal = $fedcba98;
+		@copys testglobal sp;
+		@copy sp val;
+		print "glob $fedcba98 s:> stack="; check_hex(val, $fedc); print ", ";
+		testglobal2 = $03040506;
+		@copy $7654321f sp;
+		@copys sp testglobal2;
+		@copy testglobal2 val;
+		print "stack $7654321f s:> glob $03040506="; check_hex(val, $321f0506); print ", ";
+		testglobal2 = $04050607;
+		testglobal = $654321fe;
+		@copy testglobal sp;
+		@copys sp testglobal2;
+		@copy testglobal2 val;
+		print "stack $654321fe s:> glob $04050607="; check_hex(val, $21fe0607); print ", ";
+		@copy $674523f1 sp;
+		@copys sp sp;
+		@copy sp val;
+		print "stack $674523f1 s:> stack="; check_hex(val, $23f1); print ", ";
+		@copy $67452301 sp; noop();
+		@copys sp sp;
+		@copy sp val;
+		print "stack $67452301 s:> stack="; check_hex(val, $2301); print "^";
+		
+		testglobal2 = $01020304;
+		@copyb $12345678 testglobal2;
+		@copy testglobal2 val;
+		print "$12345678 b:> glob $01020304="; check_hex(val, $78020304); print ", ";
+		@copyb $80818283 sp;
+		@copy sp val;
+		print "$80818283 b:> stack="; check_hex(val, $83); print ", ";
+		testglobal = $fedcba98;
+		testglobal2 = $02030405;
+		@copyb testglobal testglobal2;
+		@copy testglobal2 val;
+		print "glob $fedcba98 b:> glob $02030405="; check_hex(val, $fe030405); print ", ";
+		testglobal = $fedcba98;
+		@copyb testglobal sp;
+		@copy sp val;
+		print "glob $fedcba98 b:> stack="; check_hex(val, $fe); print ", ";
+		testglobal2 = $03040506;
+		@copy $7654321f sp;
+		@copyb sp testglobal2;
+		@copy testglobal2 val;
+		print "stack $7654321f b:> glob $03040506="; check_hex(val, $1f040506); print ", ";
+		testglobal2 = $04050607;
+		testglobal = $654321fe;
+		@copy testglobal sp;
+		@copyb sp testglobal2;
+		@copy testglobal2 val;
+		print "stack $654321fe b:> glob $04050607="; check_hex(val, $fe050607); print ", ";
+		@copy $674523f1 sp;
+		@copyb sp sp;
+		@copy sp val;
+		print "stack $674523f1 b:> stack="; check_hex(val, $f1); print ", ";
+		@copy $67452301 sp; noop();
+		@copyb sp sp;
+		@copy sp val;
+		print "stack $67452301 b:> stack="; check_hex(val, $01); print "^";
+		
+		count_failures();
+	];
+
+TestClass ExtendTest
+	with name 'extend' 'sex',
+	testfunc [ val;
+		print "Sign-extend:^^";
+
+		@sexb $00 val;
+		print "sexb($00)="; check_hex(val, 0); print ", ";
+		@sexb $01 val;
+		print "sexb($01)="; check_hex(val, 1); print ", ";
+		@sexb $7f val;
+		print "sexb($7f)="; check_hex(val, $7f); print ", ";
+		@sexb $80 val;
+		print "sexb($80)="; check_hex(val, $ffffff80); print ", ";
+		@sexb $fe val;
+		print "sexb($fe)="; check_hex(val, -2); print ", ";
+		@sexb $ff val;
+		print "sexb($ff)="; check_hex(val, -1); print ", ";
+		@sexb $100 val;
+		print "sexb($100)="; check_hex(val, 0); print ", ";
+		@sexb $ffffff01 val;
+		print "sexb($ffffff01)="; check_hex(val, 1); print ", ";
+		@sexb $7f0f0ff0 val;
+		print "sexb($7f0f0ff0)="; check_hex(val, -16); print "^";
+
+		testglobal = $02;
+		@sexb testglobal sp;
+		@copy sp val;
+		print "sexb($02)="; check_hex(val, 2); print ", ";
+		@copy $0f sp;
+		@sexb sp testglobal;
+		val = testglobal;
+		print "sexb($0f)="; check_hex(val, 15); print ", ";
+		testglobal = $ff;
+		@sexb testglobal sp;
+		@copy sp val;
+		print "sexb($ff)="; check_hex(val, -1); print "^";
+
+		@sexs $00 val;
+		print "sexs($00)="; check_hex(val, 0); print ", ";
+		@sexs $01 val;
+		print "sexs($01)="; check_hex(val, 1); print ", ";
+		@sexs $7fff val;
+		print "sexs($7fff)="; check_hex(val, $7fff); print ", ";
+		@sexs $8000 val;
+		print "sexs($8000)="; check_hex(val, $ffff8000); print ", ";
+		@sexs $fffe val;
+		print "sexs($fffe)="; check_hex(val, -2); print ", ";
+		@sexs $ffff val;
+		print "sexs($ffff)="; check_hex(val, -1); print ", ";
+		@sexs $10000 val;
+		print "sexs($10000)="; check_hex(val, 0); print ", ";
+		@sexs $ffff0001 val;
+		print "sexs($ffff0001)="; check_hex(val, 1); print ", ";
+		@sexs $7f0ff00f val;
+		print "sexs($7f0ff00f)="; check_hex(val, $fffff00f); print "^";
+
+		testglobal = $102;
+		@sexs testglobal sp;
+		@copy sp val;
+		print "sexs($102)="; check_hex(val, $102); print ", ";
+		@copy $0fffff sp;
+		@sexs sp testglobal;
+		val = testglobal;
+		print "sexs($0fffff)="; check_hex(val, -1); print ", ";
+		testglobal = $fffe;
+		@sexs testglobal sp;
+		@copy sp val;
+		print "sexs($fffe)="; check_hex(val, -2); print "^";
+		
+		count_failures();
+	];
+
+Array testarray -> $01 $02 $03 $04 $ff $fe $fd $fc $0 $0 $0 $f;
+Array testarray2 -> $7f $00 $80 $02 $01 $00 $ff $ff;
+
+TestClass AloadTest
+	with name 'aload',
+	testfunc [ val arr;
+		print "Array loads:^^";
+
+		print "Array sequence: "; check_hex(testarray2 - testarray, 12); print "^";
+
+		@aload testarray 0 val;
+		print "arr-->0="; check_hex(val, $01020304); print ", ";
+		@aload testarray 1 val;
+		print "arr-->1="; check_hex(val, $fffefdfc); print ", ";
+		@aload testarray 2 val;
+		print "arr-->2="; check_hex(val, $f); print "^";
+		arr = testarray+1;
+		@aload arr 0 val;
+		print "arr+1-->0="; check_hex(val, $020304ff); print ", ";
+		@aload arr 1 val;
+		print "arr+1-->1="; check_hex(val, $fefdfc00); print ", ";
+		arr = testarray+2;
+		@aload arr 0 val;
+		print "arr+2-->0="; check_hex(val, $0304fffe); print ", ";
+		@aload arr 1 val;
+		print "arr+2-->1="; check_hex(val, $fdfc0000); print ", ";
+		arr = testarray+3;
+		@aload arr 0 val;
+		print "arr+3-->0="; check_hex(val, $04fffefd); print ", ";
+		@aload arr 1 val;
+		print "arr+3-->1="; check_hex(val, $fc000000); print ", ";
+		arr = testarray+4;
+		@aload arr (-1) val;
+		print "arr+4-->-1="; check_hex(val, $01020304); print ", ";
+		@aload arr 0 val;
+		print "arr+4-->0="; check_hex(val, $fffefdfc); print ", ";
+		@aload arr 1 val;
+		print "arr+4-->1="; check_hex(val, $f); print "^";
+
+		arr = testarray2;
+		
+		@aload testarray2 (-1) val;
+		print "arr2-->-1="; check_hex(val, $f); print ", ";
+		val = -1;
+		@aload testarray2 val val;
+		print "arr2-->-1="; check_hex(val, $f); print ", ";
+		@aload arr (-1) val;
+		print "arr2-->-1="; check_hex(val, $f); print ", ";
+		val = -1;
+		@aload arr val val;
+		print "arr2-->-1="; check_hex(val, $f); print ", ";
+		!
+		@aload testarray2 (-1) sp;
+		@copy sp val;
+		print "arr2-->-1="; check_hex(val, $f); print ", ";
+		val = -1;
+		@aload testarray2 val sp;
+		@copy sp val;
+		print "arr2-->-1="; check_hex(val, $f); print ", ";
+		@aload arr (-1) sp;
+		@copy sp val;
+		print "arr2-->-1="; check_hex(val, $f); print ", ";
+		val = -1;
+		@aload arr val sp;
+		@copy sp val;
+		print "arr2-->-1="; check_hex(val, $f); print "^";
+		
+		@aload testarray2 0 val;
+		print "arr2-->0="; check_hex(val, $7f008002); print ", ";
+		val = 0;
+		@aload testarray2 val val;
+		print "arr2-->0="; check_hex(val, $7f008002); print ", ";
+		@aload arr 0 val;
+		print "arr2-->0="; check_hex(val, $7f008002); print ", ";
+		val = 0;
+		@aload arr val val;
+		print "arr2-->0="; check_hex(val, $7f008002); print ", ";
+		!
+		@aload testarray2 0 sp;
+		@copy sp val;
+		print "arr2-->0="; check_hex(val, $7f008002); print ", ";
+		val = 0;
+		@aload testarray2 val sp;
+		@copy sp val;
+		print "arr2-->0="; check_hex(val, $7f008002); print ", ";
+		@aload arr 0 sp;
+		@copy sp val;
+		print "arr2-->0="; check_hex(val, $7f008002); print ", ";
+		val = 0;
+		@aload arr val sp;
+		@copy sp val;
+		print "arr2-->0="; check_hex(val, $7f008002); print "^";
+		
+		@aload testarray2 1 val;
+		print "arr2-->1="; check_hex(val, $100ffff); print ", ";
+		val = 1;
+		@aload testarray2 val val;
+		print "arr2-->1="; check_hex(val, $100ffff); print ", ";
+		@aload arr 1 val;
+		print "arr2-->1="; check_hex(val, $100ffff); print ", ";
+		val = 1;
+		@aload arr val val;
+		print "arr2-->1="; check_hex(val, $100ffff); print ", ";
+		!
+		@aload testarray2 1 sp;
+		@copy sp val;
+		print "arr2-->1="; check_hex(val, $100ffff); print ", ";
+		val = 1;
+		@aload testarray2 val sp;
+		@copy sp val;
+		print "arr2-->1="; check_hex(val, $100ffff); print ", ";
+		@aload arr 1 sp;
+		@copy sp val;
+		print "arr2-->1="; check_hex(val, $100ffff); print ", ";
+		val = 1;
+		@aload arr val sp;
+		@copy sp val;
+		print "arr2-->1="; check_hex(val, $100ffff); print "^";
+
+		@aloads testarray 0 val;
+		print "arr=>0="; check_hex(val, $0102); print ", ";
+		@aloads testarray 1 val;
+		print "arr=>1="; check_hex(val, $0304); print ", ";
+		@aloads testarray 2 val;
+		print "arr=>2="; check_hex(val, $fffe); print ", ";
+		@aloads testarray 3 val;
+		print "arr=>3="; check_hex(val, $fdfc); print ", ";
+		@aloads testarray 4 val;
+		print "arr=>4="; check_hex(val, $0); print ", ";
+		@aloads testarray 5 val;
+		print "arr=>5="; check_hex(val, $f); print "^";
+		arr = testarray+1;
+		@aloads arr 0 val;
+		print "arr+1=>0="; check_hex(val, $0203); print ", ";
+		@aloads arr 1 val;
+		print "arr+1=>1="; check_hex(val, $04ff); print ", ";
+		arr = testarray+2;
+		@aloads arr 0 val;
+		print "arr+2=>0="; check_hex(val, $0304); print ", ";
+		@aloads arr 1 val;
+		print "arr+2=>1="; check_hex(val, $fffe); print ", ";
+		arr = testarray+3;
+		@aloads arr 0 val;
+		print "arr+3=>0="; check_hex(val, $04ff); print ", ";
+		@aloads arr 1 val;
+		print "arr+3=>1="; check_hex(val, $fefd); print ", ";
+		arr = testarray+4;
+		@aloads arr (-1) val;
+		print "arr+4=>-1="; check_hex(val, $0304); print ", ";
+		@aloads arr 0 val;
+		print "arr+4=>0="; check_hex(val, $fffe); print ", ";
+		@aloads arr 1 val;
+		print "arr+4=>1="; check_hex(val, $fdfc); print "^";
+		
+		arr = testarray2;
+		
+		@aloads testarray2 (-1) val;
+		print "arr2=>-1="; check_hex(val, $f); print ", ";
+		val = -1;
+		@aloads testarray2 val val;
+		print "arr2=>-1="; check_hex(val, $f); print ", ";
+		@aloads arr (-1) val;
+		print "arr2=>-1="; check_hex(val, $f); print ", ";
+		val = -1;
+		@aloads arr val val;
+		print "arr2=>-1="; check_hex(val, $f); print ", ";
+		!
+		@aloads testarray2 (-1) sp;
+		@copy sp val;
+		print "arr2=>-1="; check_hex(val, $f); print ", ";
+		val = -1;
+		@aloads testarray2 val sp;
+		@copy sp val;
+		print "arr2=>-1="; check_hex(val, $f); print ", ";
+		@aloads arr (-1) sp;
+		@copy sp val;
+		print "arr2=>-1="; check_hex(val, $f); print ", ";
+		val = -1;
+		@aloads arr val sp;
+		@copy sp val;
+		print "arr2=>-1="; check_hex(val, $f); print "^";
+		
+		@aloads testarray2 0 val;
+		print "arr2=>0="; check_hex(val, $7f00); print ", ";
+		val = 0;
+		@aloads testarray2 val val;
+		print "arr2=>0="; check_hex(val, $7f00); print ", ";
+		@aloads arr 0 val;
+		print "arr2=>0="; check_hex(val, $7f00); print ", ";
+		val = 0;
+		@aloads arr val val;
+		print "arr2=>0="; check_hex(val, $7f00); print ", ";
+		!
+		@aloads testarray2 0 sp;
+		@copy sp val;
+		print "arr2=>0="; check_hex(val, $7f00); print ", ";
+		val = 0;
+		@aloads testarray2 val sp;
+		@copy sp val;
+		print "arr2=>0="; check_hex(val, $7f00); print ", ";
+		@aloads arr 0 sp;
+		@copy sp val;
+		print "arr2=>0="; check_hex(val, $7f00); print ", ";
+		val = 0;
+		@aloads arr val sp;
+		@copy sp val;
+		print "arr2=>0="; check_hex(val, $7f00); print "^";
+		
+		@aloads testarray2 1 val;
+		print "arr2=>1="; check_hex(val, $8002); print ", ";
+		val = 1;
+		@aloads testarray2 val val;
+		print "arr2=>1="; check_hex(val, $8002); print ", ";
+		@aloads arr 1 val;
+		print "arr2=>1="; check_hex(val, $8002); print ", ";
+		val = 1;
+		@aloads arr val val;
+		print "arr2=>1="; check_hex(val, $8002); print ", ";
+		!
+		@aloads testarray2 1 sp;
+		@copy sp val;
+		print "arr2=>1="; check_hex(val, $8002); print ", ";
+		val = 1;
+		@aloads testarray2 val sp;
+		@copy sp val;
+		print "arr2=>1="; check_hex(val, $8002); print ", ";
+		@aloads arr 1 sp;
+		@copy sp val;
+		print "arr2=>1="; check_hex(val, $8002); print ", ";
+		val = 1;
+		@aloads arr val sp;
+		@copy sp val;
+		print "arr2=>1="; check_hex(val, $8002); print "^";
+		
+		@aloadb testarray 0 val;
+		print "arr->0="; check_hex(val, $01); print ", ";
+		@aloadb testarray 1 val;
+		print "arr->1="; check_hex(val, $02); print ", ";
+		@aloadb testarray 4 val;
+		print "arr->4="; check_hex(val, $ff); print ", ";
+		@aloadb testarray 5 val;
+		print "arr->5="; check_hex(val, $fe); print ", ";
+		@aloadb testarray 11 val;
+		print "arr->11="; check_hex(val, $f); print "^";
+		arr = testarray+1;
+		@aloadb arr 0 val;
+		print "arr+1->0="; check_hex(val, $02); print ", ";
+		@aloadb arr 1 val;
+		print "arr+1->1="; check_hex(val, $03); print ", ";
+		arr = testarray+2;
+		@aloadb arr 0 val;
+		print "arr+2->0="; check_hex(val, $03); print ", ";
+		@aloadb arr 1 val;
+		print "arr+2->1="; check_hex(val, $04); print ", ";
+		arr = testarray+3;
+		@aloadb arr 0 val;
+		print "arr+3->0="; check_hex(val, $04); print ", ";
+		@aloadb arr 1 val;
+		print "arr+3->1="; check_hex(val, $ff); print ", ";
+		arr = testarray+4;
+		@aloadb arr (-1) val;
+		print "arr+4->-1="; check_hex(val, $04); print ", ";
+		@aloadb arr 0 val;
+		print "arr+4->0="; check_hex(val, $ff); print ", ";
+		@aloadb arr 1 val;
+		print "arr+4->1="; check_hex(val, $fe); print "^";
+		
+		arr = testarray2;
+		
+		@aloadb testarray2 (-1) val;
+		print "arr2->-1="; check_hex(val, $f); print ", ";
+		val = -1;
+		@aloadb testarray2 val val;
+		print "arr2->-1="; check_hex(val, $f); print ", ";
+		@aloadb arr (-1) val;
+		print "arr2->-1="; check_hex(val, $f); print ", ";
+		val = -1;
+		@aloadb arr val val;
+		print "arr2->-1="; check_hex(val, $f); print ", ";
+		!
+		@aloadb testarray2 (-1) sp;
+		@copy sp val;
+		print "arr2->-1="; check_hex(val, $f); print ", ";
+		val = -1;
+		@aloadb testarray2 val sp;
+		@copy sp val;
+		print "arr2->-1="; check_hex(val, $f); print ", ";
+		@aloadb arr (-1) sp;
+		@copy sp val;
+		print "arr2->-1="; check_hex(val, $f); print ", ";
+		val = -1;
+		@aloadb arr val sp;
+		@copy sp val;
+		print "arr2->-1="; check_hex(val, $f); print "^";
+		
+		@aloadb testarray2 0 val;
+		print "arr2->0="; check_hex(val, $7f); print ", ";
+		val = 0;
+		@aloadb testarray2 val val;
+		print "arr2->0="; check_hex(val, $7f); print ", ";
+		@aloadb arr 0 val;
+		print "arr2->0="; check_hex(val, $7f); print ", ";
+		val = 0;
+		@aloadb arr val val;
+		print "arr2->0="; check_hex(val, $7f); print ", ";
+		!
+		@aloadb testarray2 0 sp;
+		@copy sp val;
+		print "arr2->0="; check_hex(val, $7f); print ", ";
+		val = 0;
+		@aloadb testarray2 val sp;
+		@copy sp val;
+		print "arr2->0="; check_hex(val, $7f); print ", ";
+		@aloadb arr 0 sp;
+		@copy sp val;
+		print "arr2->0="; check_hex(val, $7f); print ", ";
+		val = 0;
+		@aloadb arr val sp;
+		@copy sp val;
+		print "arr2->0="; check_hex(val, $7f); print "^";
+		
+		@aloadb testarray2 2 val;
+		print "arr2->2="; check_hex(val, $80); print ", ";
+		val = 2;
+		@aloadb testarray2 val val;
+		print "arr2->2="; check_hex(val, $80); print ", ";
+		@aloadb arr 2 val;
+		print "arr2->2="; check_hex(val, $80); print ", ";
+		val = 2;
+		@aloadb arr val val;
+		print "arr2->2="; check_hex(val, $80); print ", ";
+		!
+		@aloadb testarray2 2 sp;
+		@copy sp val;
+		print "arr2->2="; check_hex(val, $80); print ", ";
+		val = 2;
+		@aloadb testarray2 val sp;
+		@copy sp val;
+		print "arr2->2="; check_hex(val, $80); print ", ";
+		@aloadb arr 2 sp;
+		@copy sp val;
+		print "arr2->2="; check_hex(val, $80); print ", ";
+		val = 2;
+		@aloadb arr val sp;
+		@copy sp val;
+		print "arr2->2="; check_hex(val, $80); print "^";
+		
+		count_failures();
+	];
+
+Array destarray -> 12;
+Array destarray2 -> 12;
+
+TestClass AstoreTest
+	with name 'astore',
+	testfunc [ val arr;
+		print "Array stores:^^";
+
+		print "Array sequence: "; check_hex(destarray2 - destarray, 12); print "^";
+		arr = destarray;
+		for (val=0 : val<24 : val++)
+			arr->val = 0;
+
+		@astore destarray 0 $02030405;
+		@aload destarray 0 val;
+		print "arr-->0="; check_hex(val, $02030405); print ", ";
+		@astore destarray 1 $fefdfcdb;
+		@aload destarray 1 val;
+		print "arr-->1="; check_hex(val, $fefdfcdb); print ", ";
+		@astore destarray 2 $e0f;
+		@aload destarray 2 val;
+		print "arr-->2="; check_hex(val, $0e0f); print "^";
+		arr = destarray+1;
+		@astore arr 0 $12131415;
+		@aload arr 0 val;
+		print "arr+1-->0="; check_hex(val, $12131415); print ", ";
+		@aload destarray 0 val; check_hex(val, $02121314); print "/";
+		@aload destarray 1 val; check_hex(val, $15fdfcdb); print ", ";
+		@astore arr 1 $e0e1e2e3;
+		@aload arr 1 val;
+		print "arr+1-->1="; check_hex(val, $e0e1e2e3); print ", ";
+		@aload destarray 0 val; check_hex(val, $02121314); print "/";
+		@aload destarray 1 val; check_hex(val, $15e0e1e2); print "/";
+		@aload destarray 2 val; check_hex(val, $e3000e0f); print ", ";
+		arr = destarray+2;
+		@astore arr 0 $12345678;
+		@aload arr 0 val;
+		print "arr+2-->0="; check_hex(val, $12345678); print ", ";
+		@aload destarray 0 val; check_hex(val, $02121234); print "/";
+		@aload destarray 1 val; check_hex(val, $5678e1e2); print ", ";
+		@astore arr 1 $fedcba99;
+		@aload arr 1 val;
+		print "arr+2-->1="; check_hex(val, $fedcba99); print ", ";
+		arr = destarray+3;
+		@astore arr 0 $44556677;
+		@aload arr 0 val;
+		print "arr+3-->0="; check_hex(val, $44556677); print ", ";
+		@aload destarray 0 val; check_hex(val, $02121244); print "/";
+		@aload destarray 1 val; check_hex(val, $556677dc); print ", ";
+		@astore arr 1 $51413121;
+		@aload arr 1 val;
+		print "arr+3-->1="; check_hex(val, $51413121); print ", ";
+		@aload destarray 0 val; check_hex(val, $02121244); print "/";
+		@aload destarray 1 val; check_hex(val, $55667751); print "/";
+		@aload destarray 2 val; check_hex(val, $4131210f); print ", ";
+		arr = destarray+4;
+		@astore arr (-1) $21436587;
+		@aload arr (-1) val;
+		print "arr+4-->-1="; check_hex(val, $21436587); print ", ";
+		@astore arr 0 $31425364;
+		@aload arr 0 val;
+		print "arr+4-->0="; check_hex(val, $31425364); print ", ";
+		@astore arr 1 $41526374;
+		@aload arr 1 val;
+		print "arr+4-->1="; check_hex(val, $41526374); print ", ";
+		@aload destarray 0 val; check_hex(val, $21436587); print "/";
+		@aload destarray 1 val; check_hex(val, $31425364); print "/";
+		@aload destarray 2 val; check_hex(val, $41526374); print "^";
+
+		arr = destarray2;
+
+		testglobal = destarray2-4;
+		@astore destarray2 (-1) $d0000001;
+		@aload testglobal 0 val;
+		print "arr2-->-1="; check_hex(val, $d0000001); print ", ";
+		val = -1;
+		@astore destarray2 val $d1000002;
+		@aload testglobal 0 val;
+		print "arr2-->-1="; check_hex(val, $d1000002); print ", ";
+		@astore arr (-1) $d2000003;
+		@aload testglobal 0 val;
+		print "arr2-->-1="; check_hex(val, $d2000003); print ", ";
+		val = -1;
+		@astore arr val $d3000004;
+		@aload testglobal 0 val;
+		print "arr2-->-1="; check_hex(val, $d3000004); print ", ";
+		!
+		@copy $e0000001 sp;
+		@astore destarray2 (-1) sp;
+		@aload testglobal 0 val;
+		print "arr2-->-1="; check_hex(val, $e0000001); print ", ";
+		val = -1;
+		@copy $e1000011 sp;
+		@astore destarray2 val sp;
+		@aload testglobal 0 val;
+		print "arr2-->-1="; check_hex(val, $e1000011); print ", ";
+		@copy $e2000021 sp;
+		@astore arr (-1) sp;
+		@aload testglobal 0 val;
+		print "arr2-->-1="; check_hex(val, $e2000021); print ", ";
+		val = -1;
+		@copy $e3000031 sp;
+		@astore arr val sp;
+		@aload testglobal 0 val;
+		print "arr2-->-1="; check_hex(val, $e3000031); print "^";
+		
+		testglobal = destarray2;
+		@astore destarray2 0 $f1223310;
+		@aload testglobal 0 val;
+		print "arr2-->0="; check_hex(val, $f1223310); print ", ";
+		val = 0;
+		@astore destarray2 val $f2223311;
+		@aload testglobal 0 val;
+		print "arr2-->0="; check_hex(val, $f2223311); print ", ";
+		@astore arr 0 $f3223312;
+		@aload testglobal 0 val;
+		print "arr2-->0="; check_hex(val, $f3223312); print ", ";
+		val = 0;
+		@astore arr val $f4223313;
+		@aload testglobal 0 val;
+		print "arr2-->0="; check_hex(val, $f4223313); print ", ";
+		!
+		@copy $f5223315 sp;
+		@astore destarray2 0 sp;
+		@aload testglobal 0 val;
+		print "arr2-->0="; check_hex(val, $f5223315); print ", ";
+		val = 0;
+		@copy $f6223316 sp;
+		@astore destarray2 val sp;
+		@aload testglobal 0 val;
+		print "arr2-->0="; check_hex(val, $f6223316); print ", ";
+		@copy $f7223317 sp;
+		@astore arr 0 sp;
+		@aload testglobal 0 val;
+		print "arr2-->0="; check_hex(val, $f7223317); print ", ";
+		val = 0;
+		@copy $f8223318 sp;
+		@astore arr val sp;
+		@aload testglobal 0 val;
+		print "arr2-->0="; check_hex(val, $f8223318); print "^";
+		
+		testglobal = destarray2+4;
+		@astore destarray2 1 $1;
+		@aload testglobal 0 val;
+		print "arr2-->1="; check_hex(val, $1); print ", ";
+		val = 1;
+		@astore destarray2 val $2;
+		@aload testglobal 0 val;
+		print "arr2-->1="; check_hex(val, $2); print ", ";
+		@astore arr 1 $3;
+		@aload testglobal 0 val;
+		print "arr2-->1="; check_hex(val, $3); print ", ";
+		val = 1;
+		@astore arr val $4;
+		@aload testglobal 0 val;
+		print "arr2-->1="; check_hex(val, $4); print ", ";
+		!
+		@copy $5 sp;
+		@astore destarray2 1 sp;
+		@aload testglobal 0 val;
+		print "arr2-->1="; check_hex(val, $5); print ", ";
+		val = 1;
+		@copy $6 sp;
+		@astore destarray2 val sp;
+		@aload testglobal 0 val;
+		print "arr2-->1="; check_hex(val, $6); print ", ";
+		@copy $7 sp;
+		@astore arr 1 sp;
+		@aload testglobal 0 val;
+		print "arr2-->1="; check_hex(val, $7); print ", ";
+		val = 1;
+		@copy $8 sp;
+		@astore arr val sp;
+		@aload testglobal 0 val;
+		print "arr2-->1="; check_hex(val, $8); print "^";
+		
+		!### astores astoreb
+
+		count_failures();
+	];
+
+TestClass CallTest
+	with name 'call',
+	testfunc [ val;
+		print "Call and tailcall:^^";
+
+		val = arg2adder();
+		print "arg2adder()="; check(val, 0); print ", ";
+		val = arg2adder(4);
+		print "arg2adder(4)="; check(val, 4); print ", ";
+		val = arg2adder(4, 6);
+		print "arg2adder(4,6)="; check(val, 10); print ", ";
+		val = arg2adder(4, 6, 1);
+		print "arg2adder(4,6,1)="; check(val, 10); print "^";
+
+		val = arghasher(4, 6, 1);
+		print "hash(4,6,1)="; check(val, 19); print "^";
+
+		testglobal = 0;
+		val = tailcalltest(2, 3, 4);
+		print "tailcalltest(2,3,4)="; check(val, 18); print ", ";
+		print "testglobal="; check(testglobal, 2); print "^";
+		
+		count_failures();
+	];
+
+[ tailcalltest ix jx kx;
+	testglobal++;
+	ix = ix+jx+kx;
+	@copy ix sp;
+	if (1) @tailcall tailcall2test 1;
+	testglobal = 99;
+	return 99;
+];
+
+[ tailcall2test val;
+	testglobal++;
+	return val*2;
+];
+
+TestClass CallStackTest
+	with name 'callstack',
+	testfunc [ val;
+		print "Call with various stack arrangements:^^";
+
+		val = arghasher(6, 3, 5, 4, 2);
+		print "hash(6,3,5,4,2)="; check(val, 53); print "^";
+
+		@copy 99 sp;
+		@copy 1 sp; @copy 3 sp; @copy 2 sp; @copy 5 sp; @copy 4 sp;
+		@copy arghasher sp;
+		@call sp 5 sp;
+		@copy sp val;
+		print "hash(4,5,2,3,1)="; check(val, 37); print ", ";
+		@copy sp val;
+		print "guard value="; check(val, 99); print "^";
+		
+		@copy 98 sp;
+		@copy 2 sp; @copy 4 sp; @copy 5 sp; @copy 3 sp; @copy 6 sp;
+		@copy 5 sp;
+		@copy arghasher sp;
+		@call sp sp val;
+		print "hash(6,3,5,4,2)="; check(val, 53); print ", ";
+		@copy sp val;
+		print "guard value="; check(val, 98); print "^";
+		
+		@copy 1 sp; @copy 3 sp; @copy 2 sp;
+		noop();
+		@copy 5 sp; @copy 4 sp;
+		@call arghasher 5 val;
+		print "hash(4,5,2,3,1)="; check(val, 37); print "^";
+		
+		@copy 2 sp; @copy 4 sp; @copy 5 sp;
+		noop();
+		@copy 3 sp; @copy 6 sp;
+		@copy 5 sp;
+		@call arghasher sp val;
+		print "hash(6,3,5,4,2)="; check(val, 53); print "^";
+
+		@callf arghasher val;
+		print "hash()="; check(val, 0); print "^";
+		
+		@callfi arghasher 7 val;
+		print "hash(7)="; check(val, 7); print ", ";
+		@copy 8 sp;
+		@callfi arghasher sp val;
+		print "hash(8)="; check(val, 8); print "^";
+		@copy 99 sp;
+		@copy 9 sp;
+		@copy arghasher sp;
+		@callfi sp sp sp;
+		@copy sp val;
+		print "hash(9)="; check(val, 9); print ", ";
+		@copy sp val;
+		print "guard value="; check(val, 99); print "^";
+
+		@copy 98 sp;
+		@copy 8 sp; @copy 7 sp;
+		@call arghasher 2 0;
+		@copy sp val;
+		print "guard value="; check(val, 98); print "^";
+
+		@callfii arghasher 6 7 val;
+		print "hash(6,7)="; check(val, 20); print ", ";
+		@callfiii arghasher 5 7 2 val;
+		print "hash(5,7,2)="; check(val, 25); print "^";
+
+		testglobal = 0;
+
+		@copy 99 sp;
+		@copy 1 sp; @copy 3 sp; @copy 2 sp; @copy 5 sp; @copy 4 sp;
+		@copy arghasher sp;
+		if (testglobal) testglobal++;
+		@call sp 5 sp;
+		@copy sp val;
+		print "hash(4,5,2,3,1)="; check(val, 37); print ", ";
+		@copy sp val;
+		print "guard value="; check(val, 99); print "^";
+		
+		@copy 98 sp;
+		@copy 2 sp; @copy 4 sp; @copy 5 sp; @copy 3 sp; @copy 6 sp;
+		@copy 5 sp;
+		@copy arghasher sp;
+		if (testglobal) testglobal++;
+		@call sp sp val;
+		print "hash(6,3,5,4,2)="; check(val, 53); print ", ";
+		@copy sp val;
+		print "guard value="; check(val, 98); print "^";
+		
+		@copy 1 sp; @copy 3 sp; @copy 2 sp;
+		noop();
+		@copy 5 sp; @copy 4 sp;
+		if (testglobal) testglobal++;
+		@call arghasher 5 val;
+		print "hash(4,5,2,3,1)="; check(val, 37); print "^";
+		
+		@copy 2 sp; @copy 4 sp; @copy 5 sp;
+		noop();
+		@copy 3 sp; @copy 6 sp;
+		@copy 5 sp;
+		if (testglobal) testglobal++;
+		@call arghasher sp val;
+		print "hash(6,3,5,4,2)="; check(val, 53); print "^";
+
+		@callf arghasher val;
+		print "hash()="; check(val, 0); print "^";
+		
+		@callfi arghasher 7 val;
+		print "hash(7)="; check(val, 7); print ", ";
+		@copy 8 sp;
+		if (testglobal) testglobal++;
+		@callfi arghasher sp val;
+		print "hash(8)="; check(val, 8); print "^";
+		@copy 99 sp;
+		@copy 9 sp;
+		@copy arghasher sp;
+		if (testglobal) testglobal++;
+		@callfi sp sp sp;
+		@copy sp val;
+		print "hash(9)="; check(val, 9); print ", ";
+		@copy sp val;
+		print "guard value="; check(val, 99); print "^";
+
+		@copy 98 sp;
+		@copy 8 sp; @copy 7 sp;
+		if (testglobal) testglobal++;
+		@call arghasher 2 0;
+		@copy sp val;
+		print "guard value="; check(val, 98); print "^";
+		
+		count_failures();
+	];
+
+[ arg2adder ix jx;
+	return ix+jx;
+];
+	
+[ arghasher _vararg_count   res ix val;
+	res = 0;
+	for (ix=0 : ix<_vararg_count : ix++) {
+		@copy sp val;
+		res = res + (ix+1) * val;
+	}
+	return res;
+];
+
+[ noop;
+];
+
+TestClass JumpTest
+	with name 'jump' 'branch',
+	testfunc [ val;
+		print "Jumps and branches:^^";
+
+		val = 0;
+		.P0;
+		val++;
+		if (val < 5) {
+			@jump ?P0;
+		}
+		print "Jump loop 5="; check(val, 5); print "^";
+
+		val = 0;
+		@jz val ?P1jz_t;
+		val = false; @jump ?P1jz_f;
+		.P1jz_t;
+		val = true;
+		.P1jz_f;
+		print "jz 0="; check(val, 1); print ", ";
+
+		val = 1;
+		@jz val ?P2jz_t;
+		val = false; @jump ?P2jz_f;
+		.P2jz_t;
+		val = true;
+		.P2jz_f;
+		print "jz 1="; check(val, 0); print ", ";
+
+		val = -1;
+		@jz val ?P3jz_t;
+		val = false; @jump ?P3jz_f;
+		.P3jz_t;
+		val = true;
+		.P3jz_f;
+		print "jz -1="; check(val, 0); print "^";
+
+		val = 0;
+		@jnz val ?P1jnz_t;
+		val = false; @jump ?P1jnz_f;
+		.P1jnz_t;
+		val = true;
+		.P1jnz_f;
+		print "jnz 0="; check(val, 0); print ", ";
+
+		val = $1000000;
+		@jnz val ?P4jnz_t;
+		val = false; @jump ?P4jnz_f;
+		.P4jnz_t;
+		val = true;
+		.P4jnz_f;
+		print "jnz $1000000="; check(val, 1); print ", ";
+
+		val = 1;
+		@jnz val ?P2jnz_t;
+		val = false; @jump ?P2jnz_f;
+		.P2jnz_t;
+		val = true;
+		.P2jnz_f;
+		print "jnz 1="; check(val, 1); print ", ";
+
+		val = -1;
+		@jnz val ?P3jnz_t;
+		val = false; @jump ?P3jnz_f;
+		.P3jnz_t;
+		val = true;
+		.P3jnz_f;
+		print "jnz -1="; check(val, 1); print "^";
+
+		!### more branches
+		
+		count_failures();
+	];
+
+
+TestClass JumpFormTest
+	with name 'jumpform',
+	testfunc [ val;
+		print "Jump with various operand forms:^^";
+
+		val = 1;
+		@"B1:32" ?P1;
+		return;
+		.P1;
+		val = 2;
+		@"B1:32" ?P2;
+		val = 3;
+		.P2;
+		print "Test A0="; check(val, 2); print "^";
+
+		@copy 91 sp;
+		val = 4;
+		@"B1:32" ?P3;
+		return;
+		.P3;
+		val = 5;
+		@"B1:32" ?P4;
+		val = 6;
+		.P4;
+		print "Test A1="; check(val, 5); print ", ";
+		@copy sp val;
+		print "guard val="; check(val, 91); print "^";
+
+		val = test_jump0();
+		print "Test B0="; check(val, 0); print ", ";
+		val = test_jump1();
+		print "B1="; check(val, 1); print "^";
+
+		val = test_var_jump0();
+		print "Test C0="; check(val, 0); print ", ";
+		val = test_var_jump1();
+		print "C1="; check(val, 1); print "^";
+
+		val = test_var_jump(0);
+		print "Test D0="; check(val, 0); print ", ";
+		val = test_var_jump(1);
+		print "D1="; check(val, 1); print "^";
+
+		val = test_computed_jump(2);
+		print "Test E0="; check(val, 2); print ", ";
+		val = test_computed_jump(5);
+		print "E1="; check(val, 3); print ", ";
+		val = test_computed_jump(8);
+		print "E2="; check(val, 4); print ", ";
+		val = test_computed_jump(11);
+		print "E3="; check(val, 5); print ", ";
+		val = test_computed_jump(14);
+		print "E4="; check(val, 6); print "^";
+
+		val = test_push_computed_jump(2);
+		print "Test F0="; check(val, 2); print ", ";
+		val = test_push_computed_jump(5);
+		print "F1="; check(val, 3); print ", ";
+		val = test_push_computed_jump(8);
+		print "F2="; check(val, 9); print "^";
+
+		print "^Jump-if-zero with various operand forms:^^";
+
+		val = test_jz0(0);
+		print "Test B0="; check(val, 0); print ", ";
+		val = test_jz1(0);
+		print "B1="; check(val, 1); print ", ";
+		val = test_jz1(1);
+		print "B2="; check(val, 99); print ", ";
+		val = test_jz1(-1);
+		print "B3="; check(val, 99); print "^";
+
+		val = test_push_computed_jz(0, 2);
+		print "Test F0="; check(val, 2); print ", ";
+		val = test_push_computed_jz(0, 5);
+		print "F1="; check(val, 3); print ", ";
+		val = test_push_computed_jz(0, 8);
+		print "F2="; check(val, 9); print ", ";
+		val = test_push_computed_jz(0, 10);
+		print "F3="; check(val, 5); print ", ";
+		val = test_push_computed_jz(123, 10);
+		print "F4="; check(val, 2); print "^";
+
+		print "^Jump-if-equal with various operand forms:^^";
+
+		val = test_jeq0(4, 4);
+		print "Test B0="; check(val, 0); print ", ";
+		val = test_jeq1(5, 5);
+		print "B1="; check(val, 1); print ", ";
+		val = test_jeq1(5, 0);
+		print "B2="; check(val, 99); print "^";
+
+		val = test_push_computed_jeq(7, 7, 2);
+		print "Test F0="; check(val, 2); print ", ";
+		val = test_push_computed_jeq(7, 7, 5);
+		print "F1="; check(val, 3); print ", ";
+		val = test_push_computed_jeq(7, 7, 8);
+		print "F2="; check(val, 9); print ", ";
+		val = test_push_computed_jeq(7, 7, 10);
+		print "F3="; check(val, 5); print ", ";
+		val = test_push_computed_jeq(7, 6, 10);
+		print "F4="; check(val, 2); print "^";
+
+		count_failures();
+	];
+
+[ test_jump0;
+	@"1:32" 0;
+	return 99;
+];
+
+[ test_jump1;
+	@"1:32" 1;
+	return 99;
+];
+
+[ test_var_jump loc;
+	@"1:32" loc;
+	return 99;
+];
+
+[ test_var_jump0 loc;
+	loc = 0;
+	@"1:32" loc;
+	return 99;
+];
+
+[ test_var_jump1 loc;
+	loc = 1;
+	@"1:32" loc;
+	return 99;
+];
+
+[ test_computed_jump loc;
+	@"1:32" loc;
+	@"1:49" 2;
+	@"1:49" 3;
+	@"1:49" 4;
+	@"1:49" 5;
+	@"1:49" 6;
+];
+
+[ test_push_computed_jump loc;
+	@copy 9 sp;
+	@"1:32" loc;
+	@"1:49" 2;
+	@"1:49" 3;
+	@"1:49" sp;
+	@"1:49" 5;
+	@"1:49" 6;
+];
+
+[ test_jz0 val;
+	@"2:34" val 0;
+	return 99;
+];
+
+[ test_jz1 val;
+	@"2:34" val 1;
+	return 99;
+];
+
+[ test_push_computed_jz val loc;
+	@copy 9 sp;
+	@"2:34" val loc;
+	@"1:49" 2;
+	@"1:49" 3;
+	@"1:49" sp;
+	@"1:49" 5;
+	@"1:49" 6;
+];
+
+[ test_jeq0 val1 val2;
+	@"3:36" val1 val2 0;
+	return 99;
+];
+
+[ test_jeq1 val1 val2;
+	@"3:36" val1 val2 1;
+	return 99;
+];
+
+[ test_push_computed_jeq val1 val2 loc;
+	@copy 9 sp;
+	@"3:36" val1 val2 loc;
+	@"1:49" 2;
+	@"1:49" 3;
+	@"1:49" sp;
+	@"1:49" 5;
+	@"1:49" 6;
+];
+
+TestClass CompareTest
+	with name 'compare',
+	testfunc [ val;
+		print "Compare branches:^^";
+
+		!### both literals and variables in comparisons
+		
+		count_failures();
+	];
+
+TestClass StackTest
+	with name 'stack',
+	testfunc [ val eight;
+		print "Stack operations:^^";
+
+		@stkcount val;
+		print "stkcount="; check(val, 0); print ", ";
+		@copy 5 sp;
+		@stkcount val;
+		print "stkcount="; check(val, 1); print ", ";
+		@copy 6 sp;
+		@stkcount val;
+		print "stkcount="; check(val, 2); print ", ";
+		@copy 77 sp;
+		@stkcount sp;
+		@copy sp val;
+		@copy sp 0;
+		print "stkcount="; check(val, 3); print ", ";
+		noop();
+		@copy 7 sp;
+		noop();
+		@stkcount val;
+		print "stkcount="; check(val, 3); print ", ";
+		noop();
+		@stkcount sp;
+		@copy sp val;
+		print "stkcount="; check(val, 3); print ", ";
+		@stkcount testglobal;
+		@copy testglobal val;
+		print "stkcount="; check(val, 3); print "^";
+
+		! 5 6 7
+		noop();
+		@stkswap;
+		@sub sp sp val;
+		print "sp-sp="; check(val, -1); print ", ";
+		! 5
+		noop();
+		@copy 2 sp;
+		@stkswap;
+		@sub sp sp val;
+		print "sp-sp="; check(val, 3); print ", ";
+		!
+		@copy 5 sp;
+		@copy 4 sp;
+		@stkswap;
+		@sub sp sp val;
+		print "sp-sp="; check(val, 1); print "^";
+
+		eight = 8;
+		
+		@copy 7 sp; @copy eight sp; @copy 9 sp;
+		@stkpeek 0 val;
+		print "peek 0="; check(val, 9); print ", ";
+		@copy sp val; @copy sp val; @copy sp val;
+		@copy 7 sp; @copy eight sp; @copy 9 sp;
+		@stkpeek 1 val;
+		print "peek 1="; check(val, 8); print ", ";
+		@copy sp val; @copy sp val; @copy sp val;
+		@copy 7 sp; @copy eight sp; @copy 9 sp;
+		@stkpeek 2 val;
+		print "peek 2="; check(val, 7); print ", ";
+		@copy sp val; @copy sp val; @copy sp val;
+		!
+		@copy 7 sp; @copy eight sp; @copy 9 sp;
+		noop();
+		@stkpeek 0 val;
+		print "peek 0="; check(val, 9); print ", ";
+		noop();
+		@stkpeek 1 val;
+		print "peek 1="; check(val, 8); print ", ";
+		noop();
+		@stkpeek 2 val;
+		print "peek 2="; check(val, 7); print ", ";
+		@copy sp val; @copy sp val; @copy sp val;
+		!
+		@copy 7 sp; @copy eight sp; noop(); @copy 9 sp;
+		@stkpeek 0 val;
+		print "peek 0="; check(val, 9); print ", ";
+		@copy sp val; @copy sp val; @copy sp val;
+		@copy 7 sp; @copy eight sp; noop(); @copy 9 sp;
+		@stkpeek 1 val;
+		print "peek 1="; check(val, 8); print ", ";
+		@copy sp val; @copy sp val; @copy sp val;
+		@copy 7 sp; @copy eight sp; noop(); @copy 9 sp;
+		@stkpeek 2 val;
+		print "peek 2="; check(val, 7); print "^";
+		@copy sp val; @copy sp val; @copy sp val;
+
+		@stkcount val;
+		print "count="; check(val, 0); print "^";
+
+		@copy 7 sp; @copy eight sp; @copy 9 sp;
+		@stkpeek 0 sp; @copy sp val;
+		print "peek 0="; check(val, 9); print ", ";
+		@copy sp val; @copy sp val; @copy sp val;
+		@copy 7 sp; @copy eight sp; @copy 9 sp;
+		@stkpeek 1 sp; @copy sp val;
+		print "peek 1="; check(val, 8); print ", ";
+		@copy sp val; @copy sp val; @copy sp val;
+		@copy 7 sp; @copy eight sp; @copy 9 sp;
+		@stkpeek 2 sp; @copy sp val;
+		print "peek 2="; check(val, 7); print ", ";
+		@copy sp val; @copy sp val; @copy sp val;
+		!
+		@copy 7 sp; @copy eight sp; @copy 9 sp;
+		noop();
+		@stkpeek 0 sp; @copy sp val;
+		print "peek 0="; check(val, 9); print ", ";
+		noop();
+		@stkpeek 1 sp; @copy sp val;
+		print "peek 1="; check(val, 8); print ", ";
+		noop();
+		@stkpeek 2 sp; @copy sp val;
+		print "peek 2="; check(val, 7); print ", ";
+		@copy sp val; @copy sp val; @copy sp val;
+		!
+		@copy 7 sp; @copy eight sp; noop(); @copy 9 sp;
+		@stkpeek 0 sp; @copy sp val;
+		print "peek 0="; check(val, 9); print ", ";
+		@copy sp val; @copy sp val; @copy sp val;
+		@copy 7 sp; @copy eight sp; noop(); @copy 9 sp;
+		@stkpeek 1 sp; @copy sp val;
+		print "peek 1="; check(val, 8); print ", ";
+		@copy sp val; @copy sp val; @copy sp val;
+		@copy 7 sp; @copy eight sp; noop(); @copy 9 sp;
+		@stkpeek 2 sp; @copy sp val;
+		print "peek 2="; check(val, 7); print "^";
+		@copy sp val; @copy sp val; @copy sp val;
+
+		@stkcount val;
+		print "count="; check(val, 0); print "^";
+
+		@copy 7 sp; @copy eight sp; @copy 9 sp;
+		testglobal=0; @stkpeek testglobal sp; @copy sp val;
+		print "peek 0="; check(val, 9); print ", ";
+		@copy sp val; @copy sp val; @copy sp val;
+		@copy 7 sp; @copy eight sp; @copy 9 sp;
+		testglobal=1; @stkpeek testglobal sp; @copy sp val;
+		print "peek 1="; check(val, 8); print ", ";
+		@copy sp val; @copy sp val; @copy sp val;
+		@copy 7 sp; @copy eight sp; @copy 9 sp;
+		testglobal=2; @stkpeek testglobal sp; @copy sp val;
+		print "peek 2="; check(val, 7); print ", ";
+		@copy sp val; @copy sp val; @copy sp val;
+		!
+		@copy 7 sp; @copy eight sp; @copy 9 sp;
+		noop();
+		testglobal=0; @stkpeek testglobal sp; @copy sp val;
+		print "peek 0="; check(val, 9); print ", ";
+		noop();
+		testglobal=1; @stkpeek testglobal sp; @copy sp val;
+		print "peek 1="; check(val, 8); print ", ";
+		noop();
+		testglobal=2; @stkpeek testglobal sp; @copy sp val;
+		print "peek 2="; check(val, 7); print ", ";
+		@copy sp val; @copy sp val; @copy sp val;
+		!
+		@copy 7 sp; @copy eight sp; noop(); @copy 9 sp;
+		testglobal=0; @stkpeek testglobal sp; @copy sp val;
+		print "peek 0="; check(val, 9); print ", ";
+		@copy sp val; @copy sp val; @copy sp val;
+		@copy 7 sp; @copy eight sp; noop(); @copy 9 sp;
+		testglobal=1; @stkpeek testglobal sp; @copy sp val;
+		print "peek 1="; check(val, 8); print ", ";
+		@copy sp val; @copy sp val; @copy sp val;
+		@copy 7 sp; @copy eight sp; noop(); @copy 9 sp;
+		testglobal=2; @stkpeek testglobal sp; @copy sp val;
+		print "peek 2="; check(val, 7); print "^";
+		@copy sp val; @copy sp val; @copy sp val;
+
+		@stkcount val;
+		print "count="; check(val, 0); print "^";
+
+		@copy 7 sp; @copy eight sp; @copy 9 sp;
+		testglobal=0; @stkpeek testglobal val;
+		print "peek 0="; check(val, 9); print ", ";
+		@copy sp val; @copy sp val; @copy sp val;
+		@copy 7 sp; @copy eight sp; @copy 9 sp;
+		testglobal=1; @stkpeek testglobal val;
+		print "peek 1="; check(val, 8); print ", ";
+		@copy sp val; @copy sp val; @copy sp val;
+		@copy 7 sp; @copy eight sp; @copy 9 sp;
+		testglobal=2; @stkpeek testglobal val;
+		print "peek 2="; check(val, 7); print ", ";
+		@copy sp val; @copy sp val; @copy sp val;
+		!
+		@copy 7 sp; @copy eight sp; @copy 9 sp;
+		noop();
+		testglobal=0; @stkpeek testglobal val;
+		print "peek 0="; check(val, 9); print ", ";
+		noop();
+		testglobal=1; @stkpeek testglobal val;
+		print "peek 1="; check(val, 8); print ", ";
+		noop();
+		testglobal=2; @stkpeek testglobal val;
+		print "peek 2="; check(val, 7); print ", ";
+		@copy sp val; @copy sp val; @copy sp val;
+		!
+		@copy 7 sp; @copy eight sp; noop(); @copy 9 sp;
+		testglobal=0; @stkpeek testglobal val;
+		print "peek 0="; check(val, 9); print ", ";
+		@copy sp val; @copy sp val; @copy sp val;
+		@copy 7 sp; @copy eight sp; noop(); @copy 9 sp;
+		testglobal=1; @stkpeek testglobal val;
+		print "peek 1="; check(val, 8); print ", ";
+		@copy sp val; @copy sp val; @copy sp val;
+		@copy 7 sp; @copy eight sp; noop(); @copy 9 sp;
+		testglobal=2; @stkpeek testglobal val;
+		print "peek 2="; check(val, 7); print "^";
+		@copy sp val; @copy sp val; @copy sp val;
+
+		@stkcount val;
+		print "count="; check(val, 0); print "^";
+
+		@copy 7 sp; @copy eight sp; @copy 9 sp;
+		@copy 1 sp;
+		@stkpeek sp sp; @copy sp val;
+		print "peek 1="; check(val, 8); print ", ";
+		@copy 1 sp;
+		noop();
+		@stkpeek sp sp; @copy sp val;
+		print "peek 1="; check(val, 8); print ", ";
+		noop();
+		@copy 1 sp;
+		@stkpeek sp sp; @copy sp val;
+		print "peek 1="; check(val, 8); print ", ";
+		!
+		@copy 0 sp;
+		@stkpeek sp sp; @copy sp val;
+		print "peek 0="; check(val, 9); print ", ";
+		@copy 0 sp;
+		noop();
+		@stkpeek sp sp; @copy sp val;
+		print "peek 0="; check(val, 9); print ", ";
+		noop();
+		@copy 0 sp;
+		@stkpeek sp sp; @copy sp val;
+		print "peek 0="; check(val, 9); print ", ";
+		!
+		testglobal = 2;
+		@copy testglobal sp;
+		@stkpeek sp sp; @copy sp val;
+		print "peek 2="; check(val, 7); print ", ";
+		@copy testglobal sp;
+		noop();
+		@stkpeek sp sp; @copy sp val;
+		print "peek 2="; check(val, 7); print ", ";
+		noop();
+		@copy testglobal sp;
+		@stkpeek sp sp; @copy sp val;
+		print "peek 2="; check(val, 7); print "^";
+		!
+		@copy sp val; @copy sp val; @copy sp val;
+
+		@stkcount val;
+		print "count="; check(val, 0); print "^";
+
+		@copy 2 sp; @copy 3 sp; @copy 4 sp;
+		@stkcount val;
+		@call arghasher val val;
+		print "hash(4,3,2)="; check(val, 16); print ", ";
+		@copy 2 sp; @copy 3 sp; @copy 5 sp;
+		@stkcopy 3;
+		@stkcount val;
+		@call arghasher val val;
+		print "hash(5,3,2,5,3,2)="; check(val, 64); print ", ";
+		@copy 2 sp; @copy 3 sp; @copy 4 sp; noop();
+		@stkcopy 3;
+		@stkcount val;
+		@call arghasher val val;
+		print "hash(4,3,2,4,3,2)="; check(val, 59); print ", ";
+		@copy 2 sp; @copy 3 sp; noop(); @copy 5 sp; 
+		@stkcopy 3;
+		@stkcount val;
+		@call arghasher val val;
+		print "hash(5,3,2,5,3,2)="; check(val, 64); print "^";
+		
+		@stkcopy 0;
+		@stkcount val;
+		print "stkcount="; check(val, 0); print "^";
+
+		testglobal = 3;
+		@copy 2 sp; @copy 3 sp; @copy 5 sp;
+		@stkcopy testglobal;
+		@stkcount val;
+		@call arghasher val val;
+		print "hash(5,3,2,5,3,2)="; check(val, 64); print ", ";
+		@copy 2 sp; @copy 3 sp; @copy 4 sp; noop();
+		@stkcopy testglobal;
+		@stkcount val;
+		@call arghasher val val;
+		print "hash(4,3,2,4,3,2)="; check(val, 59); print ", ";
+		@copy 2 sp; @copy 3 sp; noop(); @copy 5 sp; 
+		@stkcopy testglobal;
+		@stkcount val;
+		@call arghasher val val;
+		print "hash(5,3,2,5,3,2)="; check(val, 64); print "^";
+
+		@stkcount val;
+		print "stkcount="; check(val, 0); print "^";
+		
+		@copy 5 sp; @copy 4 sp; @copy 3 sp;
+		@copy 2 sp;
+		@stkcopy sp;
+		@stkcount val;
+		@call arghasher val val;
+		print "hash(3,4,3,4,5)="; check(val, 61); print ", ";
+		@copy 5 sp; @copy 4 sp; noop(); @copy 3 sp;
+		@copy 2 sp;
+		@stkcopy sp;
+		@stkcount val;
+		@call arghasher val val;
+		print "hash(3,4,3,4,5)="; check(val, 61); print ", ";
+		@copy 5 sp; @copy 4 sp; @copy 3 sp;
+		@copy 2 sp; noop();
+		@stkcopy sp;
+		@stkcount val;
+		@call arghasher val val;
+		print "hash(3,4,3,4,5)="; check(val, 61); print ", ";
+		@copy 5 sp; @copy 4 sp; @copy 3 sp;
+		noop(); @copy 2 sp;
+		@stkcopy sp;
+		@stkcount val;
+		@call arghasher val val;
+		print "hash(3,4,3,4,5)="; check(val, 61); print "^";
+
+		@stkcount val;
+		print "stkcount="; check(val, 0); print "^";
+
+		@copy 1 sp; @copy 2 sp; @copy 3 sp; @copy 4 sp; @copy 6 sp;
+		@stkcount val;
+		@call arghasher val val;
+		print "hash(6,4,3,2,1)="; check(val, 36); print ", ";
+		@copy 1 sp; @copy 2 sp; @copy 3 sp; @copy 4 sp; @copy 6 sp;
+		@stkroll 3 1;
+		@stkcount val;
+		@call arghasher val val;
+		print "hash(4,3,6,2,1)="; check(val, 41); print ", ";
+		@copy 1 sp; @copy 2 sp; @copy 3 sp; @copy 4 sp; @copy 6 sp;
+		@stkroll 3 (-1);
+		@stkcount val;
+		@call arghasher val val;
+		print "hash(3,6,4,2,1)="; check(val, 40); print ", ";
+		@copy 1 sp; @copy 2 sp; @copy 3 sp; @copy 4 sp; @copy 6 sp;
+		@stkroll 3 (-2);
+		@stkcount val;
+		@call arghasher val val;
+		print "hash(4,3,6,2,1)="; check(val, 41); print ", ";
+		@copy 1 sp; @copy 2 sp; @copy 3 sp; @copy 4 sp; @copy 6 sp;
+		@stkroll 3 2;
+		@stkcount val;
+		@call arghasher val val;
+		print "hash(3,6,4,2,1)="; check(val, 40); print ", ";
+		@copy 1 sp; @copy 2 sp; @copy 3 sp; @copy 4 sp; @copy 6 sp;
+		@stkroll 3 3;
+		@stkcount val;
+		@call arghasher val val;
+		print "hash(6,4,3,2,1)="; check(val, 36); print ", ";
+		@copy 1 sp; @copy 2 sp; @copy 3 sp; @copy 4 sp; @copy 6 sp;
+		@stkroll 3 (-6);
+		@stkcount val;
+		@call arghasher val val;
+		print "hash(6,4,3,2,1)="; check(val, 36); print "^";
+		@copy 1 sp; @copy 2 sp; @copy 3 sp; @copy 4 sp; @copy 6 sp;
+		@copy 1 sp; @copy 4 sp;
+		@stkroll sp sp;
+		@stkcount val;
+		@call arghasher val val;
+		print "hash(4,3,2,6,1)="; check(val, 45); print ", ";
+		@copy 1 sp; @copy 2 sp; @copy 3 sp; @copy 4 sp; @copy 6 sp;
+		@copy (-1) sp; @copy 4 sp;
+		@stkroll sp sp;
+		@stkcount val;
+		@call arghasher val val;
+		print "hash(2,6,4,3,1)="; check(val, 43); print "^";
+		@copy 1 sp; @copy 2 sp; @copy 3 sp; @copy 4 sp; @copy 6 sp;
+		@copy 1 sp; @copy 4 sp;
+		noop();
+		@stkroll sp sp;
+		@stkcount val;
+		@call arghasher val val;
+		print "hash(4,3,2,6,1)="; check(val, 45); print ", ";
+		@copy 1 sp; @copy 2 sp; @copy 3 sp; @copy 4 sp; @copy 6 sp;
+		@copy (-1) sp; @copy 4 sp;
+		noop();
+		@stkroll sp sp;
+		@stkcount val;
+		@call arghasher val val;
+		print "hash(2,6,4,3,1)="; check(val, 43); print "^";
+		
+		count_failures();
+	];
+

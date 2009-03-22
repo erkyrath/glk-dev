@@ -1,0 +1,79 @@
+Constant Story "MemHeapTest";
+Constant Headline "^Not a game.^";
+
+! Unit test for the @malloc and @mfree opcodes.
+
+Include "Parser";
+Include "VerbLib";
+
+Global bignum; ! storage for BigNumber grammar token.
+
+[ Initialise;
+  location = Kitchen;
+];
+
+Object Kitchen "Heap Room"
+  with
+    description "A voice booooms out: Try ~status~, ~alloc LEN~, and
+		~free ADDR~, where LEN and ADDR are numbers.",
+  has light;
+
+[ StatusSub val val2;
+	@gestalt 8 0 val;
+	@getmemsize val2;
+	if (val == 0)
+		print "Heap inactive.^";
+	else
+		print "Heap exists from ", val, " to ", val2, ".^";
+];
+
+[ MallocSub res;
+	print "Allocating ", bignum, " bytes...^";
+	@malloc bignum res;
+	if (res == 0)
+		"Failed.";
+	else
+		"Allocated block at ", res, ".";
+];
+
+[ MfreeSub;
+	print "Freeing block at ", bignum, "...^";
+	@mfree bignum;
+];
+
+Include "Grammar";
+
+! Parse one word from the input into a (non-negative) integer, and store
+! that in the global bignum.
+!
+[ BigNumber addr len ix ch;
+
+	if (wn > num_words)
+		return GPR_FAIL;
+	addr = WordAddress(wn);
+	len = WordLength(wn);
+	wn++;
+
+	bignum = 0;
+	for (ix=0 : ix<len : ix++) {
+		ch = addr->ix;
+		switch (addr->ix) {
+			'0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
+				bignum = bignum*10 + (ch-'0');
+			default:
+				return GPR_FAIL;
+		}
+	}
+
+	return GPR_PREPOSITION;
+];
+
+Verb 'status'
+	* -> Status;
+
+Verb 'malloc' 'alloc'
+	* BigNumber -> Malloc;
+
+Verb 'mfree' 'free'
+	* BigNumber -> Mfree;
+
