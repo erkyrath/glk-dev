@@ -1895,6 +1895,137 @@ TestClass AstoreTest
 		count_failures();
 	];
 
+TestClass ArrayBitTest
+	with name 'arraybit' 'aloadbit' 'astorebit' 'abit' 'abits',
+	testfunc [ val ix res arr;
+		print "Aloadbit and astorebit:^^";
+
+		for (ix=0 : ix<16 : ix++) {
+			res = 0;
+			if (ix == 0 or 9)
+				res = 1;
+			@aloadbit testarray ix val;
+			print "bit ", ix, "="; check(val, res); print ", ";
+		}
+		print "^";
+		for (ix=-8 : ix<16 : ix++) {
+			res = 0;
+			@copy ix sp;
+			@copy testarray2 sp;
+			if (ix < -4 || (ix >= 0 && ix < 7))
+				res = 1;
+			@aloadbit sp sp val;
+			print "bit ", ix, "="; check(val, res); print ", ";
+		}
+		print "^";
+		for (ix=-8 : ix<16 : ix++) {
+			res = 0;
+			if (ix < -4 || (ix >= 0 && ix < 7))
+				res = 1;
+			@aloadbit testarray2 ix val;
+			print "bit ", ix, "="; check(val, res); print ", ";
+		}
+		print "^";
+
+		@aloadbit testarray2 22 val;
+		print "bit 22="; check(val, 0); print ", ";
+		@aloadbit testarray2 23 val;
+		print "bit 23="; check(val, 1); print ", ";
+		@aloadbit testarray2 24 val;
+		print "bit 24="; check(val, 0); print ", ";
+		@aloadbit testarray2 25 val;
+		print "bit 25="; check(val, 1); print "^";
+		@aloadbit testarray2 (-31) val;
+		print "bit -31="; check(val, 0); print ", ";
+		@aloadbit testarray2 (-32) val;
+		print "bit -32="; check(val, 0); print ", ";
+		@aloadbit testarray2 (-33) val;
+		print "bit -33="; check(val, 1); print ", ";
+		@aloadbit testarray2 (-34) val;
+		print "bit -34="; check(val, 1); print "^";
+
+		arr = testarray2+1;
+		@aloadbit arr 14 val;
+		print "bit 22="; check(val, 0); print ", ";
+		@aloadbit arr 15 val;
+		print "bit 23="; check(val, 1); print ", ";
+		@aloadbit arr 16 val;
+		print "bit 24="; check(val, 0); print ", ";
+		@aloadbit arr 17 val;
+		print "bit 25="; check(val, 1); print "^";
+		@aloadbit arr (-39) val;
+		print "bit -31="; check(val, 0); print ", ";
+		@aloadbit arr (-40) val;
+		print "bit -32="; check(val, 0); print ", ";
+		@aloadbit arr (-41) val;
+		print "bit -33="; check(val, 1); print ", ";
+		@aloadbit arr (-42) val;
+		print "bit -34="; check(val, 1); print "^";
+		
+		arr = destarray;
+		for (val=0 : val<24 : val++)
+			arr->val = 0;
+		@astoreb destarray 1 $ff;
+		
+		@astorebit destarray 1 1;
+		@aloadb destarray 0 val;
+		print "bit 1 on="; check_hex(val, $2); print ", ";
+		@astorebit destarray 6 $ff;
+		@aloadb destarray 0 val;
+		print "bit 6 on="; check_hex(val, $42); print ", ";
+		@astorebit destarray 3 $80000000;
+		@aloadb destarray 0 val;
+		print "bit 3 on="; check_hex(val, $4a); print ", ";
+		@astorebit destarray 0 0;
+		@aloadb destarray 0 val;
+		print "bit 0 off="; check_hex(val, $4a); print ", ";
+		@astorebit destarray 6 0;
+		@aloadb destarray 0 val;
+		print "bit 6 off="; check_hex(val, $0a); print "^";
+		@astorebit destarray 15 0;
+		@aloadb destarray 1 val;
+		print "bit 15 off="; check_hex(val, $7f); print ", ";
+		@astorebit destarray 12 2;
+		@aloadb destarray 1 val;
+		print "bit 12 on="; check_hex(val, $7f); print ", ";
+		@astorebit destarray 8 0;
+		@aloadb destarray 1 val;
+		print "bit 8 off="; check_hex(val, $7e); print "^";
+		@astorebit destarray2 (-1) 1;
+		@aloadb destarray2 (-1) val;
+		print "bit -1 on="; check_hex(val, $80); print ", ";
+		@astorebit destarray2 (-8) 1;
+		@aloadb destarray2 (-1) val;
+		print "bit -8 on="; check_hex(val, $81); print "^";
+
+		@astore destarray 0 0;
+		res = 0;
+		for (ix=0 : ix < 32 : ix++) {
+			arr = (8*(3-(ix/8)) + (ix&7));
+			@shiftl 1 arr arr;
+			res = res + arr;
+			@astorebit destarray ix 1;
+			@aload destarray 0 val;
+			check_hex(val, res); print ", ";
+		}
+		print "^";
+		res = -1;
+		for (ix=0 : ix < 32 : ix++) {
+			arr = (8*(3-(ix/8)) + (ix&7));
+			@shiftl 1 arr arr;
+			res = res - arr;
+			@copy ix sp;
+			@copy destarray sp;
+			if (testglobal) testglobal++;
+			@astorebit sp sp 0;
+			@aload destarray 0 val;
+			check_hex(val, res); print ", ";
+		}
+		print "^";
+			
+		count_failures();
+	];
+
 TestClass CallTest
 	with name 'call',
 	testfunc [ val;
