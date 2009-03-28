@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-"""
+r"""
 encode-table.py: generate Glulx string objects and a Glulx string encoding
 table, as I6 source code.
 
@@ -59,6 +59,7 @@ import bisect
 string_table = {}
 huff_ents = {}
 ent_bits = {}
+double_count = 1
 verbose = ('-v' in sys.argv)
 
 def add_entity(res, ent):
@@ -67,6 +68,7 @@ def add_entity(res, ent):
     huff_ents[ent] = count+1
 
 def parse_text(ln, label):
+    global double_count
     length = len(ln)
     res = []
     pos = 0
@@ -98,6 +100,36 @@ def parse_text(ln, label):
             ch = unichr(int(ch, 16))
             pos += 4
             ent = (4, ch)
+            add_entity(res, ent)
+            continue
+        if (ch == '('):
+            endpos = ln.find(')', pos)
+            if (endpos < 0):
+                sys.stderr.write('Unterminated reference in line: ' + label + '\n')
+                continue
+            refname = ln[ pos : endpos ]
+            pos = endpos+1
+            args = None
+            if (' ' in refname):
+                subls = refname.split(' ')
+                subls = [ val for val in subls if val ]
+                refname = subls.pop(0)
+                args = tuple(subls)
+            try:
+                refnum = int(refname)
+            except:
+                refnum = None
+            if (refnum is None):
+                if (args is None):
+                    ent = (8, refname)
+                else:
+                    ent = (10, refname, args)
+            else:
+                double_count = max(double_count, refnum+1)
+                if (args is None):
+                    ent = (9, refnum)
+                else:
+                    ent = (11, refnum, args)
             add_entity(res, ent)
             continue
         if (ch == "'"):
@@ -160,6 +192,10 @@ def compute_tree(ls, tree, addr=12, bits=''):
         nodelen = 5
     elif (typ == 5):
         nodelen = 5 + 4*len(tree[1])
+    elif (typ == 8 or typ == 9):
+        nodelen = 5
+    elif (typ == 10 or typ == 11):
+        nodelen = 9 + 4*len(tree[2])
     else:
         raise Exception("Unknown node type " + str(typ))
 
@@ -214,6 +250,36 @@ def write_tree(mem, ls):
             MemW4(mem, addr, 0)
         elif (typ == 4):
             MemW4(mem, addr+1, ord(ent[1]))
+        elif (typ == 8):
+            addr += 1
+            MemW4(mem, addr, 0)
+            refs.append( (addr, ent[1]) )
+        elif (typ == 9):
+            addr += 1
+            MemW4(mem, addr, 0)
+            refs.append( (addr, 'double_indirect+'+str(4*ent[1])) )
+        elif (typ == 10):
+            addr += 1
+            MemW4(mem, addr, 0)
+            refs.append( (addr, ent[1]) )
+            addr += 4
+            MemW4(mem, addr, len(ent[2]))
+            addr += 4
+            for val in ent[2]:
+                MemW4(mem, addr, 0)
+                refs.append( (addr, val) )
+                addr += 4
+        elif (typ == 11):
+            addr += 1
+            MemW4(mem, addr, 0)
+            refs.append( (addr, 'double_indirect+'+str(4*ent[1])) )
+            addr += 4
+            MemW4(mem, addr, len(ent[2]))
+            addr += 4
+            for val in ent[2]:
+                MemW4(mem, addr, 0)
+                refs.append( (addr, val) )
+                addr += 4
     return (patches, refs)
 
 while (True):
@@ -286,6 +352,7 @@ print 'Array encoding_table ->', print_table(mem)
 patches.append(0)
 print 'Array encoding_patches -->', print_table(patches, 12)
 print 'Global table_patched = false;'
+print '\n! Call this before you do "@setstringtbl encoding_table".'
 print '[ patch_encoding_table   addr ix;'
 print '  if (table_patched) return;'
 print '  table_patched = true;'
@@ -301,6 +368,9 @@ for (addr, offset) in refs:
     print '  addr = encoding_table + ' + str(addr) + ';',
     print 'addr-->0 = ' + offset + ';'
 print '];'
+
+print '\n! Double-indirect references: (start out as all zeroes)'
+print 'Array double_indirect -->', double_count, ';'
 
 print '\n! String objects\n'
 
