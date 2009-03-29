@@ -311,6 +311,44 @@ Class TestClass
 	}
 ];
 
+[ string_to_array val arr arrlen    str oldstr len;
+	oldstr = glk($0048); ! stream_get_current
+	str = glk($0043, arr, arrlen, 1, 0); ! stream_open_memory
+	if (str == 0) return 0;
+
+	glk($0047, str); ! stream_set_current
+
+	@streamstr val;
+
+	glk($0047, oldstr); ! stream_set_current
+	@copy $ffffffff sp;
+	@copy str sp;
+	@glk $0044 2 0; ! stream_close
+	@copy sp len;
+	@copy sp 0;
+
+	return len;
+];
+
+[ string_to_uniarray val arr arrlen    str oldstr len;
+	oldstr = glk($0048); ! stream_get_current
+	str = glk($0139, arr, arrlen, 1, 0); ! stream_open_memory_uni
+	if (str == 0) return 0;
+
+	glk($0047, str); ! stream_set_current
+
+	@streamstr val;
+
+	glk($0047, oldstr); ! stream_set_current
+	@copy $ffffffff sp;
+	@copy str sp;
+	@glk $0044 2 0; ! stream_close
+	@copy sp len;
+	@copy sp 0;
+
+	return len;
+];
+	
 [ check val wanted;
 	if (val == wanted) {
 		print val;
@@ -329,6 +367,64 @@ Class TestClass
 	failures++;
 	print (Hex) val, " (should be ", (Hex) wanted, " FAIL)";
 	rfalse;
+];
+
+[ check_str str len  newlen ix good ch;
+	good = true;
+	newlen = string_to_array(str, bigbuffer2, BIGBUFSIZE);
+	if (newlen ~= len) {
+		good = false;
+	}
+	else {
+		for (ix=0 : ix<len : ix++) {
+			if (bigbuffer->ix ~= bigbuffer2->ix)
+				good = false;
+		}
+	}
+	print "~";
+	for (ix=0 : ix<len : ix++) {
+		ch = bigbuffer->ix;
+		@streamchar ch;
+	}
+	print "~ len ", len;
+	if (~~good) {
+		failures++;
+		print " (should be ~";
+		for (ix=0 : ix<newlen : ix++) {
+			ch = bigbuffer2->ix;
+			@streamchar ch;
+		}
+		print "~ len ", newlen, ", FAIL)";
+	}
+];
+
+[ check_ustr str len  newlen ix good ch;
+	good = true;
+	newlen = string_to_uniarray(str, bigubuffer2, BIGBUFSIZE);
+	if (newlen ~= len) {
+		good = false;
+	}
+	else {
+		for (ix=0 : ix<len : ix++) {
+			if (bigubuffer-->ix ~= bigubuffer2-->ix)
+				good = false;
+		}
+	}
+	print "~";
+	for (ix=0 : ix<len : ix++) {
+		ch = bigubuffer-->ix;
+		@streamunichar ch;
+	}
+	print "~ len ", len;
+	if (~~good) {
+		failures++;
+		print " (should be ~";
+		for (ix=0 : ix<newlen : ix++) {
+			ch = bigubuffer2-->ix;
+			@streamunichar ch;
+		}
+		print "~ len ", newlen, ", FAIL)";
+	}
 ];
 
 [ count_failures   val;
@@ -1899,6 +1995,13 @@ TestClass ArrayBitTest
 	with name 'arraybit' 'aloadbit' 'astorebit' 'abit' 'abits',
 	testfunc [ val ix res arr;
 		print "Aloadbit and astorebit:^^";
+		
+		print "### ";
+		for (ix=0 : ix<20 : ix++) {
+			@aloadb testarray ix val;
+			print " ", (Hex) val;
+		}
+		print "^";
 
 		for (ix=0 : ix<16 : ix++) {
 			res = 0;
@@ -2885,3 +2988,261 @@ TestClass StackTest
 		count_failures();
 	];
 
+! The following is imported from encode-table.
+! -----------
+Array encoding_table -> 0 0 3 90 0 0 0 117 0 0 0 12 0 0 0 0 21 0 0 2
+    97 0 0 0 0 30 0 0 1 230 0 0 0 0 39 0 0 1 110 0 0 0 0 48 0
+    0 0 215 0 0 0 0 57 0 0 0 104 0 0 0 0 66 0 0 0 85 0 0 0 0
+    75 0 0 0 80 4 0 0 0 101 4 0 0 0 111 0 0 0 0 94 0 0 0 99 4
+    0 0 3 177 4 0 0 48 169 0 0 0 0 113 0 0 0 196 0 0 0 0 122 0 0
+    0 155 5 0 0 0 115 0 0 0 101 0 0 0 118 0 0 0 101 0 0 0 114 0 0
+    0 97 0 0 0 108 0 0 0 0 5 0 0 0 115 0 0 0 117 0 0 0 98 0 0
+    0 115 0 0 0 116 0 0 0 114 0 0 0 105 0 0 0 110 0 0 0 103 0 0 0
+    0 0 0 0 0 205 0 0 0 210 8 0 0 0 0 8 0 0 0 0 0 0 0 0 224
+    0 0 1 23 0 0 0 0 233 0 0 0 252 0 0 0 0 242 0 0 0 247 9 0 0
+    0 0 9 0 0 0 0 0 0 0 1 5 0 0 1 10 9 0 0 0 0 10 0 0 0
+    0 0 0 0 1 0 0 0 0 0 0 0 1 32 0 0 1 71 0 0 0 1 41 0 0
+    1 58 10 0 0 0 0 0 0 0 2 0 0 0 0 0 0 0 0 10 0 0 0 0 0
+    0 0 1 0 0 0 0 0 0 0 1 80 0 0 1 97 10 0 0 0 0 0 0 0 2
+    0 0 0 0 0 0 0 0 11 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 1
+    119 0 0 1 195 0 0 0 1 128 0 0 1 182 0 0 0 1 137 0 0 1 180 0 0
+    0 1 146 0 0 1 163 11 0 0 0 0 0 0 0 2 0 0 0 0 0 0 0 0 11
+    0 0 0 0 0 0 0 2 0 0 0 0 0 0 0 0 2 10 0 0 0 1 191 0 0
+    1 193 2 99 2 102 0 0 0 1 204 0 0 1 217 0 0 0 1 213 0 0 1 215 2
+    103 2 106 0 0 0 1 226 0 0 1 228 2 107 2 109 0 0 0 1 239 0 0 2 62
+    0 0 0 1 248 0 0 2 27 0 0 0 2 1 0 0 2 14 0 0 0 2 10 0 0
+    2 12 2 113 2 114 0 0 0 2 23 0 0 2 25 2 117 2 118 0 0 0 2 36 0
+    0 2 49 0 0 0 2 45 0 0 2 47 2 119 2 120 0 0 0 2 58 0 0 2 60
+    2 122 2 224 0 0 0 2 71 0 0 2 84 0 0 0 2 80 0 0 2 82 2 32 2
+    34 0 0 0 2 93 0 0 2 95 2 104 2 108 0 0 0 2 106 0 0 2 162 0 0
+    0 2 115 0 0 2 161 0 0 0 2 124 0 0 2 137 0 0 0 2 133 0 0 2 135
+    2 115 2 121 0 0 0 2 146 0 0 2 148 2 101 0 0 0 2 157 0 0 2 159 2
+    97 2 98 1 0 0 0 2 171 0 0 2 217 0 0 0 2 180 0 0 2 215 0 0 0
+    2 189 0 0 2 202 0 0 0 2 198 0 0 2 200 2 100 2 105 0 0 0 2 211 0
+    0 2 213 2 110 2 111 2 91 0 0 0 2 226 0 0 2 228 2 93 0 0 0 2 237
+    0 0 2 250 0 0 0 2 246 0 0 2 248 2 112 2 116 0 0 0 3 3 0 0 3
+    38 0 0 0 3 12 0 0 3 25 0 0 0 3 21 0 0 3 23 2 46 2 84 0 0
+    0 3 34 0 0 3 36 2 232 2 236 0 0 0 3 47 0 0 3 60 0 0 0 3 56
+    0 0 3 58 2 242 2 249 0 0 0 3 69 0 0 3 79 3 99 111 110 116 97 105 110
+    115 0 3 115 117 98 115 116 114 105 110 103 0;
+Array encoding_patches --> 8 13 17 22 26 31 35 40 44 49 53 58
+    62 67 71 86 90 105 109 114 118 197 201 216 220 225 229 234 238
+    253 257 280 284 289 293 328 332 367 371 376 380 385 389 394 398 439
+    443 452 456 461 465 474 478 487 491 496 500 505 509 514 518 527 531
+    540 544 549 553 562 566 575 579 584 588 597 601 610 614 619 623 628
+    632 637 641 650 654 661 665 675 679 684 688 693 697 702 706 715 719
+    730 734 741 745 750 754 763 767 772 776 781 785 794 798 807 811 816
+    820 829 833 0;
+Global table_patched = false;
+
+! Call this before you do "@setstringtbl encoding_table".
+[ patch_encoding_table   addr ix;
+  if (table_patched) return;
+  table_patched = true;
+  ix = 0;
+  while (1) {
+    addr = encoding_patches-->ix;
+    if (addr == 0) break;
+    addr = addr + encoding_table;
+    addr-->0 = addr-->0 + encoding_table;
+    ix++;
+  }
+  addr = encoding_table + 206; addr-->0 = argprint;
+  addr = encoding_table + 211; addr-->0 = hello_str;
+  addr = encoding_table + 243; addr-->0 = double_indirect+0;
+  addr = encoding_table + 248; addr-->0 = double_indirect+4;
+  addr = encoding_table + 262; addr-->0 = double_indirect+8;
+  addr = encoding_table + 267; addr-->0 = argprint;
+  addr = encoding_table + 275; addr-->0 = 1;
+  addr = encoding_table + 298; addr-->0 = argprint;
+  addr = encoding_table + 306; addr-->0 = 1;
+  addr = encoding_table + 310; addr-->0 = 2;
+  addr = encoding_table + 315; addr-->0 = hello_str;
+  addr = encoding_table + 323; addr-->0 = 1;
+  addr = encoding_table + 337; addr-->0 = nativeprint;
+  addr = encoding_table + 345; addr-->0 = "foo";
+  addr = encoding_table + 349; addr-->0 = "bar";
+  addr = encoding_table + 354; addr-->0 = double_indirect+0;
+  addr = encoding_table + 362; addr-->0 = 1;
+  addr = encoding_table + 403; addr-->0 = double_indirect+4;
+  addr = encoding_table + 411; addr-->0 = 2;
+  addr = encoding_table + 415; addr-->0 = 3;
+  addr = encoding_table + 420; addr-->0 = double_indirect+8;
+  addr = encoding_table + 428; addr-->0 = hello_str;
+  addr = encoding_table + 432; addr-->0 = bye_str;
+];
+
+! Double-indirect references: (start out as all zeroes)
+Array double_indirect --> 3 ;
+
+! String objects
+
+Array alphabet2_str -> $E1 89 78 13 137 102 220 200 114 158 159 230 71
+    16 195 43 201 138 26 181 2;
+Array alphabet_str -> $E1 89 78 13 137 102 220 200 114 158 159 230 71
+    16 195 43 201 138 26 181 2;
+Array bye_str -> $E1 121 76 5;
+Array dindir0_1_str -> $E1 139 191 2;
+Array dindir0_str -> $E1 139 184 2;
+Array dindir1_23_str -> $E1 75 184 2;
+Array dindir1_str -> $E1 139 188 2;
+Array dindir2_hello_bye_str -> $E1 75 188 2;
+Array dindir2_str -> $E1 139 186 2;
+Array hello_str -> $E1 46 121 63 23;
+Array highbit_str -> $E1 250 215 247 207 111 1;
+Array indirargprint_12_str -> $E1 139 185 2;
+Array indirargprint_1_str -> $E1 139 190 2;
+Array indirargprint_str -> $E1 11 187 2;
+Array indirhello_1_str -> $E1 139 189 2;
+Array indirhello_str -> $E1 11 191 2;
+Array indirnativeprint_foobar_str -> $E1 139 187 2;
+Array mix_str -> $E1 159 110 12 230 207 64 204 4 28 0 230 141
+    79 10 31 100 1;
+Array newline_str -> $E1 100 1;
+Array substring_str -> $E1 246 223 22;
+Array subunistring_str -> $E1 22 106 11;
+Array unicode_str -> $E1 153 14 2 23;
+! -----------
+
+Constant BIGBUFSIZE 256;
+Array bigbuffer -> BIGBUFSIZE;
+Array bigbuffer2 -> BIGBUFSIZE;
+Array bigubuffer --> BIGBUFSIZE;
+Array bigubuffer2 --> BIGBUFSIZE;
+
+TestClass StringsTest
+	with name 'strings' 'string',
+	testfunc [ val;
+		print "String table decoding:^^";
+		patch_encoding_table();
+
+		print "Basic strings: ";
+		val = tablestring(hello_str);
+		check_str("hello", val); print ", ";
+		val = tablestring(bye_str);
+		check_str("bye", val); print ", ";
+		val = tablestring(alphabet_str);
+		check_str("abcdefghijklmnopqrstuvwxyz", val); print ", ";
+		val = tablestring(highbit_str);
+		check_str("@@224@@232@@236@@242@@249", val); print ", ";
+		val = tablestring(newline_str);
+		check_str("^", val); print ", ";
+		val = tablestring(mix_str);
+		check_str("This contains several node types.^", val); print "^";
+
+		print "Unicode strings: ";
+		val = tableustring(hello_str);
+		check_ustr("hello", val); print ", ";
+		val = tableustring(alphabet2_str);
+		check_ustr("abcdefghijklmnopqrstuvwxyz", val); print ", ";
+		val = tableustring(unicode_str);
+		check_ustr("a@{e0}@{3b1}@{30a9}", val); print "^";
+		
+		print "Substrings: ";
+		val = tablestring(substring_str);
+		check_str("~substring~", val); print ", ";
+		val = tablestring(subunistring_str);
+		check_str("~substring~", val); print "^";
+
+		print "References: ";
+		val = tablestring(indirhello_str);
+		check_str("[hello]", val); print ", ";
+		val = tablestring(indirhello_1_str);
+		check_str("[hello]", val); print ", ";
+		val = tablestring(indirargprint_str);
+		check_str("[]", val); print ", ";
+		val = tablestring(indirargprint_1_str);
+		check_str("[1]", val); print ", ";
+		val = tablestring(indirargprint_12_str);
+		check_str("[1 2]", val); print ", ";
+		val = tablestring(indirnativeprint_foobar_str);
+		check_str("[foo bar]", val); print "^";
+
+		print "Indirect references: ";
+		double_indirect-->0 = bye_str;
+		val = tablestring(dindir0_str);
+		check_str("[bye]", val); print ", ";
+		double_indirect-->0 = substring_str;
+		val = tablestring(dindir0_str);
+		check_str("[~substring~]", val); print ", ";
+		double_indirect-->0 = hello_str;
+		double_indirect-->1 = dindir0_str;
+		val = tablestring(dindir1_str);
+		check_str("[[hello]]", val); print ", ";
+		double_indirect-->0 = byehello_func;
+		val = tablestring(dindir1_str);
+		check_str("[[bye hello]]", val); print ", ";
+		double_indirect-->0 = argprint;
+		val = tablestring(dindir0_1_str);
+		check_str("[1]", val); print ", ";
+		double_indirect-->1 = argprint;
+		val = tablestring(dindir1_23_str);
+		check_str("[2 3]", val); print ", ";
+		double_indirect-->2 = argprintstr;
+		val = tablestring(dindir2_hello_bye_str);
+		check_str("[hello bye]", val); print "^";
+
+		print "Indirect references with unicode: ";
+		double_indirect-->2 = unicode_str;
+		val = tableustring(dindir2_str);
+		check_ustr("[a@{e0}@{3b1}@{30a9}]", val); print "^";
+		
+		count_failures();
+	];
+
+
+[ tablestring val len;
+	@setstringtbl encoding_table;
+	len = string_to_array(val, bigbuffer, BIGBUFSIZE);
+	val = 0-->7;
+	@setstringtbl val;
+	return len;
+];
+
+[ tableustring val len;
+	@setstringtbl encoding_table;
+	len = string_to_uniarray(val, bigubuffer, BIGBUFSIZE);
+	val = 0-->7;
+	@setstringtbl val;
+	return len;
+];
+	
+[ argprint _vararg_count   ix;
+	for (ix=0 : ix<_vararg_count : ix++) {
+		if (ix) @streamchar 32;
+		@streamnum sp;
+	}
+];
+
+[ argprintstr _vararg_count   ix;
+	for (ix=0 : ix<_vararg_count : ix++) {
+		if (ix) @streamchar 32;
+		@streamstr sp;
+	}
+];
+
+[ nativeprint _vararg_count   ix val;
+	val = 0-->7;
+	@setstringtbl val;
+	for (ix=0 : ix<_vararg_count : ix++) {
+		if (ix) @streamchar 32;
+		@streamstr sp;
+	}
+	@setstringtbl encoding_table;
+];
+
+[ byehello_func;
+	@streamstr bye_str;
+	@streamchar 32;
+	@streamstr hello_str;
+];
+
+TestClass FilterTest
+	with name 'filter',
+	testfunc [ val;
+		print "Filter iosys mode:^^";
+		patch_encoding_table();
+		
+		!###
+		count_failures();
+	];
