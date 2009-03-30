@@ -1995,13 +1995,6 @@ TestClass ArrayBitTest
 	with name 'arraybit' 'aloadbit' 'astorebit' 'abit' 'abits',
 	testfunc [ val ix res arr;
 		print "Aloadbit and astorebit:^^";
-		
-		print "### ";
-		for (ix=0 : ix<20 : ix++) {
-			@aloadb testarray ix val;
-			print " ", (Hex) val;
-		}
-		print "^";
 
 		for (ix=0 : ix<16 : ix++) {
 			res = 0;
@@ -3244,5 +3237,8 @@ TestClass FilterTest
 		patch_encoding_table();
 		
 		!###
+		
+		!### throw in a filter function? throw in an indirect function?
+		
 		count_failures();
 	];
