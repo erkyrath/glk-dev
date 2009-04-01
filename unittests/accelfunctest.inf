@@ -1,0 +1,662 @@
+Constant Story "AccelFuncTest";
+Constant Headline "^Not a game.^";
+
+Release 2;
+
+! Unit test for the @accelfunc and @accelparam opcodes.
+
+Include "Parser";
+Include "VerbLib";
+
+[ Initialise;
+  location = Kitchen;
+];
+
+Class TestObj
+  with name 'test',
+	before [;
+		Enter: <<RunFast self>>;
+		Examine:
+			"This tests ", (string) self.indexname, ".";
+	],
+	invent [;
+		if (action == ##WhichTests) {
+			print (string) self.indexname;
+			rtrue;
+		}
+		rfalse;
+	],
+	indexnum 0,
+	indexname 0,
+	testfunc 0,
+  has static;
+
+Object Kitchen "Acceleration Room"
+  with
+	description "A voice booooms out: Try ~slow test~ or ~fast test~, to run 
+		a sequence with the standard or accelerated function. The results
+		should be identical. Type ~which~ to list the functions that your
+		interpreter can accelerate.",
+  has light;
+
+TestObj -> CoreRegion "core test"
+  with
+	name 'core' 'opcode',
+	indexnum 1,
+	indexname "core opcode funtionality, using Z__Region",
+	corefunc Z__Region,
+	testfunc test_core;
+
+TestObj -> TestZRegion "ZRegion test"
+  with
+	name 'zregion' 'z//' 'region',
+	indexnum 1,
+	indexname "Z__Region",
+	corefunc Z__Region,
+	testfunc test_zregion;
+
+TestObj -> TestCPTab "CPTab test"
+  with
+	name 'cptab' 'cp' 'tab',
+	indexnum 2,
+	indexname "CP__Tab",
+	corefunc CP__Tab,
+	testfunc test_cptab;
+
+TestObj -> TestRAPr "RAPr test"
+  with
+	name 'rapr' 'ra' 'pr',
+	indexnum 3,
+	indexname "RA__Pr",
+	corefunc RA__Pr,
+	testfunc test_rapr;
+
+TestObj -> TestRLPr "RLPr test"
+  with
+	name 'rlpr' 'rl' 'pr',
+	indexnum 4,
+	indexname "RL__Pr",
+	corefunc RL__Pr,
+	testfunc test_rlpr;
+
+TestObj -> TestOCCl "OCCl test"
+  with
+	name 'occl' 'oc' 'cl',
+	indexnum 5,
+	indexname "OC__Cl",
+	corefunc OC__Cl,
+	testfunc test_occl;
+
+TestObj -> TestRVPr "RVPr test"
+  with
+	name 'rvpr' 'rv' 'pr',
+	indexnum 6,
+	indexname "RV__Pr",
+	corefunc RV__Pr,
+	testfunc test_rvpr;
+
+TestObj -> TestOPPr "OPPr test"
+  with
+	name 'oppr' 'op' 'pr',
+	indexnum 7,
+	indexname "OP__Pr",
+	corefunc OP__Pr,
+	testfunc test_oppr;
+
+Global test_core_global;
+
+[ test_core val;
+	print "Too few arguments: ", Z__Region(), "^";
+	print "Too many arguments: ", Z__Region(Kitchen, 9), "^";
+	print "So many arguments that they go on the stack: ",
+		Z__Region(test_core, 9, 8, 7, 6, 5, 4), "^";
+	
+	val = Z__Region(Kitchen);
+	print "To local: ", val, "^";
+	test_core_global = Z__Region(test_core);
+	print "To global: ", test_core_global, "^";
+	val = 0;
+	@copy Kitchen sp;
+	@call Z__Region 1 sp;
+	@copy sp val;
+	print "To stack: ", val, "^";
+
+	print "In tailcall: ", test_core_sub(), "^";
+];
+
+[ test_core_sub;
+	if (1) {
+		@copy test_core_sub sp;
+		@tailcall Z__Region 1;
+	}
+	print "This should not be printed.^";
+];
+
+[ test_zregion;
+	print "(Note: objects return 1, functions return 2, strings return 3)^";
+
+	print "Kitchen: ", Z__Region(Kitchen);
+	print "; test_zregion(): ", Z__Region(test_zregion);
+	print "; ~foo~: ", Z__Region("foo"), "^";
+	print "Various zeroes: ", Z__Region(0), " ", Z__Region(1), " ",
+		Z__Region(Kitchen+1), " ", Z__Region(1000000), " ", Z__Region(-1), " ",
+		Z__Region('dictword'), "^";
+	print "Z__Region itself: ", Z__Region(Z__Region), "^";
+];
+
+[ test_cptab  val;
+	print "Kitchen.description:^";
+	val = CP__Tab(Kitchen, description);
+	printpropdata(val);
+	
+	print "Kitchen.testfunc:^";
+	val = CP__Tab(Kitchen, testfunc);
+	printpropdata(val);
+	
+	print "TestCPTab.testfunc:^";
+	val = CP__Tab(TestCPTab, testfunc);
+	printpropdata(val);
+	
+	print "TestCPTab.name:^";
+	val = CP__Tab(TestCPTab, name);
+	printpropdata(val);
+	
+	print "Kitchen.321:^";
+	val = CP__Tab(Kitchen, 321);
+	printpropdata(val);
+	
+	print "bareobject.name:^";
+	val = CP__Tab(bareobject, name);
+	printpropdata(val);
+	
+	print "Kitchen.(0):^";
+	val = CP__Tab(Kitchen);
+	printpropdata(val);
+	
+	print "Three errors (might be fatal):^";
+	print "The exact phrasing of errors need not be identical between fast
+		and slow.^";
+	CP__Tab();
+	CP__Tab(1);
+	CP__Tab(test_cptab);
+];
+
+Object bareobject;
+
+[ printpropdata addr  pid numwords pflags paddr ix val;
+	if (addr == 0)
+		"No such property.^";
+		
+	@aloads addr 0 pid;
+	@aloads addr 1 numwords;
+	@aloads addr 4 pflags;
+	@aload  addr 1 paddr;
+
+	print "Property ", pid, ", flags ", pflags, ", ", numwords, " words:^";
+	for (ix=0 : ix<numwords : ix++) {
+		val = paddr-->ix;
+		print "  ", ix, ": ", val;
+		if (val->0 == $60) {
+			print " '", (address) val, "'^";
+			continue;
+		}
+		switch (ZRegion(val)) {
+			1: print " ", (object) val;
+			2: print " <func>";
+			3: print " ", (string) val;
+		}
+		print "^";
+	}
+	print "^";
+];
+
+[ printpropaddr paddr numwords   ix val;
+	if (paddr == 0)
+		"No such property.";
+	if (numwords == 0)
+		numwords = 1;
+	for (ix=0 : ix<numwords : ix++) {
+		val = paddr-->ix;
+		print val;
+		if (val->0 == $60) {
+			print " '", (address) val, "'";
+			continue;
+		}
+		switch (ZRegion(val)) {
+			1: print " ", (object) val;
+			2: print " <func>";
+			3: print " ", (string) val;
+		}
+	}
+	print "^";
+];
+
+Property comprop 99;
+
+Class TopClass
+  with gloop 11,
+       name 'top';
+
+Class MidClass
+  class TopClass,
+  with gloop 22 23,
+       glark 'hello' 'hello2',
+	   name 'mid',
+	   comprop 123,
+  private password 'pass';
+
+Class BotClass
+  class MidClass,
+  with glark 'goodbye',
+       botval -5,
+	   name 'bot';
+
+TopClass topobj;
+MidClass midobj;
+BotClass botobj;
+
+BotClass botspecial
+  with glark 'special' 'speca' 'specb',
+  private password 'swordfish';
+
+[ test_rapr addr saveself;
+	saveself = self;
+	
+	addr = RA__Pr(bareobject, name);
+	print "bareobject.name: ", (printpropaddr) addr;
+	addr = RA__Pr(CoreRegion, name);
+	print "CoreRegion.name: ", (printpropaddr) addr;
+	addr = RA__Pr(CoreRegion, indexnum);
+	print "CoreRegion.indexnum: ", (printpropaddr) addr;
+	addr = RA__Pr(bareobject, TestObj::indexnum);
+	print "bareobject.TestObj::indexnum: ", (printpropaddr) addr;
+	addr = RA__Pr(CoreRegion, TestObj::indexnum);
+	print "CoreRegion.TestObj::indexnum: ", (printpropaddr) addr;
+	addr = RA__Pr(botspecial, TestObj::indexnum);
+	print "botspecial.TestObj::indexnum: ", (printpropaddr) addr;
+	
+	addr = RA__Pr(topobj, gloop);
+	print "topobj.gloop: ", (printpropaddr) addr;
+	addr = RA__Pr(midobj, gloop);
+	print "midobj.gloop: ", (printpropaddr) addr;
+	addr = RA__Pr(midobj, TopClass::gloop);
+	print "midobj.TopClass::gloop: ", (printpropaddr) addr;
+	addr = RA__Pr(midobj, BotClass::gloop);
+	print "midobj.BotClass::gloop: ", (printpropaddr) addr;
+	addr = RA__Pr(botspecial, glark);
+	print "botspecial.glark: ", (printpropaddr) addr;
+	addr = RA__Pr(botspecial, BotClass::glark);
+	print "botspecial.BotClass::glark: ", (printpropaddr) addr;
+	addr = RA__Pr(botspecial, MidClass::glark);
+	print "botspecial.MidClass::glark: ", (printpropaddr) addr;
+
+	self = midobj;
+	addr = RA__Pr(midobj, password);
+	print "midobj.password: ", (printpropaddr) addr;
+	addr = RA__Pr(botspecial, password);
+	print "botspecial.password (foreign): ", (printpropaddr) addr;
+	self = botspecial;
+	addr = RA__Pr(midobj, password);
+	print "midobj.password (foreign): ", (printpropaddr) addr;
+	addr = RA__Pr(botspecial, password);
+	print "botspecial.password: ", (printpropaddr) addr;
+
+	addr = RA__Pr(TopClass, gloop);
+	print "TopClass.gloop: ", (printpropaddr) addr;
+	addr = RA__Pr(TopClass, create);
+	print "TopClass.create: ", (printpropaddr) addr;
+
+	self = saveself;
+];
+
+[ test_rlpr len saveself;
+	saveself = self;
+	
+	len = RL__Pr(bareobject, name);
+	print "bareobject.name: ", len, " bytes^";
+	len = RL__Pr(CoreRegion, name);
+	print "CoreRegion.name: ", len, " bytes^";
+	len = RL__Pr(CoreRegion, indexnum);
+	print "CoreRegion.indexnum: ", len, " bytes^";
+	len = RL__Pr(bareobject, TestObj::indexnum);
+	print "bareobject.TestObj::indexnum: ", len, " bytes^";
+	len = RL__Pr(CoreRegion, TestObj::indexnum);
+	print "CoreRegion.TestObj::indexnum: ", len, " bytes^";
+	len = RL__Pr(botspecial, TestObj::indexnum);
+	print "botspecial.TestObj::indexnum: ", len, " bytes^";
+	
+	len = RL__Pr(topobj, gloop);
+	print "topobj.gloop: ", len, " bytes^";
+	len = RL__Pr(midobj, gloop);
+	print "midobj.gloop: ", len, " bytes^";
+	len = RL__Pr(midobj, TopClass::gloop);
+	print "midobj.TopClass::gloop: ", len, " bytes^";
+	len = RL__Pr(midobj, BotClass::gloop);
+	print "midobj.BotClass::gloop: ", len, " bytes^";
+	len = RL__Pr(botspecial, glark);
+	print "botspecial.glark: ", len, " bytes^";
+	len = RL__Pr(botspecial, BotClass::glark);
+	print "botspecial.BotClass::glark: ", len, " bytes^";
+	len = RL__Pr(botspecial, MidClass::glark);
+	print "botspecial.MidClass::glark: ", len, " bytes^";
+
+	self = midobj;
+	len = RL__Pr(midobj, password);
+	print "midobj.password: ", len, " bytes^";
+	len = RL__Pr(botspecial, password);
+	print "botspecial.password (foreign): ", len, " bytes^";
+	self = botspecial;
+	len = RL__Pr(midobj, password);
+	print "midobj.password (foreign): ", len, " bytes^";
+	len = RL__Pr(botspecial, password);
+	print "botspecial.password: ", len, " bytes^";
+
+	len = RL__Pr(TopClass, gloop);
+	print "TopClass.gloop: ", len, " bytes^";
+	len = RL__Pr(TopClass, create);
+	print "TopClass.create: ", len, " bytes^";
+
+	self = saveself;
+];
+
+[ printbool val;
+	if (val == 0) "no";
+	if (val == 1) "yes";
+	"??? (", val, ")";
+];
+
+[ test_occl  val;
+	val = OC__Cl("str", String);
+	print "~str~ ofclass String: ", (printbool) val;
+	val = OC__Cl("str", Routine);
+	print "~str~ ofclass Routine: ", (printbool) val;
+	val = OC__Cl("str", Object);
+	print "~str~ ofclass Object: ", (printbool) val;
+	val = OC__Cl("str", Class);
+	print "~str~ ofclass Class: ", (printbool) val;
+	val = OC__Cl("str", TopClass);
+	print "~str~ ofclass TopClass: ", (printbool) val;
+
+	val = OC__Cl(printbool, String);
+	print "printbool() ofclass String: ", (printbool) val;
+	val = OC__Cl(printbool, Routine);
+	print "printbool() ofclass Routine: ", (printbool) val;
+	val = OC__Cl(printbool, Object);
+	print "printbool() ofclass Object: ", (printbool) val;
+	val = OC__Cl(printbool, Class);
+	print "printbool() ofclass Class: ", (printbool) val;
+	val = OC__Cl(printbool, TopClass);
+	print "printbool() ofclass TopClass: ", (printbool) val;
+
+	val = OC__Cl('word', String);
+	print "'word' ofclass String: ", (printbool) val;
+	val = OC__Cl('word', Routine);
+	print "'word' ofclass Routine: ", (printbool) val;
+	val = OC__Cl('word', Object);
+	print "'word' ofclass Object: ", (printbool) val;
+	val = OC__Cl('word', Class);
+	print "'word' ofclass Class: ", (printbool) val;
+	val = OC__Cl('word', TopClass);
+	print "'word' ofclass TopClass: ", (printbool) val;
+
+	val = OC__Cl(String, Class);
+	print "String ofclass Class: ", (printbool) val;
+	val = OC__Cl(Routine, Class);
+	print "Routine ofclass Class: ", (printbool) val;
+	val = OC__Cl(Object, Class);
+	print "Object ofclass Class: ", (printbool) val;
+	val = OC__Cl(Class, Class);
+	print "Class ofclass Class: ", (printbool) val;
+	val = OC__Cl(TopClass, Class);
+	print "TopClass ofclass Class: ", (printbool) val;
+	val = OC__Cl(bareobject, Class);
+	print "bareobject ofclass Class: ", (printbool) val;
+
+	val = OC__Cl(String, Object);
+	print "String ofclass Object: ", (printbool) val;
+	val = OC__Cl(Routine, Object);
+	print "Routine ofclass Object: ", (printbool) val;
+	val = OC__Cl(Object, Object);
+	print "Object ofclass Object: ", (printbool) val;
+	val = OC__Cl(Class, Object);
+	print "Class ofclass Object: ", (printbool) val;
+	val = OC__Cl(TopClass, Object);
+	print "TopClass ofclass Object: ", (printbool) val;
+	val = OC__Cl(bareobject, Object);
+	print "bareobject ofclass Object: ", (printbool) val;
+	
+	val = OC__Cl(TopClass, String);
+	print "TopClass ofclass String: ", (printbool) val;
+	val = OC__Cl(bareobject, String);
+	print "bareobject ofclass String: ", (printbool) val;
+	val = OC__Cl(TopClass, Routine);
+	print "TopClass ofclass Routine: ", (printbool) val;
+	val = OC__Cl(bareobject, Routine);
+	print "bareobject ofclass Routine: ", (printbool) val;
+
+	val = OC__Cl(bareobject, TopClass);
+	print "bareobject ofclass TopClass: ", (printbool) val;
+	val = OC__Cl(bareobject, BotClass);
+	print "bareobject ofclass BotClass: ", (printbool) val;
+	val = OC__Cl(topobj, TopClass);
+	print "topobj ofclass TopClass: ", (printbool) val;
+	val = OC__Cl(topobj, MidClass);
+	print "topobj ofclass MidClass: ", (printbool) val;
+	val = OC__Cl(topobj, BotClass);
+	print "topobj ofclass BotClass: ", (printbool) val;
+	val = OC__Cl(midobj, TopClass);
+	print "midobj ofclass TopClass: ", (printbool) val;
+	val = OC__Cl(midobj, MidClass);
+	print "midobj ofclass MidClass: ", (printbool) val;
+	val = OC__Cl(midobj, BotClass);
+	print "midobj ofclass BotClass: ", (printbool) val;
+	val = OC__Cl(botobj, TopClass);
+	print "botobj ofclass TopClass: ", (printbool) val;
+	val = OC__Cl(botobj, MidClass);
+	print "botobj ofclass MidClass: ", (printbool) val;
+	val = OC__Cl(botobj, BotClass);
+	print "botobj ofclass BotClass: ", (printbool) val;
+
+	print "^Three errors (might be fatal):^";
+	print "The exact phrasing of errors need not be identical between fast
+		and slow.^";
+
+	val = OC__Cl(bareobject, topobj);
+	print "bareobject ofclass topobj: ", (printbool) val;
+	val = OC__Cl(topobj, "str");
+	print "topobj ofclass ~str~: ", (printbool) val;
+	val = OC__Cl(TopClass, printbool);
+	print "TopClass ofclass printbool(): ", (printbool) val;
+];
+
+[ test_rvpr   val;
+	val = RV__Pr(bareobject, name);
+	print "bareobject.name: ", val, "^";
+
+	val = RV__Pr(botobj, gloop);
+	print "botobj.gloop: ", val, "^";
+	val = RV__Pr(midobj, gloop);
+	print "midobj.gloop: ", val, "^";
+	val = RV__Pr(topobj, gloop);
+	print "topobj.gloop: ", val, "^";
+
+	val = RV__Pr(botobj, comprop);
+	print "botobj.comprop: ", val, "^";
+	val = RV__Pr(midobj, comprop);
+	print "midobj.comprop: ", val, "^";
+	val = RV__Pr(topobj, comprop);
+	print "topobj.comprop: ", val, "^";
+	val = RV__Pr(TopClass, comprop);
+	print "TopClass.comprop: ", val, "^";
+
+	print "^Two errors (might be fatal):^";
+	print "The exact phrasing of errors need not be identical between fast
+		and slow.^";
+		
+	val = RV__Pr(topobj, glark);
+	print "topobj.glark: ", val, "^";
+	val = RV__Pr(TopClass, gloop);
+	print "TopClass.gloop: ", val, "^";
+];
+
+[ test_oppr   val;
+	val = OP__Pr("str", name);
+	print "~str~ provides name: ", (printbool) val;
+	val = OP__Pr("str", gloop);
+	print "~str~ provides gloop: ", (printbool) val;
+	val = OP__Pr("str", print);
+	print "~str~ provides print: ", (printbool) val;
+	val = OP__Pr("str", print_to_array);
+	print "~str~ provides print_to_array: ", (printbool) val;
+	val = OP__Pr("str", create);
+	print "~str~ provides create: ", (printbool) val;
+	val = OP__Pr("str", call);
+	print "~str~ provides call: ", (printbool) val;
+	
+	val = OP__Pr(printbool, name);
+	print "printbool() provides name: ", (printbool) val;
+	val = OP__Pr(printbool, gloop);
+	print "printbool() provides gloop: ", (printbool) val;
+	val = OP__Pr(printbool, print);
+	print "printbool() provides print: ", (printbool) val;
+	val = OP__Pr(printbool, print_to_array);
+	print "printbool() provides print_to_array: ", (printbool) val;
+	val = OP__Pr(printbool, create);
+	print "printbool() provides create: ", (printbool) val;
+	val = OP__Pr(printbool, call);
+	print "printbool() provides call: ", (printbool) val;
+	
+	val = OP__Pr('word', name);
+	print "'word' provides name: ", (printbool) val;
+	val = OP__Pr('word', gloop);
+	print "'word' provides gloop: ", (printbool) val;
+	val = OP__Pr('word', print);
+	print "'word' provides print: ", (printbool) val;
+	val = OP__Pr('word', print_to_array);
+	print "'word' provides print_to_array: ", (printbool) val;
+	val = OP__Pr('word', create);
+	print "'word' provides create: ", (printbool) val;
+	val = OP__Pr('word', call);
+	print "'word' provides call: ", (printbool) val;
+	
+	val = OP__Pr(TopClass, name);
+	print "TopClass provides name: ", (printbool) val;
+	val = OP__Pr(TopClass, gloop);
+	print "TopClass provides gloop: ", (printbool) val;
+	val = OP__Pr(TopClass, glark);
+	print "TopClass provides glark: ", (printbool) val;
+	val = OP__Pr(TopClass, print);
+	print "TopClass provides print: ", (printbool) val;
+	val = OP__Pr(TopClass, print_to_array);
+	print "TopClass provides print_to_array: ", (printbool) val;
+	val = OP__Pr(TopClass, create);
+	print "TopClass provides create: ", (printbool) val;
+	val = OP__Pr(TopClass, call);
+	print "TopClass provides call: ", (printbool) val;
+	
+	val = OP__Pr(topobj, gloop);
+	print "topobj provides gloop: ", (printbool) val;
+	val = OP__Pr(midobj, gloop);
+	print "midobj provides gloop: ", (printbool) val;
+	val = OP__Pr(midobj, TopClass::gloop);
+	print "midobj provides TopClass::gloop: ", (printbool) val;
+	val = OP__Pr(midobj, BotClass::gloop);
+	print "midobj provides BotClass::gloop: ", (printbool) val;
+	val = OP__Pr(botspecial, glark);
+	print "botspecial provides glark: ", (printbool) val;
+	val = OP__Pr(botspecial, BotClass::glark);
+	print "botspecial provides BotClass::glark: ", (printbool) val;
+	val = OP__Pr(botspecial, MidClass::glark);
+	print "botspecial provides MidClass::glark: ", (printbool) val;
+	val = OP__Pr(botspecial, TopClass::glark);
+	print "botspecial provides TopClass::glark: ", (printbool) val;
+];
+
+Include "Grammar";
+
+Global params_accelerated;
+
+[ accel_params   addr;
+	if (params_accelerated)
+		return;
+	
+	addr = #classes_table;
+	@accelparam 0 addr;
+	@accelparam 1 INDIV_PROP_START;
+	@accelparam 2 Class;
+	@accelparam 3 Object;
+	@accelparam 4 Routine;
+	@accelparam 5 String;
+	addr = #globals_array + WORDSIZE * #g$self;
+	@accelparam 6 addr;
+	@accelparam 7 NUM_ATTR_BYTES;
+	addr = #cpv__start;
+	@accelparam 8 addr;
+
+	params_accelerated = true;
+];
+
+[ RunSlowSub tester;
+	if (~~(noun ofclass TestObj))
+		"That's not a test.";
+	print "Unaccelerated test of ", (string) noun.indexname, " (function ", noun.indexnum, ")^";
+	print "^";
+
+	tester = noun.testfunc;
+	tester();
+];
+
+[ RunFastSub res func tester;
+	if (~~(noun ofclass TestObj))
+		"That's not a test.";
+	print "ACCELERATED test of ", (string) noun.indexname, " (function ", noun.indexnum, ")^";
+	print "^";
+	
+	@gestalt 9 0 res;
+	if (res == 0) {
+		"This interpreter does not support acceleration.";
+	}
+
+	accel_params();
+	
+	res = noun.indexnum;
+	func = noun.corefunc;
+	tester = noun.testfunc;
+	
+	@accelfunc res func;
+	tester();
+	@accelfunc 0 func;
+];
+
+[ WhichTestsSub obj val res count;
+	objectloop (obj in Kitchen) {
+		give obj ~workflag;
+	}
+	
+	count = 0;
+	objectloop (obj ofclass TestObj) {
+		if (obj == CoreRegion)
+			continue;
+		val = obj.indexnum;
+		@gestalt 10 val res;
+		if (~~res)
+			continue;
+		give obj workflag;
+		count++;
+	}
+	
+	if (~~count)
+		"This interpreter does not support any accelerated functions.";
+	print "This interpreter supports acceleration of ";
+	WriteListFrom(child(Kitchen), DEFART_BIT | WORKFLAG_BIT | ENGLISH_BIT | PARTINV_BIT);
+	print ".^";
+];
+
+Verb 'slow'
+	* multi -> RunSlow;
+
+Verb 'fast'
+	* multi -> RunFast;
+
+Verb 'which'
+	* -> WhichTests;

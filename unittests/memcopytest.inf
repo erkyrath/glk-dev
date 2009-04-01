@@ -1,0 +1,145 @@
+Constant Story "MemCopyTest";
+Constant Headline "^Not a game.^";
+
+! Unit test for the @mcopy and @mzero opcodes.
+
+Include "Parser";
+Include "VerbLib";
+
+Global bignum; ! storage for BigNumber grammar token.
+Global number1;
+Global number2;
+Global number3;
+
+Constant ArrLength = 20;
+Array arr -> ArrLength;
+
+[ Initialise;
+  location = Kitchen;
+];
+
+Object Kitchen "Heap Room"
+  with
+    description [;
+		print "A voice booooms out: Try ~say WORD~, ~zero POS LEN~,
+			or ~copy SRCPOS DESTPOS LEN~, where POS and LEN are numbers
+			from 0 to 20.^";
+		ShowArray();
+	],
+  has light;
+
+[ ShowArray ix ch;
+	print "Array: ";
+	for (ix=0 : ix<ArrLength : ix++) {
+		ch = arr->ix;
+		if (ch < 32 || ch >= 127)
+			print "(",ch,")";
+		else
+			print (char) ch;
+	}
+	new_line;
+];
+
+[ SaygrabSub;
+	ShowArray();
+];
+
+[ McopySub;
+	if (number1+number3 > ArrLength)
+		"Source span exceeds array length!";
+	if (number2+number3 > ArrLength)
+		"Destination span exceeds array length!";
+	
+	print "Copying ", number3, " bytes from ", number1, " to ", number2, ".^";
+
+	number1 = number1+arr;
+	number2 = number2+arr;
+	@mcopy number3 number1 number2;
+	ShowArray();
+];
+
+[ MzeroSub;
+	if (number1+number2 > ArrLength)
+		"Source span exceeds array length!";
+		
+	print "Zeroing ", number2, " bytes at ", number1, ".^";
+
+	number1 = number1+arr;
+	@mzero number2 number1;
+	ShowArray();
+];
+  
+Include "Grammar";
+
+! Copy one word from the input into the array.
+!
+[ GrabWord addr len ix;
+
+	if (wn > num_words)
+		return GPR_FAIL;
+	addr = WordAddress(wn);
+	len = WordLength(wn);
+	wn++;
+
+	for (ix=0 : ix<len && ix<ArrLength : ix++) {
+		arr->ix = addr->ix;
+	}
+
+	for ( : ix<ArrLength : ix++) {
+		arr->ix = 0;
+	}
+
+	return GPR_PREPOSITION;
+];
+
+! Parse one word from the input into a (non-negative) integer, and store
+! that in the global bignum.
+!
+[ BigNumber addr len ix ch;
+
+	if (wn > num_words)
+		return GPR_FAIL;
+	addr = WordAddress(wn);
+	len = WordLength(wn);
+	wn++;
+
+	bignum = 0;
+	for (ix=0 : ix<len : ix++) {
+		ch = addr->ix;
+		switch (addr->ix) {
+			'0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
+				bignum = bignum*10 + (ch-'0');
+			default:
+				return GPR_FAIL;
+		}
+	}
+
+	return GPR_PREPOSITION;
+];
+
+[ BigNumber1 res;
+	res = BigNumber();
+	number1 = bignum;
+	return res;
+];
+
+[ BigNumber2 res;
+	res = BigNumber();
+	number2 = bignum;
+	return res;
+];
+
+[ BigNumber3 res;
+	res = BigNumber();
+	number3 = bignum;
+	return res;
+];
+
+Extend 'say' replace
+	* GrabWord -> Saygrab;
+
+Verb 'mcopy' 'copy'
+	* BigNumber1 BigNumber2 BigNumber3 -> Mcopy;
+
+Verb 'mzero' 'zero'
+	* BigNumber1 BigNumber2 -> Mzero;

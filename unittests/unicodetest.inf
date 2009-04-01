@@ -1,0 +1,94 @@
+Constant Story "UnicodeTest";
+Constant Headline "^Not a game.^";
+
+! Unit test for the @streamunichar opcode.
+
+Include "Parser";
+Include "VerbLib";
+
+[ Initialise;
+  location = Kitchen;
+];
+
+Object Kitchen "Unicode Room"
+  with
+	description "This is a polyglot room.",
+  has light;
+
+Class Sign
+  with
+	name 'sign' 'signs//p',
+  has static;
+  
+Sign latin1 "latin-1 sign" Kitchen
+  with
+	name 'latin' 'latin-1',
+	description [;
+		print "AEIOU with umlauts: @:A@:E@:I@:O@:U^";
+		print "aeiou with umlauts: ";
+		@streamunichar $E4;
+		@streamunichar $EB;
+		@streamunichar $EF;
+		@streamunichar $F6;
+		@streamunichar $FC;
+		print "^";
+	];
+
+Sign greek "greek sign" Kitchen
+  with
+	name 'greek',
+	description [;
+		print "Greek: @{3B1}@{3B2}@{3B3}@{3B4}@{3B5} (abgde)^";
+	];
+  
+Sign hebrew "hebrew sign" Kitchen
+  with
+	name 'hebrew',
+	description [;
+		print "Hebrew: @{5D0}@{5D1}@{5D2}@{5D3}@{5DE} (abgdm... the aleph should be on the right)^";
+	];
+  
+Sign punctuation "punctuation sign" Kitchen
+  with
+	name 'punctuation' 'punc' 'punct',
+	description [;
+		print "Punctuation: @{2018}single curly quotes@{2019} @{201C}double curly quotes@{201D}^";
+	];
+  
+Sign ligature "ligature sign" Kitchen
+  with
+	name 'ligature' 'ligatures',
+	description [;
+		print "Ligatures: @{E6} (ae) @{153} (oe) @{14B} (nj) @{FB00} (ff) @{FB01} (fi) @{FB03} (ffi) @{FB04} (ffl)^";
+	];
+  
+Sign hirigana "hirigana sign" Kitchen
+  with
+	name 'hirigana',
+	description [;
+		print "Hirigana: @{304A}@{3059}@{3082} (O SU MO)^";
+	];
+  
+Sign katakana "katakana sign" Kitchen
+  with
+	name 'katakana',
+	description [;
+		print "Katakana: @{30AA}@{30B9}@{30E2} (O SU MO)^";
+	];
+
+Sign bigsign "big sign" Kitchen
+  with
+	name 'big',
+	description [;
+		print "This is all the signs in sequence:^^";
+		<Examine latin1>;
+		<Examine greek>;
+		<Examine hebrew>;
+		<Examine punctuation>;
+		<Examine ligature>;
+		<Examine hirigana>;
+		<Examine katakana>;
+	];
+	  
+Include "Grammar";
+

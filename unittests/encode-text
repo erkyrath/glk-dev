@@ -1,0 +1,22 @@
+hello_str: hello
+bye_str: bye
+alphabet_str: abcdefghijklmnopqrstuvwxyz
+alphabet2_str: abcdefghijklmnopqrstuvwxyz
+newline_str: \n
+highbit_str: \xe0\xe8\xec\xf2\xf9
+unicode_str: a\xe0\u03b1\u30a9
+substring_str: "\'substring'"
+subunistring_str: "\"substring""
+indirhello_str: [\(hello_str)]
+indirargprint_str: [\(argprint)]
+indirhello_1_str: [\(hello_str 1)]
+indirargprint_1_str: [\(argprint 1)]
+indirargprint_12_str: [\(argprint 1 2)]
+indirnativeprint_foobar_str: [\(nativeprint "foo" "bar")]
+dindir0_str: [\(0)]
+dindir1_str: [\(1)]
+dindir2_str: [\(2)]
+dindir0_1_str: [\(0 1)]
+dindir1_23_str: [\(1 2 3)]
+dindir2_hello_bye_str: [\(2 hello_str bye_str)]
+mix_str: This \'contains' \"several" \x6e\u006fd\u0065 types.\n
