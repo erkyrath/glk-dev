@@ -2983,49 +2983,54 @@ TestClass StackTest
 
 ! The following is imported from encode-table.
 ! -----------
-Array encoding_table -> 0 0 3 90 0 0 0 117 0 0 0 12 0 0 0 0 21 0 0 2
-    97 0 0 0 0 30 0 0 1 230 0 0 0 0 39 0 0 1 110 0 0 0 0 48 0
-    0 0 215 0 0 0 0 57 0 0 0 104 0 0 0 0 66 0 0 0 85 0 0 0 0
-    75 0 0 0 80 4 0 0 0 101 4 0 0 0 111 0 0 0 0 94 0 0 0 99 4
-    0 0 3 177 4 0 0 48 169 0 0 0 0 113 0 0 0 196 0 0 0 0 122 0 0
-    0 155 5 0 0 0 115 0 0 0 101 0 0 0 118 0 0 0 101 0 0 0 114 0 0
-    0 97 0 0 0 108 0 0 0 0 5 0 0 0 115 0 0 0 117 0 0 0 98 0 0
-    0 115 0 0 0 116 0 0 0 114 0 0 0 105 0 0 0 110 0 0 0 103 0 0 0
-    0 0 0 0 0 205 0 0 0 210 8 0 0 0 0 8 0 0 0 0 0 0 0 0 224
-    0 0 1 23 0 0 0 0 233 0 0 0 252 0 0 0 0 242 0 0 0 247 9 0 0
-    0 0 9 0 0 0 0 0 0 0 1 5 0 0 1 10 9 0 0 0 0 10 0 0 0
-    0 0 0 0 1 0 0 0 0 0 0 0 1 32 0 0 1 71 0 0 0 1 41 0 0
-    1 58 10 0 0 0 0 0 0 0 2 0 0 0 0 0 0 0 0 10 0 0 0 0 0
-    0 0 1 0 0 0 0 0 0 0 1 80 0 0 1 97 10 0 0 0 0 0 0 0 2
-    0 0 0 0 0 0 0 0 11 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 1
-    119 0 0 1 195 0 0 0 1 128 0 0 1 182 0 0 0 1 137 0 0 1 180 0 0
-    0 1 146 0 0 1 163 11 0 0 0 0 0 0 0 2 0 0 0 0 0 0 0 0 11
-    0 0 0 0 0 0 0 2 0 0 0 0 0 0 0 0 2 10 0 0 0 1 191 0 0
-    1 193 2 99 2 102 0 0 0 1 204 0 0 1 217 0 0 0 1 213 0 0 1 215 2
-    103 2 106 0 0 0 1 226 0 0 1 228 2 107 2 109 0 0 0 1 239 0 0 2 62
-    0 0 0 1 248 0 0 2 27 0 0 0 2 1 0 0 2 14 0 0 0 2 10 0 0
-    2 12 2 113 2 114 0 0 0 2 23 0 0 2 25 2 117 2 118 0 0 0 2 36 0
-    0 2 49 0 0 0 2 45 0 0 2 47 2 119 2 120 0 0 0 2 58 0 0 2 60
-    2 122 2 224 0 0 0 2 71 0 0 2 84 0 0 0 2 80 0 0 2 82 2 32 2
-    34 0 0 0 2 93 0 0 2 95 2 104 2 108 0 0 0 2 106 0 0 2 162 0 0
-    0 2 115 0 0 2 161 0 0 0 2 124 0 0 2 137 0 0 0 2 133 0 0 2 135
-    2 115 2 121 0 0 0 2 146 0 0 2 148 2 101 0 0 0 2 157 0 0 2 159 2
-    97 2 98 1 0 0 0 2 171 0 0 2 217 0 0 0 2 180 0 0 2 215 0 0 0
-    2 189 0 0 2 202 0 0 0 2 198 0 0 2 200 2 100 2 105 0 0 0 2 211 0
-    0 2 213 2 110 2 111 2 91 0 0 0 2 226 0 0 2 228 2 93 0 0 0 2 237
-    0 0 2 250 0 0 0 2 246 0 0 2 248 2 112 2 116 0 0 0 3 3 0 0 3
-    38 0 0 0 3 12 0 0 3 25 0 0 0 3 21 0 0 3 23 2 46 2 84 0 0
-    0 3 34 0 0 3 36 2 232 2 236 0 0 0 3 47 0 0 3 60 0 0 0 3 56
-    0 0 3 58 2 242 2 249 0 0 0 3 69 0 0 3 79 3 99 111 110 116 97 105 110
-    115 0 3 115 117 98 115 116 114 105 110 103 0;
-Array encoding_patches --> 8 13 17 22 26 31 35 40 44 49 53 58
-    62 67 71 86 90 105 109 114 118 197 201 216 220 225 229 234 238
-    253 257 280 284 289 293 328 332 367 371 376 380 385 389 394 398 439
-    443 452 456 461 465 474 478 487 491 496 500 505 509 514 518 527 531
-    540 544 549 553 562 566 575 579 584 588 597 601 610 614 619 623 628
-    632 637 641 650 654 661 665 675 679 684 688 693 697 702 706 715 719
-    730 734 741 745 750 754 763 767 772 776 781 785 794 798 807 811 816
-    820 829 833 0;
+Array encoding_table -> 0 0 3 178 0 0 0 133 0 0 0 12 0 0 0 0 21 0 0 0
+    199 0 0 0 0 30 0 0 0 98 0 0 0 0 39 0 0 0 63 0 0 0 0 48 0
+    0 0 61 0 0 0 0 57 0 0 0 59 2 115 2 121 2 123 0 0 0 0 72 0 0
+    0 74 2 125 0 0 0 0 83 0 0 0 85 2 101 0 0 0 0 94 0 0 0 96 2
+    97 2 98 0 0 0 0 107 0 0 0 175 0 0 0 0 116 0 0 0 151 0 0 0 0
+    125 0 0 0 138 0 0 0 0 134 0 0 0 136 2 100 2 105 0 0 0 0 147 0 0
+    0 149 2 110 2 111 0 0 0 0 160 0 0 0 173 0 0 0 0 169 0 0 0 171 2
+    112 2 116 2 34 0 0 0 0 184 0 0 0 197 0 0 0 0 193 0 0 0 195 2 91
+    2 93 2 58 0 0 0 0 208 0 0 2 110 0 0 0 0 217 0 0 0 218 1 0 0
+    0 0 227 0 0 1 31 0 0 0 0 236 0 0 1 29 0 0 0 0 245 0 0 0 250
+    9 0 0 0 0 0 0 0 1 3 0 0 1 16 0 0 0 1 12 0 0 1 14 2 84
+    2 232 0 0 0 1 25 0 0 1 27 2 236 2 242 2 46 0 0 0 1 40 0 0 1
+    179 0 0 0 1 49 0 0 1 104 0 0 0 1 58 0 0 1 79 0 0 0 1 67 0
+    0 1 69 2 249 3 99 111 110 116 97 105 110 115 0 0 0 0 1 88 0 0 1 99 3
+    115 117 98 115 116 114 105 110 103 0 4 0 0 0 101 0 0 0 1 113 0 0 1 132 0
+    0 0 1 122 0 0 1 127 4 0 0 0 111 4 0 0 3 177 0 0 0 1 141 0 0
+    1 146 4 0 0 48 169 5 0 0 0 115 0 0 0 101 0 0 0 118 0 0 0 101 0
+    0 0 114 0 0 0 97 0 0 0 108 0 0 0 0 0 0 0 1 188 0 0 2 23 0
+    0 0 1 197 0 0 1 252 0 0 0 1 206 0 0 1 247 5 0 0 0 115 0 0 0
+    117 0 0 0 98 0 0 0 115 0 0 0 116 0 0 0 114 0 0 0 105 0 0 0 110
+    0 0 0 103 0 0 0 0 8 0 0 0 0 0 0 0 2 5 0 0 2 10 8 0 0
+    0 0 10 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 2 32 0 0 2 71 0
+    0 0 2 41 0 0 2 58 10 0 0 0 0 0 0 0 2 0 0 0 0 0 0 0 0
+    10 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 2 80 0 0 2 97 10 0 0
+    0 0 0 0 0 2 0 0 0 0 0 0 0 0 11 0 0 0 0 0 0 0 1 0 0
+    0 0 0 0 0 2 119 0 0 3 71 0 0 0 2 128 0 0 2 248 0 0 0 2 137
+    0 0 2 213 0 0 0 2 146 0 0 2 200 0 0 0 2 155 0 0 2 198 0 0 0
+    2 164 0 0 2 181 11 0 0 0 0 0 0 0 2 0 0 0 0 0 0 0 0 11 0
+    0 0 0 0 0 0 2 0 0 0 0 0 0 0 0 2 10 0 0 0 2 209 0 0 2
+    211 2 39 2 96 0 0 0 2 222 0 0 2 235 0 0 0 2 231 0 0 2 233 2 99
+    2 102 0 0 0 2 244 0 0 2 246 2 103 2 106 0 0 0 3 1 0 0 3 36 0
+    0 0 3 10 0 0 3 23 0 0 0 3 19 0 0 3 21 2 107 2 109 0 0 0 3
+    32 0 0 3 34 2 113 2 114 0 0 0 3 45 0 0 3 58 0 0 0 3 54 0 0
+    3 56 2 117 2 118 0 0 0 3 67 0 0 3 69 2 119 2 120 0 0 0 3 80 0
+    0 3 143 0 0 0 3 89 0 0 3 130 0 0 0 3 98 0 0 3 111 0 0 0 3
+    107 0 0 3 109 2 122 2 224 0 0 0 3 120 0 0 3 125 9 0 0 0 0 9 0
+    0 0 0 0 0 0 3 139 0 0 3 141 2 32 2 48 0 0 0 3 152 0 0 3 165
+    0 0 0 3 161 0 0 3 163 2 49 2 50 0 0 0 3 174 0 0 3 176 2 104 2
+    108;
+Array encoding_patches --> 8 13 17 22 26 31 35 40 44 49 53 64
+    68 75 79 86 90 99 103 108 112 117 121 126 130 139 143 152 156
+    161 165 176 180 185 189 200 204 209 213 219 223 228 232 237 241 251
+    255 260 264 273 277 288 292 297 301 306 310 315 319 336 340 361 365
+    370 374 389 393 436 440 445 449 454 458 509 513 536 540 545 549 584
+    588 623 627 632 636 641 645 650 654 659 663 668 672 713 717 726 730
+    735 739 748 752 761 765 770 774 779 783 792 796 805 809 814 818 827
+    831 840 844 849 853 858 862 867 871 880 884 899 903 912 916 921 925
+    934 938 0;
 Global table_patched = false;
 
 ! Call this before you do "@setstringtbl encoding_table".
@@ -3040,29 +3045,29 @@ Global table_patched = false;
     addr-->0 = addr-->0 + encoding_table;
     ix++;
   }
-  addr = encoding_table + 206; addr-->0 = argprint;
-  addr = encoding_table + 211; addr-->0 = hello_str;
-  addr = encoding_table + 243; addr-->0 = double_indirect+0;
-  addr = encoding_table + 248; addr-->0 = double_indirect+4;
-  addr = encoding_table + 262; addr-->0 = double_indirect+8;
-  addr = encoding_table + 267; addr-->0 = argprint;
-  addr = encoding_table + 275; addr-->0 = 1;
-  addr = encoding_table + 298; addr-->0 = argprint;
-  addr = encoding_table + 306; addr-->0 = 1;
-  addr = encoding_table + 310; addr-->0 = 2;
-  addr = encoding_table + 315; addr-->0 = hello_str;
-  addr = encoding_table + 323; addr-->0 = 1;
-  addr = encoding_table + 337; addr-->0 = nativeprint;
-  addr = encoding_table + 345; addr-->0 = "foo";
-  addr = encoding_table + 349; addr-->0 = "bar";
-  addr = encoding_table + 354; addr-->0 = double_indirect+0;
-  addr = encoding_table + 362; addr-->0 = 1;
-  addr = encoding_table + 403; addr-->0 = double_indirect+4;
-  addr = encoding_table + 411; addr-->0 = 2;
-  addr = encoding_table + 415; addr-->0 = 3;
-  addr = encoding_table + 420; addr-->0 = double_indirect+8;
-  addr = encoding_table + 428; addr-->0 = hello_str;
-  addr = encoding_table + 432; addr-->0 = bye_str;
+  addr = encoding_table + 246; addr-->0 = double_indirect+8;
+  addr = encoding_table + 504; addr-->0 = argprint;
+  addr = encoding_table + 518; addr-->0 = hello_str;
+  addr = encoding_table + 523; addr-->0 = argprint;
+  addr = encoding_table + 531; addr-->0 = 1;
+  addr = encoding_table + 554; addr-->0 = argprint;
+  addr = encoding_table + 562; addr-->0 = 1;
+  addr = encoding_table + 566; addr-->0 = 2;
+  addr = encoding_table + 571; addr-->0 = hello_str;
+  addr = encoding_table + 579; addr-->0 = 1;
+  addr = encoding_table + 593; addr-->0 = nativeprint;
+  addr = encoding_table + 601; addr-->0 = "foo";
+  addr = encoding_table + 605; addr-->0 = "bar";
+  addr = encoding_table + 610; addr-->0 = double_indirect+0;
+  addr = encoding_table + 618; addr-->0 = 1;
+  addr = encoding_table + 677; addr-->0 = double_indirect+4;
+  addr = encoding_table + 685; addr-->0 = 2;
+  addr = encoding_table + 689; addr-->0 = 3;
+  addr = encoding_table + 694; addr-->0 = double_indirect+8;
+  addr = encoding_table + 702; addr-->0 = hello_str;
+  addr = encoding_table + 706; addr-->0 = bye_str;
+  addr = encoding_table + 889; addr-->0 = double_indirect+0;
+  addr = encoding_table + 894; addr-->0 = double_indirect+4;
 ];
 
 ! Double-indirect references: (start out as all zeroes)
@@ -3070,32 +3075,37 @@ Array double_indirect --> 3 ;
 
 ! String objects
 
-Array alphabet2_str -> $E1 89 78 13 137 102 220 200 114 158 159 230 71
-    16 195 43 201 138 26 181 2;
-Array alphabet_str -> $E1 89 78 13 137 102 220 200 114 158 159 230 71
-    16 195 43 201 138 26 181 2;
-Array bye_str -> $E1 121 76 5;
-Array dindir0_1_str -> $E1 139 191 2;
-Array dindir0_str -> $E1 139 184 2;
-Array dindir1_23_str -> $E1 75 184 2;
-Array dindir1_str -> $E1 139 188 2;
-Array dindir2_hello_bye_str -> $E1 75 188 2;
-Array dindir2_str -> $E1 139 186 2;
-Array hello_str -> $E1 46 121 63 23;
-Array highbit_str -> $E1 250 215 247 207 111 1;
-Array indirargprint_12_str -> $E1 139 185 2;
-Array indirargprint_1_str -> $E1 139 190 2;
-Array indirargprint_str -> $E1 11 187 2;
-Array indirhello_1_str -> $E1 139 189 2;
-Array indirhello_str -> $E1 11 191 2;
-Array indirnativeprint_foobar_str -> $E1 139 187 2;
-Array mix_str -> $E1 159 110 12 230 207 64 204 4 28 0 230 141
-    79 10 31 100 1;
-Array newline_str -> $E1 100 1;
-Array substring_str -> $E1 246 223 22;
-Array subunistring_str -> $E1 22 106 11;
-Array unicode_str -> $E1 153 14 2 23;
+Array alphabet2_str -> $E1 28 63 17 216 116 246 137 243 197 191 148 100
+    101 181 6 234 102 187 219 195 67 0;
+Array alphabet_str -> $E1 28 63 17 216 116 246 137 243 197 191 148 100
+    101 181 6 234 102 187 219 195 67 0;
+Array bye_str -> $E1 60 100 1;
+Array dindir012_str -> $E1 120 170 181 158 107 173 5 5;
+Array dindir0_1_str -> $E1 120 123 191 223 20;
+Array dindir0_str -> $E1 120 251 201 111 10;
+Array dindir1_23_str -> $E1 248 248 128 63 20;
+Array dindir1_str -> $E1 248 248 217 31 10;
+Array dindir2_hello_bye_str -> $E1 248 250 160 191 20;
+Array dindir2_str -> $E1 248 122 225 47 5;
+Array dinquote2_str -> $E1 168 71 227 98 60 210 20;
+Array hello_str -> $E1 31 251 127 57;
+Array highbit_str -> $E1 199 210 178 242 134 0;
+Array indirargprint_12_str -> $E1 166 199 6;
+Array indirargprint_1_str -> $E1 166 219 6;
+Array indirargprint_str -> $E1 166 211 6;
+Array indirhello_1_str -> $E1 166 215 6;
+Array indirhello_str -> $E1 166 203 6;
+Array indirnativeprint_foobar_str -> $E1 166 207 6;
+Array mix_str -> $E1 37 159 8 174 198 171 253 146 90 132 230 75
+    133 10 3 117 24;
+Array newline_str -> $E1 195 0;
+Array null_str -> $E1 1;
+Array substring_str -> $E1 186 73 7;
+Array subunistring_str -> $E1 186 67 7;
+Array unicode_str -> $E1 220 177 181 45;
 ! -----------
+
+Array cstring_str -> $E0 'C' ' ' 's' 't' 'r' 'i' 'n' 'g' '.' 0;
 
 Constant BIGBUFSIZE 256;
 Array bigbuffer -> BIGBUFSIZE;
@@ -3114,6 +3124,8 @@ TestClass StringsTest
 		check_str("hello", val); print ", ";
 		val = tablestring(bye_str);
 		check_str("bye", val); print ", ";
+		val = tablestring(null_str);
+		check_str("", val); print ", ";
 		val = tablestring(alphabet_str);
 		check_str("abcdefghijklmnopqrstuvwxyz", val); print ", ";
 		val = tablestring(highbit_str);
@@ -3130,7 +3142,12 @@ TestClass StringsTest
 		check_ustr("abcdefghijklmnopqrstuvwxyz", val); print ", ";
 		val = tableustring(unicode_str);
 		check_ustr("a@{e0}@{3b1}@{30a9}", val); print "^";
-		
+
+		print "C-style strings: ";
+		val = tableustring(cstring_str);
+		check_ustr("C string.", val); print "^";
+		!### unicode C-style string
+
 		print "Substrings: ";
 		val = tablestring(substring_str);
 		check_str("~substring~", val); print ", ";
@@ -3154,31 +3171,48 @@ TestClass StringsTest
 		print "Indirect references: ";
 		double_indirect-->0 = bye_str;
 		val = tablestring(dindir0_str);
-		check_str("[bye]", val); print ", ";
+		check_str("{0:bye:0}", val); print ", ";
 		double_indirect-->0 = substring_str;
 		val = tablestring(dindir0_str);
-		check_str("[~substring~]", val); print ", ";
+		check_str("{0:~substring~:0}", val); print ", ";
 		double_indirect-->0 = hello_str;
 		double_indirect-->1 = dindir0_str;
 		val = tablestring(dindir1_str);
-		check_str("[[hello]]", val); print ", ";
+		check_str("{1:{0:hello:0}:1}", val); print ", ";
 		double_indirect-->0 = byehello_func;
 		val = tablestring(dindir1_str);
-		check_str("[[bye hello]]", val); print ", ";
+		check_str("{1:{0:bye hello:0}:1}", val); print ", ";
 		double_indirect-->0 = argprint;
 		val = tablestring(dindir0_1_str);
-		check_str("[1]", val); print ", ";
+		check_str("{0:1:0}", val); print ", ";
 		double_indirect-->1 = argprint;
 		val = tablestring(dindir1_23_str);
-		check_str("[2 3]", val); print ", ";
+		check_str("{1:2 3:1}", val); print ", ";
 		double_indirect-->2 = argprintstr;
 		val = tablestring(dindir2_hello_bye_str);
-		check_str("[hello bye]", val); print "^";
+		check_str("{2:hello bye:2}", val); print ", ";
+		double_indirect-->2 = null_str;
+		val = tablestring(dinquote2_str);
+		check_str("{~'``'~}", val); print "^";
+
+		print "Multiple references: ";
+		double_indirect-->0 = hello_str;
+		double_indirect-->1 = bye_str;
+		double_indirect-->2 = cstring_str;
+		val = tablestring(dindir012_str);
+		check_str("{hello...bye...C string.}", val); print ", ";
+		testglobal = 0;
+		double_indirect-->0 = dindir1_str;
+		double_indirect-->1 = counterprint;
+		double_indirect-->2 = byehello_func;
+		val = tablestring(dindir012_str);
+		check_str("{{1:+0:1}...+1...bye hello}", val); print ", ";
+		print "counter="; check(testglobal, 2); print "^";
 
 		print "Indirect references with unicode: ";
 		double_indirect-->2 = unicode_str;
 		val = tableustring(dindir2_str);
-		check_ustr("[a@{e0}@{3b1}@{30a9}]", val); print "^";
+		check_ustr("{2:a@{e0}@{3b1}@{30a9}:2}", val); print "^";
 		
 		count_failures();
 	];
@@ -3222,6 +3256,12 @@ TestClass StringsTest
 		@streamstr sp;
 	}
 	@setstringtbl encoding_table;
+];
+
+[ counterprint;
+	@streamchar '+';
+	@streamnum testglobal;
+	testglobal++;
 ];
 
 [ byehello_func;
