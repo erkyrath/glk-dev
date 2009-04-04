@@ -656,7 +656,7 @@ TestClass ArithTest
 		print "$7fffffff/-2="; check_hex(val, -$3fffffff); print ", ";
 		@div (-$7fffffff) 2 val;
 		print "-$7fffffff/2="; check_hex(val, -$3fffffff); print ", ";
-		@div $80000000 2 val; !####?
+		@div $80000000 2 val; !#### this is probably wrong, don't trust it
 		print "$80000000/2="; check_hex(val, $40000000); print ", ";
 		@div $80000000 1 val;
 		print "$80000000/1="; check_hex(val, $80000000); print "^";
