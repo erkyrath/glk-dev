@@ -318,7 +318,10 @@ Class TestClass
 
 	glk($0047, str); ! stream_set_current
 
-	@streamstr val;
+	if (val->0 == $c0 or $c1)
+		val();
+	else
+		@streamstr val;
 
 	glk($0047, oldstr); ! stream_set_current
 	@copy $ffffffff sp;
@@ -337,7 +340,10 @@ Class TestClass
 
 	glk($0047, str); ! stream_set_current
 
-	@streamstr val;
+	if (val->0 == $c0 or $c1)
+		val();
+	else
+		@streamstr val;
 
 	glk($0047, oldstr); ! stream_set_current
 	@copy $ffffffff sp;
@@ -3268,6 +3274,66 @@ TestClass StringsTest
 	@streamstr bye_str;
 	@streamchar 32;
 	@streamstr hello_str;
+];
+
+TestClass IOSysTest
+	with name 'iosys',
+	testfunc [ val;
+		print "I/O mode switching:^^";
+
+		@setiosys 0 0;
+		val = string_to_array("static null", bigbuffer, BIGBUFSIZE);
+		@setiosys 2 0;
+		check_str("", val); print ", ";
+		
+		@setiosys 2 0;
+		val = string_to_array("static glk", bigbuffer, BIGBUFSIZE);
+		@setiosys 2 0;
+		check_str("static glk", val); print ", ";
+		
+		@setiosys 1 prependequal;
+		val = string_to_array("static filter", bigbuffer, BIGBUFSIZE);
+		@setiosys 2 0;
+		check_str("=s=t=a=t=i=c= =f=i=l=t=e=r", val); print "^";
+
+		testglobal=0; testglobal2=0;
+		@setiosys testglobal testglobal2;
+		val = string_to_array(iosys_tester, bigbuffer, BIGBUFSIZE);
+		@setiosys 2 0;
+		check_str("", val); print ", ";
+		print "guard="; check(testglobal, 99); print "^";
+
+		@setiosys 0 0;
+		testglobal=2; testglobal2=0;
+		@setiosys testglobal testglobal2;
+		val = string_to_array(iosys_tester, bigbuffer, BIGBUFSIZE);
+		@setiosys 2 0;
+		check_str("string, chr 0, -100", val); print ", ";
+		print "guard="; check(testglobal, 99); print "^";
+
+		testglobal=1; testglobal2=surroundbracket;
+		@setiosys testglobal testglobal2;
+		val = string_to_array(iosys_tester, bigbuffer, BIGBUFSIZE);
+		@setiosys 2 0;
+		check_str("<s><t><r><i><n><g><,>< ><c><h><r>< ><0><,>< ><-><1><0><0>", val); print ", ";
+		print "guard="; check(testglobal, 99); print "^";
+
+		!### repeat with unicode stream
+
+		count_failures();
+	];
+
+Array ccomma_str -> $E0 ',' ' ' 0;
+	
+[ iosys_tester;
+	print "string";
+	@streamstr ccomma_str;
+	@streamchar 'c'; @streamchar 'h'; @streamchar 'r'; @streamchar ' ';
+	@streamnum 0;
+	@streamunichar ',';
+	@streamunichar ' ';
+	@streamnum (-100);
+	testglobal = 99;
 ];
 
 TestClass FilterTest
