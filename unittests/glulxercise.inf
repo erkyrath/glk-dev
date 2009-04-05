@@ -3271,14 +3271,158 @@ TestClass StringsTest
 ];
 
 TestClass FilterTest
-	with name 'filter',
+	with name 'filter' 'filterio',
 	testfunc [ val;
 		print "Filter iosys mode:^^";
 		patch_encoding_table();
 		
-		!###
+		print "Basic strings: ";
+		val = tablefilterstring(hello_str);
+		check_str("=h=e=l=l=o", val); print ", ";
+		val = tablefilterrstring(bye_str);
+		check_str("b=y=e=", val); print ", ";
+		val = tablefilterstring(mix_str);
+		check_str("=T=h=i=s= =c=o=n=t=a=i=n=s= =s=e=v=e=r=a=l= =n=o=d=e= =t=y=p=e=s=.=^", val); print "^";
+
+		!### unicode
+
+		print "References: ";
+		val = tablefilterstring(indirhello_str);
+		check_str("=[=h=e=l=l=o=]", val); print ", ";
+		val = tablefilterstring(indirargprint_12_str);
+		check_str("=[=1= =2=]", val); print ", ";
+		val = tablefilterstring(indirnativeprint_foobar_str);
+		check_str("=[=f=o=o= =b=a=r=]", val); print "^";
 		
-		!### throw in a filter function? throw in an indirect function?
+		print "Multiple references: ";
+		double_indirect-->0 = hello_str;
+		double_indirect-->1 = bye_str;
+		double_indirect-->2 = cstring_str;
+		val = tablefilterstring(dindir012_str);
+		check_str("={=h=e=l=l=o=.=.=.=b=y=e=.=.=.=C= =s=t=r=i=n=g=.=}", val); print ", ";
+		double_indirect-->0 = bracketfilter;
+		double_indirect-->1 = indirhello_str;
+		double_indirect-->2 = indirargprint_12_str;
+		val = tablefilterstring(dindir012_str);
+		check_str("={<.><.><.><[><h><e><l><l><o><]><.><.><.><[><1>< ><2><]><}>", val); print ", ";
+		testglobal = 0;
+		double_indirect-->0 = dindir1_str;
+		double_indirect-->1 = counterprint;
+		double_indirect-->2 = byehello_func;
+		val = tablefilterstring(dindir012_str);
+		check_str("={={=1=:=+=0=:=1=}=.=.=.=+=1=.=.=.=b=y=e= =h=e=l=l=o=}", val); print ", ";
+		print "counter="; check(testglobal, 2); print "^";
+
+		!### indirect with unicode
 		
 		count_failures();
 	];
+
+[ tablefilterstring val len;
+	@setstringtbl encoding_table;
+	@setiosys 1 prependequal;
+	len = string_to_array(val, bigbuffer, BIGBUFSIZE);
+	val = 0-->7;
+	@setiosys 2 0;
+	@setstringtbl val;
+	return len;
+];
+
+[ tablefilterrstring val len;
+	@setiosys 1 appendequal;
+	@setstringtbl encoding_table;
+	len = string_to_array(val, bigbuffer, BIGBUFSIZE);
+	val = 0-->7;
+	@setstringtbl val;
+	@setiosys 2 0;
+	return len;
+];
+
+[ bracketfilter;
+	@setiosys 1 surroundbracket;
+];
+
+[ prependequal ch;
+	glk($0080, '='); ! put_char
+	glk($0080, ch); ! put_char
+];
+
+[ appendequal ch;
+	glk($0080, ch); ! put_char
+	glk($0080, '='); ! put_char
+];
+
+[ surroundbracket ch;
+	glk($0080, '<'); ! put_char
+	glk($0080, ch); ! put_char
+	glk($0080, '>'); ! put_char
+];
+
+TestClass NullIOTest
+	with name 'nullio',
+	testfunc [ val;
+		print "Null iosys mode:^^";
+		patch_encoding_table();
+		
+		print "Basic strings: ";
+		val = tablenullstring(hello_str);
+		check_str("", val); print ", ";
+		val = tablenullrstring(bye_str);
+		check_str("", val); print ", ";
+		val = tablenullstring(mix_str);
+		check_str("", val); print "^";
+
+		!### unicode
+
+		print "References: ";
+		val = tablenullstring(indirhello_str);
+		check_str("", val); print ", ";
+		val = tablenullstring(indirargprint_12_str);
+		check_str("", val); print ", ";
+		val = tablenullstring(indirnativeprint_foobar_str);
+		check_str("", val); print "^";
+		
+		print "Multiple references: ";
+		double_indirect-->0 = hello_str;
+		double_indirect-->1 = bye_str;
+		double_indirect-->2 = cstring_str;
+		val = tablenullstring(dindir012_str);
+		check_str("", val); print ", ";
+		double_indirect-->0 = indirhello_str;
+		double_indirect-->1 = bracketfilter;
+		double_indirect-->2 = indirargprint_12_str;
+		val = tablenullstring(dindir012_str);
+		check_str("<.><.><.><[><1>< ><2><]><}>", val); print ", ";
+		testglobal = 0;
+		double_indirect-->0 = dindir1_str;
+		double_indirect-->1 = counterprint;
+		double_indirect-->2 = byehello_func;
+		val = tablenullstring(dindir012_str);
+		check_str("", val); print ", ";
+		print "counter="; check(testglobal, 2); print "^";
+
+		!### indirect with unicode
+		
+		count_failures();
+	];
+
+[ tablenullstring val len;
+	@setstringtbl encoding_table;
+	@setiosys 0 0;
+	len = string_to_array(val, bigbuffer, BIGBUFSIZE);
+	val = 0-->7;
+	@setiosys 2 0;
+	@setstringtbl val;
+	return len;
+];
+
+[ tablenullrstring val len;
+	@setiosys 0 0;
+	@setstringtbl encoding_table;
+	len = string_to_array(val, bigbuffer, BIGBUFSIZE);
+	val = 0-->7;
+	@setstringtbl val;
+	@setiosys 2 0;
+	return len;
+];
+
