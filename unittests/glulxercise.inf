@@ -3320,6 +3320,19 @@ TestClass IOSysTest
 
 		!### repeat with unicode stream
 
+		@getiosys testglobal testglobal2;
+		print "current="; check(testglobal, 2); print ", ";
+		check(testglobal2, 0); print "^";
+
+		@setiosys 1 appendequal;
+		@getiosys sp sp;
+		@setiosys 2 0;
+		@stkswap;
+		@copy sp val;
+		print "current="; check(val, 1); print ", ";
+		@copy sp val;
+		check(val, appendequal); print "^";
+
 		count_failures();
 	];
 
