@@ -3308,14 +3308,14 @@ TestClass IOSysTest
 		@setiosys testglobal testglobal2;
 		val = string_to_array(iosys_tester, bigbuffer, BIGBUFSIZE);
 		@setiosys 2 0;
-		check_str("string, chr 0, -100", val); print ", ";
+		check_str("string, chr 0, -100 -2", val); print ", ";
 		print "guard="; check(testglobal, 99); print "^";
 
 		testglobal=1; testglobal2=surroundbracket;
 		@setiosys testglobal testglobal2;
 		val = string_to_array(iosys_tester, bigbuffer, BIGBUFSIZE);
 		@setiosys 2 0;
-		check_str("<s><t><r><i><n><g><,>< ><c><h><r>< ><0><,>< ><-><1><0><0>", val); print ", ";
+		check_str("<s><t><r><i><n><g><,>< ><c><h><r>< ><0><,>< ><-><1><0><0>< ><-><2>", val); print ", ";
 		print "guard="; check(testglobal, 99); print "^";
 
 		!### repeat with unicode stream
@@ -3333,12 +3333,32 @@ TestClass IOSysTest
 		@copy sp val;
 		check(val, appendequal); print "^";
 
+		print "Changing in mid-string: ";
+		@setiosys 1 surroundonce;
+		val = string_to_array(printhash_func, bigbuffer, BIGBUFSIZE);
+		@getiosys testglobal testglobal2;
+		print "current="; check(testglobal, 2); print ", ";
+		check(testglobal2, 0); print ", ";
+		check_str("<#>.", val); print ", ";
+		@setiosys 1 surroundonce;
+		val = string_to_array("abcde", bigbuffer, BIGBUFSIZE);
+		@getiosys testglobal testglobal2;
+		print "current="; check(testglobal, 2); print ", ";
+		check(testglobal2, 0); print ", ";
+		check_str("<a>bcde", val); print ", ";
+		@setiosys 1 surroundonce;
+		val = string_to_array(print123_func, bigbuffer, BIGBUFSIZE);
+		@getiosys testglobal testglobal2;
+		print "current="; check(testglobal, 2); print ", ";
+		check(testglobal2, 0); print ", ";
+		check_str("<1>23", val); print "^";
+
 		count_failures();
 	];
 
 Array ccomma_str -> $E0 ',' ' ' 0;
 	
-[ iosys_tester;
+[ iosys_tester   loc;
 	print "string";
 	@streamstr ccomma_str;
 	@streamchar 'c'; @streamchar 'h'; @streamchar 'r'; @streamchar ' ';
@@ -3346,7 +3366,21 @@ Array ccomma_str -> $E0 ',' ' ' 0;
 	@streamunichar ',';
 	@streamunichar ' ';
 	@streamnum (-100);
+	loc = ' ';
+	@streamchar loc;
+	loc = 2;
+	loc = 0-loc;
+	@streamnum loc;
 	testglobal = 99;
+];
+
+[ printhash_func;
+	@streamchar '#';
+	@streamchar '.';
+];
+
+[ print123_func;
+	@streamnum 123;
 ];
 
 TestClass FilterTest
@@ -3435,6 +3469,13 @@ TestClass FilterTest
 	glk($0080, '<'); ! put_char
 	glk($0080, ch); ! put_char
 	glk($0080, '>'); ! put_char
+];
+
+[ surroundonce ch;
+	@setiosys 2 0;
+	@streamchar '<';
+	@streamchar ch;
+	@streamchar '>';
 ];
 
 TestClass NullIOTest
