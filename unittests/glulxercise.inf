@@ -682,8 +682,12 @@ TestClass ArithTest
 		print "$7fffffff/-2="; check_hex(val, -$3fffffff); print ", ";
 		@div (-$7fffffff) 2 val;
 		print "-$7fffffff/2="; check_hex(val, -$3fffffff); print ", ";
-		@div $80000000 2 val; !#### this is probably wrong, don't trust it
-		print "$80000000/2="; check_hex(val, $40000000); print ", ";
+		@div (-$7fffffff) (-2) val;
+		print "-$7fffffff/-2="; check_hex(val, $3fffffff); print ", ";
+		@div $80000000 2 val;
+		print "$80000000/2="; check_hex(val, $C0000000); print ", ";
+		@div $80000000 (-2) val;
+		print "$80000000/(-2)="; check_hex(val, $40000000); print ", ";
 		@div $80000000 1 val;
 		print "$80000000/1="; check_hex(val, $80000000); print "^";
 		testglobal = -48; testglobal2 = -8;
@@ -700,12 +704,25 @@ TestClass ArithTest
 		print "13%-5="; check(val, 3); print ", ";
 		@mod (-13) (-5) val;
 		print "-13%-5="; check(val, -3); print ", ";
-		@mod $80000001 7 val;
-		print "$80000001%7="; check(val, -1); print ", ";
+		@mod $7fffffff 7 val;
+		print "$7fffffff%7="; check(val, 1); print ", ";
+		@mod (-$7fffffff) 7 val;
+		print "-$7fffffff%7="; check(val, -1); print ", ";
+		@mod $7fffffff (-7) val;
+		print "$7fffffff%-7="; check(val, 1); print ", ";
+		@mod (-$7fffffff) (-7) val;
+		print "-$7fffffff%-7="; check(val, -1); print ", ";
+		@mod $80000000 7 val;
+		print "$80000000%7="; check(val, -2); print ", ";
+		@mod $80000000 (-7) val;
+		print "$80000000%-7="; check(val, -2); print ", ";
 		@mod $80000000 2 val;
 		print "$80000000%2="; check(val, 0); print ", ";
+		@mod $80000000 (-2) val;
+		print "$80000000%-2="; check(val, 0); print ", ";
 		@mod $80000000 1 val;
 		print "$80000000%1="; check(val, 0); print "^";
+		
 		testglobal = 49; testglobal2 = -8;
 		@mod testglobal testglobal2 val;
 		print "Globals -49%-8="; check(val, 1); print "^";
