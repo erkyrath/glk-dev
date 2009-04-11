@@ -545,7 +545,9 @@ TestClass OperandTest
 		@copy ($7FFFFFFF) val;
 		print "$7FFFFFFF="; check_hex(val, $7FFFFFFF); print ", ";
 		@copy ($80000000) val;
-		print "$80000000="; check_hex(val, $80000000); print "^";
+		print "$80000000="; check_hex(val, $80000000); print ", ";
+		@copy ($CDEF1234) val;
+		print "$CDEF1234="; check_hex(val, $CDEF1234); print "^";
 
 		@add 0 0 val;
 		print "Constants: zero="; check(val, 0); print ", ";
@@ -564,7 +566,9 @@ TestClass OperandTest
 		@add 0 ($7FFFFFFF) val;
 		print "$7FFFFFFF="; check_hex(val, $7FFFFFFF); print ", ";
 		@add 0 ($80000000) val;
-		print "$80000000="; check_hex(val, $80000000); print "^";
+		print "$80000000="; check_hex(val, $80000000); print ", ";
+		@add 0 ($CDEF1234) val;
+		print "$CDEF1234="; check_hex(val, $CDEF1234); print "^";
 
 		testglobal = 123;
 		@copy testglobal val;
@@ -714,8 +718,14 @@ TestClass ArithTest
 		print "-(-5)="; check(val, 5); print ", ";
 		@neg $7FFFFFFF val;
 		print "-($7FFFFFFF)="; check(val, $80000001); print ", ";
+		@neg $80000001 val;
+		print "-($80000001)="; check(val, $7FFFFFFF); print ", ";
 		@neg $80000000 val;
 		print "-($80000000)="; check_hex(val, $80000000); print "^";
+
+		testglobal = $80000001;
+		@neg testglobal val;
+		print "global -($80000001)="; check(val, $7FFFFFFF); print "^";
 		
 		count_failures();
 	];
@@ -2940,6 +2950,16 @@ TestClass StackTest
 		print "stkcount="; check(val, 0); print "^";
 
 		@copy 1 sp; @copy 2 sp; @copy 3 sp; @copy 4 sp; @copy 6 sp;
+		@stkcount val;
+		@call arghasher val val;
+		print "hash(6,4,3,2,1)="; check(val, 36); print ", ";
+		@copy 1 sp; @copy 2 sp; @copy 3 sp; @copy 4 sp; @copy 6 sp;
+		@stkroll 0 1;
+		@stkcount val;
+		@call arghasher val val;
+		print "hash(6,4,3,2,1)="; check(val, 36); print ", ";
+		@copy 1 sp; @copy 2 sp; @copy 3 sp; @copy 4 sp; @copy 6 sp;
+		@stkroll 2 4;
 		@stkcount val;
 		@call arghasher val val;
 		print "hash(6,4,3,2,1)="; check(val, 36); print ", ";
