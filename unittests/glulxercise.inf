@@ -690,9 +690,22 @@ TestClass ArithTest
 		print "$80000000/(-2)="; check_hex(val, $40000000); print ", ";
 		@div $80000000 1 val;
 		print "$80000000/1="; check_hex(val, $80000000); print "^";
+		
 		testglobal = -48; testglobal2 = -8;
 		@div testglobal testglobal2 val;
-		print "Globals -48/-8="; check(val, 6); print "^";
+		print "Globals -48/-8="; check(val, 6); print ", ";
+		testglobal = 48; testglobal2 = 7;
+		@div testglobal testglobal2 val;
+		print "48/7="; check(val, 6); print ", ";
+		testglobal = 48; testglobal2 = -7;
+		@div testglobal testglobal2 val;
+		print "48/-7="; check(val, -6); print ", ";
+		testglobal = -48; testglobal2 = 7;
+		@div testglobal testglobal2 val;
+		print "-48/7="; check(val, -6); print ", ";
+		testglobal = -48; testglobal2 = -7;
+		@div testglobal testglobal2 val;
+		print "-48/-7="; check(val, 6); print "^";
 		
 		@mod 12 3 val;
 		print "12%3="; check(val, 0); print ", ";
@@ -723,9 +736,18 @@ TestClass ArithTest
 		@mod $80000000 1 val;
 		print "$80000000%1="; check(val, 0); print "^";
 		
+		testglobal = 49; testglobal2 = 8;
+		@mod testglobal testglobal2 val;
+		print "Globals 49%8="; check(val, 1); print ", ";
 		testglobal = 49; testglobal2 = -8;
 		@mod testglobal testglobal2 val;
-		print "Globals -49%-8="; check(val, 1); print "^";
+		print "49%-8="; check(val, 1); print ", ";
+		testglobal = -49; testglobal2 = 8;
+		@mod testglobal testglobal2 val;
+		print "-49%8="; check(val, -1); print ", ";
+		testglobal = -49; testglobal2 = -8;
+		@mod testglobal testglobal2 val;
+		print "-49%-8="; check(val, -1); print "^";
 
 		@neg 0 val;
 		print "-(0)="; check(val, 0); print ", ";
