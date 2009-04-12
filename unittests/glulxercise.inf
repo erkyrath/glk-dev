@@ -376,6 +376,24 @@ Class TestClass
 	rfalse;
 ];
 
+[ check_list _vararg_count    arr ix wanted;
+	@copy sp arr;
+	_vararg_count--;
+	
+	for (ix=0 : ix<_vararg_count : ix++) {
+		@copy sp wanted;
+		if (ix)
+			print ", ";
+		if (wanted == arr-->ix) {
+			print wanted;
+		}
+		else {
+			failures++;
+			print arr-->ix, " (should be ", wanted, " FAIL)";
+		}
+	}
+];
+
 [ check_str str len  newlen ix good ch;
 	good = true;
 	newlen = string_to_array(str, bigbuffer2, BIGBUFSIZE);
@@ -2450,11 +2468,26 @@ TestClass JumpTest
 		.P3jnz_f;
 		print "jnz -1="; check(val, 1); print "^";
 
-		!### more branches
+		testglobal = 0;
+		val = test_jumpabs();
+		print "jumpabs test="; check(val, 33); print ", ";
+		check(testglobal, 44); print "^";
 		
 		count_failures();
 	];
 
+[ test_jumpabs pos loc;
+	pos = test_jumpabs_2+5;
+	loc = 22;
+	@jumpabs pos;
+];
+
+[ test_jumpabs_2 pos loc;
+	pos = 0;
+	loc = loc+11;
+	testglobal = 44;
+	return loc;
+];
 
 TestClass JumpFormTest
 	with name 'jumpform',
@@ -2648,16 +2681,164 @@ TestClass JumpFormTest
 	@"1:49" 6;
 ];
 
+Array branch_results --> 10;
+
 TestClass CompareTest
 	with name 'compare',
-	testfunc [ val;
+	testfunc [;
 		print "Compare branches:^^";
 
-		!### both literals and variables in comparisons
+		test_branch_jgt(2,  -1, 0, 1, 2, 3, $7fffffff, $80000000);
+		print "jgt 2: "; check_list(branch_results,  1, 1, 1, 0, 0, 0, 1); print "^";
+		test_branch_jgt(-2,  -3, -2, -1, 0, 1, 3, $7fffffff, $80000000);
+		print "jgt -2: "; check_list(branch_results,  1, 0, 0, 0, 0, 0, 0, 1); print "^";
+		test_branch_jge(2,  -1, 0, 1, 2, 3, $7fffffff, $80000000);
+		print "jge 2: "; check_list(branch_results,  1, 1, 1, 1, 0, 0, 1); print "^";
+		test_branch_jge(-2,  -3, -2, -1, 0, 1, 3, $7fffffff, $80000000);
+		print "jge -2: "; check_list(branch_results,  1, 1, 0, 0, 0, 0, 0, 1); print "^";
+		
+		test_branch_jlt(2,  -1, 0, 1, 2, 3, $7fffffff, $80000000);
+		print "jlt 2: "; check_list(branch_results,  0, 0, 0, 0, 1, 1, 0); print "^";
+		test_branch_jlt(-2,  -3, -2, -1, 0, 1, 3, $7fffffff, $80000000);
+		print "jlt -2: "; check_list(branch_results,  0, 0, 1, 1, 1, 1, 1, 0); print "^";
+		test_branch_jle(2,  -1, 0, 1, 2, 3, $7fffffff, $80000000);
+		print "jle 2: "; check_list(branch_results,  0, 0, 0, 1, 1, 1, 0); print "^";
+		test_branch_jle(-2,  -3, -2, -1, 0, 1, 3, $7fffffff, $80000000);
+		print "jle -2: "; check_list(branch_results,  0, 1, 1, 1, 1, 1, 1, 0); print "^";
+		
+		test_branch_jgtu(2,  -1, 0, 1, 2, 3, $7fffffff, $80000000);
+		print "jgtu 2: "; check_list(branch_results,  0, 1, 1, 0, 0, 0, 0); print "^";
+		test_branch_jgtu(-2,  -3, -2, -1, 0, 1, 3, $7fffffff, $80000000);
+		print "jgtu -2: "; check_list(branch_results,  1, 0, 0, 1, 1, 1, 1, 1); print "^";
+		test_branch_jgeu(2,  -1, 0, 1, 2, 3, $7fffffff, $80000000);
+		print "jgeu 2: "; check_list(branch_results,  0, 1, 1, 1, 0, 0, 0); print "^";
+		test_branch_jgeu(-2,  -3, -2, -1, 0, 1, 3, $7fffffff, $80000000);
+		print "jgeu -2: "; check_list(branch_results,  1, 1, 0, 1, 1, 1, 1, 1); print "^";
+		
+		test_branch_jltu(2,  -1, 0, 1, 2, 3, $7fffffff, $80000000);
+		print "jltu 2: "; check_list(branch_results,  1, 0, 0, 0, 1, 1, 1); print "^";
+		test_branch_jltu(-2,  -3, -2, -1, 0, 1, 3, $7fffffff, $80000000);
+		print "jltu -2: "; check_list(branch_results,  0, 0, 1, 0, 0, 0, 0, 0); print "^";
+		test_branch_jleu(2,  -1, 0, 1, 2, 3, $7fffffff, $80000000);
+		print "jleu 2: "; check_list(branch_results,  1, 0, 0, 1, 1, 1, 1); print "^";
+		test_branch_jleu(-2,  -3, -2, -1, 0, 1, 3, $7fffffff, $80000000);
+		print "jleu -2: "; check_list(branch_results,  0, 1, 1, 0, 0, 0, 0, 0); print "^";
 		
 		count_failures();
 	];
 
+[ test_branch_jgt _vararg_count  val1 ix val2 res;
+	@copy sp val1;
+	_vararg_count--;
+	
+	for (ix=0 : ix<_vararg_count : ix++) {
+		@copy sp val2;
+		res = 1;
+		@jgt val1 val2 ?YES;
+		res = 0;
+		.YES;
+		branch_results-->ix = res;
+	}
+];
+	
+[ test_branch_jge _vararg_count  val1 ix val2 res;
+	@copy sp val1;
+	_vararg_count--;
+	
+	for (ix=0 : ix<_vararg_count : ix++) {
+		@copy sp val2;
+		res = 1;
+		@jge val1 val2 ?YES;
+		res = 0;
+		.YES;
+		branch_results-->ix = res;
+	}
+];
+	
+[ test_branch_jlt _vararg_count  val1 ix val2 res;
+	@copy sp val1;
+	_vararg_count--;
+	
+	for (ix=0 : ix<_vararg_count : ix++) {
+		@copy sp val2;
+		res = 1;
+		@jlt val1 val2 ?YES;
+		res = 0;
+		.YES;
+		branch_results-->ix = res;
+	}
+];
+	
+[ test_branch_jle _vararg_count  val1 ix val2 res;
+	@copy sp val1;
+	_vararg_count--;
+	
+	for (ix=0 : ix<_vararg_count : ix++) {
+		@copy sp val2;
+		res = 1;
+		@jle val1 val2 ?YES;
+		res = 0;
+		.YES;
+		branch_results-->ix = res;
+	}
+];
+	
+[ test_branch_jgtu _vararg_count  val1 ix val2 res;
+	@copy sp val1;
+	_vararg_count--;
+	
+	for (ix=0 : ix<_vararg_count : ix++) {
+		@copy sp val2;
+		res = 1;
+		@jgtu val1 val2 ?YES;
+		res = 0;
+		.YES;
+		branch_results-->ix = res;
+	}
+];
+	
+[ test_branch_jgeu _vararg_count  val1 ix val2 res;
+	@copy sp val1;
+	_vararg_count--;
+	
+	for (ix=0 : ix<_vararg_count : ix++) {
+		@copy sp val2;
+		res = 1;
+		@jgeu val1 val2 ?YES;
+		res = 0;
+		.YES;
+		branch_results-->ix = res;
+	}
+];
+	
+[ test_branch_jltu _vararg_count  val1 ix val2 res;
+	@copy sp val1;
+	_vararg_count--;
+	
+	for (ix=0 : ix<_vararg_count : ix++) {
+		@copy sp val2;
+		res = 1;
+		@jltu val1 val2 ?YES;
+		res = 0;
+		.YES;
+		branch_results-->ix = res;
+	}
+];
+	
+[ test_branch_jleu _vararg_count  val1 ix val2 res;
+	@copy sp val1;
+	_vararg_count--;
+	
+	for (ix=0 : ix<_vararg_count : ix++) {
+		@copy sp val2;
+		res = 1;
+		@jleu val1 val2 ?YES;
+		res = 0;
+		.YES;
+		branch_results-->ix = res;
+	}
+];
+	
 TestClass StackTest
 	with name 'stack',
 	testfunc [ val eight;
