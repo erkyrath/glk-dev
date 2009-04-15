@@ -1,6 +1,8 @@
 Constant Story "Glulxercise";
 Constant Headline "A Glulx interpreter unit test^";
 
+Release 2;
+
 Constant GG_MAINWIN_ROCK     201;
 Constant GG_SAVESTR_ROCK     301;
 Constant GG_SCRIPTSTR_ROCK   302;
