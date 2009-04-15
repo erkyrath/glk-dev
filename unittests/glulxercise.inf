@@ -3376,6 +3376,7 @@ Array unicode_str -> $E1 220 177 181 45;
 ! -----------
 
 Array cstring_str -> $E0 'C' ' ' 's' 't' 'r' 'i' 'n' 'g' '.' 0;
+Array cunistring_str --> $E2000000 'C' ' ' $DC 'n' $EF 'c' 'o' $3B4 'e' ' ' $201C $30A9 $201D 0;
 
 Constant BIGBUFSIZE 256;
 Array bigbuffer -> BIGBUFSIZE;
@@ -3416,7 +3417,8 @@ TestClass StringsTest
 		print "C-style strings: ";
 		val = tableustring(cstring_str);
 		check_ustr("C string.", val); print "^";
-		!### unicode C-style string
+		val = tableustring(cunistring_str);
+		check_ustr("C @{DC}n@{EF}co@{3B4}e @{201C}@{30A9}@{201D}", val); print "^";
 
 		print "Substrings: ";
 		val = tablestring(substring_str);
@@ -3560,6 +3562,11 @@ TestClass IOSysTest
 		@setiosys 2 0;
 		check_str("=s=t=a=t=i=c= =f=i=l=t=e=r", val); print "^";
 
+		@setiosys 1 prependuequal;
+		val = string_to_uniarray(cunistring_str, bigubuffer, BIGBUFSIZE);
+		@setiosys 2 0;
+		check_ustr("=C= =@{DC}=n=@{EF}=c=o=@{3B4}=e= =@{201C}=@{30A9}=@{201D}", val); print "^";
+
 		testglobal=0; testglobal2=0;
 		@setiosys testglobal testglobal2;
 		val = string_to_array(iosys_tester, bigbuffer, BIGBUFSIZE);
@@ -3582,7 +3589,12 @@ TestClass IOSysTest
 		check_str("<s><t><r><i><n><g><,>< ><c><h><r>< ><0><,>< ><-><1><0><0>< ><-><2>", val); print ", ";
 		print "guard="; check(testglobal, 99); print "^";
 
-		!### repeat with unicode stream
+		testglobal=1; testglobal2=surroundbracket;
+		@setiosys testglobal testglobal2;
+		val = string_to_uniarray(iosys_tester, bigubuffer, BIGBUFSIZE);
+		@setiosys 2 0;
+		check_ustr("<s><t><r><i><n><g><,>< ><c><h><r>< ><0><,>< ><-><1><0><0>< ><-><2>", val); print ", ";
+		print "guard="; check(testglobal, 99); print "^";
 
 		@getiosys testglobal testglobal2;
 		print "current="; check(testglobal, 2); print ", ";
@@ -3659,9 +3671,9 @@ TestClass FilterTest
 		val = tablefilterrstring(bye_str);
 		check_str("b=y=e=", val); print ", ";
 		val = tablefilterstring(mix_str);
-		check_str("=T=h=i=s= =c=o=n=t=a=i=n=s= =s=e=v=e=r=a=l= =n=o=d=e= =t=y=p=e=s=.=^", val); print "^";
-
-		!### unicode
+		check_str("=T=h=i=s= =c=o=n=t=a=i=n=s= =s=e=v=e=r=a=l= =n=o=d=e= =t=y=p=e=s=.=^", val); print ", ";
+		val = tablefilterstring(cunistring_str);
+		check_str("=C= =@{DC}=n=@{EF}=c=o=@{B4}=e= =@{1C}=@{A9}=@{1D}", val); print "^";
 
 		print "References: ";
 		val = tablefilterstring(indirhello_str);
@@ -3688,9 +3700,14 @@ TestClass FilterTest
 		double_indirect-->2 = byehello_func;
 		val = tablefilterstring(dindir012_str);
 		check_str("={={=1=:=+=0=:=1=}=.=.=.=+=1=.=.=.=b=y=e= =h=e=l=l=o=}", val); print ", ";
-		print "counter="; check(testglobal, 2); print "^";
-
-		!### indirect with unicode
+		print "counter="; check(testglobal, 2); print ", ";
+		testglobal = 0;
+		double_indirect-->0 = cstring_str;
+		double_indirect-->1 = counterprint;
+		double_indirect-->2 = cunistring_str;
+		val = tablefilterstring(dindir012_str);
+		check_str("={=C= =s=t=r=i=n=g=.=.=.=.=+=0=.=.=.=C= =@{DC}=n=@{EF}=c=o=@{B4}=e= =@{1C}=@{A9}=@{1D}=}", val); print ", ";
+		print "counter="; check(testglobal, 1); print "^";
 		
 		count_failures();
 	];
@@ -3724,6 +3741,11 @@ TestClass FilterTest
 	glk($0080, ch); ! put_char
 ];
 
+[ prependuequal ch;
+	glk($0080, '='); ! put_char
+	glk($0128, ch); ! put_char_uni
+];
+
 [ appendequal ch;
 	glk($0080, ch); ! put_char
 	glk($0080, '='); ! put_char
@@ -3754,9 +3776,9 @@ TestClass NullIOTest
 		val = tablenullrstring(bye_str);
 		check_str("", val); print ", ";
 		val = tablenullstring(mix_str);
+		check_str("", val); print ", ";
+		val = tablenullstring(cunistring_str);
 		check_str("", val); print "^";
-
-		!### unicode
 
 		print "References: ";
 		val = tablenullstring(indirhello_str);
@@ -3783,9 +3805,14 @@ TestClass NullIOTest
 		double_indirect-->2 = byehello_func;
 		val = tablenullstring(dindir012_str);
 		check_str("", val); print ", ";
-		print "counter="; check(testglobal, 2); print "^";
-
-		!### indirect with unicode
+		print "counter="; check(testglobal, 2); print ", ";
+		testglobal = 0;
+		double_indirect-->0 = cunistring_str;
+		double_indirect-->1 = counterprint;
+		double_indirect-->2 = cstring_str;
+		val = tablenullstring(dindir012_str);
+		check_str("", val); print ", ";
+		print "counter="; check(testglobal, 1); print "^";
 		
 		count_failures();
 	];
