@@ -2570,7 +2570,11 @@ TestClass JumpFormTest
 		val = test_push_computed_jz(0, 10);
 		print "F3="; check(val, 5); print ", ";
 		val = test_push_computed_jz(123, 10);
-		print "F4="; check(val, 2); print "^";
+		print "F4="; check(val, 2); print ", ";
+		val = test_push_computed_jz(0, 0);
+		print "F5="; check(val, 0); print ", ";
+		val = test_push_computed_jz(0, 1);
+		print "F6="; check(val, 1); print "^";
 
 		print "^Jump-if-equal with various operand forms:^^";
 
@@ -2590,7 +2594,11 @@ TestClass JumpFormTest
 		val = test_push_computed_jeq(7, 7, 10);
 		print "F3="; check(val, 5); print ", ";
 		val = test_push_computed_jeq(7, 6, 10);
-		print "F4="; check(val, 2); print "^";
+		print "F4="; check(val, 2); print ", ";
+		val = test_push_computed_jeq(-1, -1, 1);
+		print "F5="; check(val, 1); print ", ";
+		val = test_push_computed_jeq(0, 0, 0);
+		print "F6="; check(val, 0); print "^";
 
 		count_failures();
 	];
