@@ -368,6 +368,16 @@ Class TestClass
 	rfalse;
 ];
 
+[ check_range val wantmin wantmax;
+	if (val >= wantmin && val <= wantmax) {
+		print val;
+		rtrue;
+	}
+	failures++;
+	print val, " (should be in [", wantmin, "..", wantmax, "] FAIL)";
+	rfalse;
+];
+
 [ check_hex val wanted;
 	if (val == wanted) {
 		print (Hex) val;
@@ -3839,3 +3849,154 @@ TestClass NullIOTest
 	return len;
 ];
 
+Array histogram --> 16;
+
+TestClass RandomTest
+	with name 'random',
+	testfunc [ val ix hibit lobit;
+		print "Random-number generator:^";
+		print "NOTE: Tests may, very occasionally, fail through sheer bad
+			luck. If so, try this test again.^^";
+
+		@setrandom 0;
+
+		for (ix=0 : ix<4 : ix++) {
+			histogram-->ix = 0;
+		}
+		for (ix=0 : ix<240 : ix++) {
+			@random 4 val;
+			(histogram-->val)++;
+		}
+		print "Random 4: ";
+		for (ix=0 : ix<4 : ix++) {
+			print ix, "="; check_range(histogram-->ix, 30, 90); print ", ";
+		}
+		print "^";
+
+		for (ix=0 : ix<5 : ix++) {
+			histogram-->ix = 0;
+		}
+		for (ix=0 : ix<240 : ix++) {
+			@random (-5) val;
+			val = -val;
+			(histogram-->val)++;
+		}
+		print "Random -5: ";
+		for (ix=0 : ix<5 : ix++) {
+			print ix, "="; check_range(histogram-->ix, 24, 72); print ", ";
+		}
+		print "^";
+
+		for (ix=0 : ix<4 : ix++) {
+			histogram-->ix = 0;
+		}
+		hibit = 0;
+		lobit = 0;
+		for (ix=0 : ix<240 : ix++) {
+			@random 0 val;
+			if (val < 0)
+				hibit++;
+			else
+				lobit++;
+			val = val & 3;
+			(histogram-->val)++;
+		}
+		print "Random 0: ";
+		for (ix=0 : ix<4 : ix++) {
+			print ix, "="; check_range(histogram-->ix, 30, 90); print ", ";
+		}
+		print "lobit="; check_range(lobit, 100, 140); print ", ";
+		print "hibit="; check_range(hibit, 100, 140); print ", ";
+		print "^";
+
+		testglobal = 4;
+		for (ix=0 : ix<4 : ix++) {
+			histogram-->ix = 0;
+		}
+		for (ix=0 : ix<240 : ix++) {
+			@random testglobal val;
+			(histogram-->val)++;
+		}
+		print "Random 4 global: ";
+		for (ix=0 : ix<4 : ix++) {
+			print ix, "="; check_range(histogram-->ix, 30, 90); print ", ";
+		}
+		print "^";
+
+		testglobal = -5;
+		for (ix=0 : ix<5 : ix++) {
+			histogram-->ix = 0;
+		}
+		for (ix=0 : ix<240 : ix++) {
+			@random testglobal val;
+			val = -val;
+			(histogram-->val)++;
+		}
+		print "Random -5 global: ";
+		for (ix=0 : ix<5 : ix++) {
+			print ix, "="; check_range(histogram-->ix, 24, 72); print ", ";
+		}
+		print "^";
+
+		testglobal = 0;
+		for (ix=0 : ix<4 : ix++) {
+			histogram-->ix = 0;
+		}
+		hibit = 0;
+		lobit = 0;
+		for (ix=0 : ix<240 : ix++) {
+			@random testglobal val;
+			if (val < 0)
+				hibit++;
+			else
+				lobit++;
+			val = val & 3;
+			(histogram-->val)++;
+		}
+		print "Random 0 global: ";
+		for (ix=0 : ix<4 : ix++) {
+			print ix, "="; check_range(histogram-->ix, 30, 90); print ", ";
+		}
+		print "lobit="; check_range(lobit, 100, 140); print ", ";
+		print "hibit="; check_range(hibit, 100, 140); print ", ";
+		print "^";
+		
+		count_failures();
+	];
+
+TestClass DRandomTest
+	with name 'nonrandom' 'detrandom' 'deterministic',
+	testfunc [ val ix orig0;
+		print "Random numbers in deterministic mode:^^";
+
+		@setrandom 1;
+		for (ix=0 : ix<16 : ix++) {
+			@random 0 val;
+			histogram-->ix = val;
+		}
+		orig0 = histogram-->0;
+		@setrandom 1;
+		print "setrandom 1: ";
+		for (ix=0 : ix<16 : ix++) {
+			@random 0 val;
+			check(val, histogram-->ix); print ", ";
+		}
+		print "^";
+
+		@setrandom 100;
+		for (ix=0 : ix<16 : ix++) {
+			@random 0 val;
+			histogram-->ix = val;
+		}
+		@setrandom 100;
+		print "setrandom 100: ";
+		for (ix=0 : ix<16 : ix++) {
+			@random 0 val;
+			check(val, histogram-->ix); print ", ";
+		}
+		print "^";
+		val = (orig0 ~= histogram-->0);
+		print "Sequences different: "; check(val, 1); print "^";
+		
+		count_failures();
+	];
