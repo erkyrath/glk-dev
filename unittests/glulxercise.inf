@@ -39,6 +39,7 @@ Constant PARSE_BUFFER_LEN = 244;    ! 4 + MAX_BUFFER_WORDS*4;
 Array  buffer    buffer INPUT_BUFFER_LEN;
 Array  parse     --> PARSE_BUFFER_LEN/WORDSIZE;
 
+Global allstackdepth;
 Global failures = 0;
 Global total_failures = 0;
 
@@ -273,6 +274,7 @@ Array gg_tokenbuf -> DICT_WORD_SIZE;
 			continue;
 		}
 
+		allstackdepth = 0;
 		found.testfunc();
 	}
 ];
@@ -493,6 +495,7 @@ TestClass AllAction
 
 			res = total_failures;
 			print "^";
+			allstackdepth = 116;
 			obj.testfunc();
 			obj.fail_count = total_failures - res;
 		}
@@ -3262,6 +3265,193 @@ TestClass StackTest
 		
 		count_failures();
 	];
+
+TestClass ThrowTest
+	with name 'throw' 'catch' 'exception' 'continuation',
+	testfunc [ val tok;
+		print "Catch/throw:^^";
+
+		testglobal = 0;
+		val = test_catch_jump0();
+		print "catch 0="; check(val, 0); print ", ";
+		print "token="; check(testglobal, 248+allstackdepth); print "^";
+		
+		testglobal = 0;
+		val = test_catch_jump1();
+		print "catch 1="; check(val, 1); print ", ";
+		print "token="; check(testglobal, 248+allstackdepth); print "^";
+		
+		testglobal = 0;
+		val = test_catch_jump1sp();
+		print "catch 1 sp="; check(val, 1); print ", ";
+		print "token="; check(testglobal, 248+allstackdepth); print "^";
+
+		testglobal = 0;
+		@copy 77 sp;
+		val = test_catch_discard();
+		print "catch discard="; check(val, 100); print ", ";
+		print "token="; check(testglobal, 252+allstackdepth); print ", ";
+		@copy sp val;
+		print "guard="; check(val, 77); print "^";
+		
+		testglobal = 0;
+		val = test_catch_computed(5);
+		print "catch computed="; check(val, 99); print ", ";
+		print "thrown="; check(testglobal, 97); print ", ";
+		print "token="; check(testglobal2, 256+allstackdepth); print "^";
+
+		testglobal = 0;
+		testglobal2 = 0;
+		val = 88;
+		@catch testglobal ?Catch1;
+		jump Throw1;
+		.Catch1;
+		testglobal2 = testglobal;
+		val = recurse_throw(testglobal, 100, 5);
+		testglobal = 0;
+		testglobal2 = 0;
+		.Throw1;
+		print "global catch="; check(testglobal, 105); print ", ";
+		print "token="; check(testglobal2, 220+allstackdepth); print ", ";
+		print "guard="; check(val, 88); print "^";
+		
+		testglobal = 0;
+		testglobal2 = 0;
+		val = 87;
+		@catch testglobal ?Catch2;
+		jump Throw2;
+		.Catch2;
+		testglobal2 = testglobal;
+		val = recurse_throw_sp(testglobal, 100, 6);
+		testglobal = 0;
+		testglobal2 = 0;
+		.Throw2;
+		print "global catch="; check(testglobal, 106); print ", ";
+		print "token="; check(testglobal2, 220+allstackdepth); print ", ";
+		print "guard="; check(val, 87); print "^";
+		
+		testglobal = 0;
+		testglobal2 = 0;
+		val = 86;
+		@catch testglobal ?Catch3;
+		jump Throw3;
+		.Catch3;
+		testglobal2 = testglobal;
+		val = recurse_throw_spnoop(testglobal, 100, 7);
+		testglobal = 0;
+		testglobal2 = 0;
+		.Throw3;
+		print "global catch="; check(testglobal, 107); print ", ";
+		print "token="; check(testglobal2, 220+allstackdepth); print ", ";
+		print "guard="; check(val, 86); print "^";
+
+		tok = 0;
+		testglobal2 = 0;
+		val = 88;
+		@catch tok ?Catch4;
+		jump Throw4;
+		.Catch4;
+		testglobal2 = tok;
+		val = recurse_throw(tok, 100, 5);
+		tok = 0;
+		testglobal2 = 0;
+		.Throw4;
+		print "local catch="; check(tok, 105); print ", ";
+		print "token="; check(testglobal2, 220+allstackdepth); print ", ";
+		print "guard="; check(val, 88); print "^";
+
+		tok = 0;
+		testglobal = 0;
+		testglobal2 = 0;
+		val = 87;
+		@catch sp ?Catch5;
+		testglobal++;
+		jump Throw5;
+		.Catch5;
+		@copy sp testglobal2;
+		val = recurse_throw(testglobal2, 100, 4);
+		tok = 0;
+		testglobal2 = 0;
+		.Throw5;
+		@copy sp tok;
+		print "local catch="; check(tok, 104); print ", ";
+		print "token="; check(testglobal2, 220+allstackdepth); print ", ";
+		print "count="; check(testglobal, 1); print ", ";
+		print "guard="; check(val, 87); print "^";
+		
+		count_failures();
+	];
+
+[ test_catch_jump0;
+	@"2:50" testglobal 0;
+	testglobal = 98;
+	return 99;
+];
+
+[ test_catch_jump1;
+	noop();
+	@"2:50" testglobal 1;
+	testglobal = 98;
+	return 99;
+];
+	
+[ test_catch_jump1sp;
+	@copy 1 sp;
+	noop();
+	@"2:50" testglobal sp;
+	testglobal = 98;
+	return 99;
+];
+	
+[ test_catch_discard;
+	@catch testglobal ?Catch;
+	testglobal = 98;
+	return 99;
+	.Catch;
+	return 100;
+];
+
+[ test_catch_computed loc dummy;
+	@"2:50" testglobal loc;
+	@"1:49" 99;
+	!.Catch;
+	testglobal2 = testglobal;
+	@"2:51" 97 testglobal;
+	testglobal = 0;
+	dummy = 0;
+	return 0;
+];
+
+[ recurse_throw token val depth;
+	if (depth == 0)
+		@throw val token;
+	else
+		recurse_throw(token, val+1, depth-1);
+	return 99;
+];
+
+[ recurse_throw_sp token val depth;
+	if (depth == 0) {
+		@copy token sp;
+		@copy val sp;
+		@throw sp sp;
+	}
+	else
+		recurse_throw(token, val+1, depth-1);
+	return 99;
+];
+
+[ recurse_throw_spnoop token val depth;
+	if (depth == 0) {
+		@copy token sp;
+		@copy val sp;
+		noop();
+		@throw sp sp;
+	}
+	else
+		recurse_throw(token, val+1, depth-1);
+	return 99;
+];
 
 ! The following is imported from encode-table.
 ! -----------
