@@ -3594,7 +3594,8 @@ TestClass StringsTest
 
 		print "Basic strings: ";
 		val = tablestring(hello_str);
-		check_str("hello", val); print ", ";
+		check_str("hello", val); 
+		print " is len "; check(val, 5); print ", ";
 		val = tablestring(bye_str);
 		check_str("bye", val); print ", ";
 		val = tablestring(null_str);
