@@ -1,7 +1,7 @@
 Constant Story "Glulxercise";
 Constant Headline "A Glulx interpreter unit test^";
 
-Release 2;
+Release 3;
 
 Constant GG_MAINWIN_ROCK     201;
 Constant GG_SAVESTR_ROCK     301;
@@ -4149,6 +4149,17 @@ TestClass RandomTest
 		}
 		print "lobit="; check_range(lobit, 100, 140); print ", ";
 		print "hibit="; check_range(hibit, 100, 140); print ", ";
+		print "^";
+
+		hibit = 0;
+		lobit = $FFFFFFFF;
+		for (ix=0 : ix<24 : ix++) {
+			@random 0 val;
+			hibit = hibit | val;
+			lobit = lobit & val;
+		}
+		print "Accumulated bits: hi="; check(hibit, $FFFFFFFF); print ", ";
+		print "lo="; check(lobit, 0); print ", ";
 		print "^";
 		
 		count_failures();
