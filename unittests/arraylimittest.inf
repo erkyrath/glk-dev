@@ -1,0 +1,81 @@
+[ Main win;
+
+#ifdef TARGET_GLULX;
+	@setiosys 2 0; ! select Glk I/O system
+	win = glk($0023, 0, 0, 0, 3, 0); ! glk_window_open
+	glk($002F, win); ! glk_set_window
+#ifnot;
+	win=0;
+#endif;
+
+	print "ArrayLimitTest^^";
+	print "This test commits a sin: it calls print_to_array(buf) with
+		one argument, to see how the interpreter reacts. This form
+		is deprecated in Glulx; you should be using two arguments.^^
+		A correct interpreter should display either a warning or a
+		fatal error. (If 2009 is recent, a warning is sufficient.)
+		If the error is not fatal, it will also display the intended
+		output of the test, which is two identical lines:^^";
+	print "7 chars: Hello.@@94J (1013*@@94@@64)^";
+	print "7 chars: Hello.@@94J (1013*@@94@@64)^^";
+	print "An old interpreter might print that output; or it might
+		print only one such line, which is wrong. (This uncertainty
+		is why this is a sin, and deprecated.) Conceivably it might
+		crash, which is even worse.^^";
+	print "(If the interpreter displays the error ~[** Programming error:
+		tried to call Glulx print_to_array with only one argument **]~,
+		then the compiler has caught the sin and prevented it from
+		happening at all! Which is virtuous of the compiler, but it 
+		makes this test pointless. You must compile this source code with
+		an older Inform compiler, or download the arraylimittest.ulx
+		file from the Glk web site.)^^";
+	print "Okay, enough explanation. Test time. Ready? Go!^^";
+	print "---------------------------------------^^";
+
+	runtest();
+];
+
+Constant teststr = "Hello.^";
+
+Array buf -> 1024;
+
+[ runtest;
+	clearbuf();
+	teststr.print_to_array(buf, 1024);
+	printbuf();
+	
+	clearbuf();
+	teststr.print_to_array(buf);
+	printbuf();
+];
+
+[ clearbuf ix;
+	for (ix=0 : ix<1024 : ix++)
+		buf->ix = 0;
+];
+
+[ printbuf ix ch count;
+	ch = (buf+0)-->0;
+	print ch, " chars: ";
+	count = 0;
+	for (ix=4 : ix<1024 : ix++) {
+		ch = buf->ix;
+		if (ch == 0) {
+			count++;
+			continue;
+		}
+		if (count) {
+			print " (", count, "*0) ";
+			count = 0;
+		}
+		if (ch < 32)
+			print "@@94", (char) (ch+64);
+		else
+			print (char) ch;
+	}
+	if (count) {
+		print " (", count, "*@@94@@64) ";
+		count = 0;
+	}
+	new_line;
+];
