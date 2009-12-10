@@ -179,6 +179,10 @@ Verb '@{431}@{440}@{430}@{442}@{44c}' * -> Fake;
         cx = wpos - 1;
         for (ix=0 : ix<wlen : ix++) {
           ch = buf-->(cx+ix);
+          ! We only lowercase characters up through 256, which is what
+          ! glk_char_to_lower() can handle. We ought to be calling
+          ! glk_buffer_to_lower_case_uni() to lower-case everything,
+          ! but that's messier.
           if (ch < 256) ch = glk($00A0, ch);
           gg_tokenbuf-->ix = ch;
         }
