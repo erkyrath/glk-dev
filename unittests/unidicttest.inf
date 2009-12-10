@@ -3,6 +3,8 @@
 Constant Story "UniDictTest";
 Constant Headline "Not a game.^";
 
+Release 2;
+
 Global mainwin;
 Array gg_event --> 4;
 Constant BUFLEN = 80;
@@ -137,7 +139,7 @@ Verb '@{431}@{440}@{430}@{442}@{44c}' * -> Fake;
 ! It's not ideal but it's consistent.
 
 [ tokenise buf tab
-    cx numwords len bx ix wx wpos wlen val res dictlen entrylen wordbytes ch;
+    cx numwords len bx ix wx wpos wlen val res dictlen wordbytes ch;
     len = buf-->0;
     buf = buf+WORDSIZE;
 
@@ -166,7 +168,6 @@ Verb '@{431}@{440}@{430}@{442}@{44c}' * -> Fake;
     ! Now we look each word up in the dictionary.
 
     dictlen = #dictionary_table-->0;
-    entrylen = wordbytes + 10;
 
     for (wx=0 : wx<numwords : wx++) {
         wlen = tab-->(wx*3+2);
@@ -184,19 +185,20 @@ Verb '@{431}@{440}@{430}@{442}@{44c}' * -> Fake;
         for (: ix<DICT_WORD_SIZE : ix++) gg_tokenbuf-->ix = 0;
 
         val = #dictionary_table + WORDSIZE;
-        @binarysearch gg_tokenbuf wordbytes val entrylen dictlen 4 1 res;
+        @binarysearch gg_tokenbuf wordbytes val DICT_ENTRY_BYTES dictlen 4 1 res;
         tab-->(wx*3+1) = res;
     }
 ];
 
-[ PrintDict count ix entrysize wd;
+[ PrintDict count ix wd;
   count = #dictionary_table-->0;
-  print "The dictionary contains ", count, " words.^^";
-
-  entrysize = WORDSIZE * DICT_WORD_SIZE + 10;
+  print "The dictionary contains ", count, " words, and begins at address ",
+    #dictionary_table, ".^";
+  print "Each entry is ", DICT_ENTRY_BYTES, " bytes long, including ",
+    DICT_WORD_SIZE, " (", DICT_CHAR_SIZE, "-byte) characters.^^";
 
   for (ix=0 : ix<count : ix++) {
-    wd = (#dictionary_table + WORDSIZE) + ix*entrysize;
+    wd = (#dictionary_table + WORDSIZE) + ix*DICT_ENTRY_BYTES;
     print "    '", (address) wd, "'";
     if ((wd->#dict_par1) & 1)
       print " (verb)";
