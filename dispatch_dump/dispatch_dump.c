@@ -1,3 +1,11 @@
+/* dispatch_dump: A quick hack to dump the g_dispa data (the Glk API
+   description) out as a text or XML file.
+
+   Link this with cheapglk, and run "dispatch_dump" or "dispatch_dump --xml".
+
+   This program is in the public domain.
+*/
+
 #include "glk.h"
 #include "glkstart.h" /* This comes with the Glk library. */
 #include "gi_dispa.h"
