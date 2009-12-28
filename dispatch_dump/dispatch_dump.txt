@@ -1,0 +1,227 @@
+
+* classes 4
+fileref 2
+schannel 3
+stream 1
+window 0
+
+* constants 114
+evtype_Arrange 5
+evtype_CharInput 2
+evtype_Hyperlink 8
+evtype_LineInput 3
+evtype_MouseInput 4
+evtype_None 0
+evtype_Redraw 6
+evtype_SoundNotify 7
+evtype_Timer 1
+filemode_Read 2
+filemode_ReadWrite 3
+filemode_Write 1
+filemode_WriteAppend 5
+fileusage_BinaryMode 0
+fileusage_Data 0
+fileusage_InputRecord 3
+fileusage_SavedGame 1
+fileusage_TextMode 256
+fileusage_Transcript 2
+fileusage_TypeMask 15
+gestalt_CharInput 1
+gestalt_CharOutput 3
+gestalt_CharOutput_ApproxPrint 1
+gestalt_CharOutput_CannotPrint 0
+gestalt_CharOutput_ExactPrint 2
+gestalt_DrawImage 7
+gestalt_Graphics 6
+gestalt_GraphicsTransparency 14
+gestalt_HyperlinkInput 12
+gestalt_Hyperlinks 11
+gestalt_LineInput 2
+gestalt_MouseInput 4
+gestalt_Sound 8
+gestalt_SoundMusic 13
+gestalt_SoundNotify 10
+gestalt_SoundVolume 9
+gestalt_Timer 5
+gestalt_Unicode 15
+gestalt_Version 0
+imagealign_InlineCenter 3
+imagealign_InlineDown 2
+imagealign_MarginLeft 4
+imagealign_MarginRight 5
+imagealign_InlineUp 1
+keycode_Delete -7
+keycode_Down -5
+keycode_End -13
+keycode_Escape -8
+keycode_Func1 -17
+keycode_Func10 -26
+keycode_Func11 -27
+keycode_Func12 -28
+keycode_Func2 -18
+keycode_Func3 -19
+keycode_Func4 -20
+keycode_Func5 -21
+keycode_Func6 -22
+keycode_Func7 -23
+keycode_Func8 -24
+keycode_Func9 -25
+keycode_Home -12
+keycode_Left -2
+keycode_MAXVAL 28
+keycode_PageDown -11
+keycode_PageUp -10
+keycode_Return -6
+keycode_Right -3
+keycode_Tab -9
+keycode_Unknown -1
+keycode_Up -4
+seekmode_Current 1
+seekmode_End 2
+seekmode_Start 0
+style_Alert 5
+style_BlockQuote 7
+style_Emphasized 1
+style_Header 3
+style_Input 8
+style_NUMSTYLES 11
+style_Normal 0
+style_Note 6
+style_Preformatted 2
+style_Subheader 4
+style_User1 9
+style_User2 10
+stylehint_BackColor 8
+stylehint_Indentation 0
+stylehint_Justification 2
+stylehint_NUMHINTS 10
+stylehint_Oblique 5
+stylehint_ParaIndentation 1
+stylehint_Proportional 6
+stylehint_ReverseColor 9
+stylehint_Size 3
+stylehint_TextColor 7
+stylehint_Weight 4
+stylehint_just_Centered 2
+stylehint_just_LeftFlush 0
+stylehint_just_LeftRight 1
+stylehint_just_RightFlush 3
+winmethod_Above 2
+winmethod_Below 3
+winmethod_DirMask 15
+winmethod_DivisionMask 240
+winmethod_Fixed 16
+winmethod_Left 0
+winmethod_Proportional 32
+winmethod_Right 1
+wintype_AllTypes 0
+wintype_Blank 2
+wintype_Graphics 5
+wintype_Pair 1
+wintype_TextBuffer 3
+wintype_TextGrid 4
+
+* functions 102
+1 exit 0:
+2 set_interrupt_handler _
+3 tick 0:
+4 gestalt 3IuIu:Iu
+5 gestalt_ext 4IuIu&#Iu:Iu
+32 window_iterate 3Qa<Iu:Qa
+33 window_get_rock 2Qa:Iu
+34 window_get_root 1:Qa
+35 window_open 6QaIuIuIuIu:Qa
+36 window_close 2Qa<[2IuIu]:
+37 window_get_size 3Qa<Iu<Iu:
+38 window_set_arrangement 4QaIuIuQa:
+39 window_get_arrangement 4Qa<Iu<Iu<Qa:
+40 window_get_type 2Qa:Iu
+41 window_get_parent 2Qa:Qa
+42 window_clear 1Qa:
+43 window_move_cursor 3QaIuIu:
+44 window_get_stream 2Qa:Qb
+45 window_set_echo_stream 2QaQb:
+46 window_get_echo_stream 2Qa:Qb
+47 set_window 1Qa:
+48 window_get_sibling 2Qa:Qa
+64 stream_iterate 3Qb<Iu:Qb
+65 stream_get_rock 2Qb:Iu
+66 stream_open_file 4QcIuIu:Qb
+67 stream_open_memory 4&+#!CnIuIu:Qb
+68 stream_close 2Qb<[2IuIu]:
+69 stream_set_position 3QbIsIu:
+70 stream_get_position 2Qb:Iu
+71 stream_set_current 1Qb:
+72 stream_get_current 1:Qb
+96 fileref_create_temp 3IuIu:Qc
+97 fileref_create_by_name 4IuSIu:Qc
+98 fileref_create_by_prompt 4IuIuIu:Qc
+99 fileref_destroy 1Qc:
+100 fileref_iterate 3Qc<Iu:Qc
+101 fileref_get_rock 2Qc:Iu
+102 fileref_delete_file 1Qc:
+103 fileref_does_file_exist 2Qc:Iu
+104 fileref_create_from_fileref 4IuQcIu:Qc
+128 put_char 1Cu:
+129 put_char_stream 2QbCu:
+130 put_string 1S:
+131 put_string_stream 2QbS:
+132 put_buffer 1>+#Cn:
+133 put_buffer_stream 2Qb>+#Cn:
+134 set_style 1Iu:
+135 set_style_stream 2QbIu:
+144 get_char_stream 2Qb:Is
+145 get_line_stream 3Qb<+#Cn:Iu
+146 get_buffer_stream 3Qb<+#Cn:Iu
+160 char_to_lower 2Cu:Cu
+161 char_to_upper 2Cu:Cu
+176 stylehint_set 4IuIuIuIs:
+177 stylehint_clear 3IuIuIu:
+178 style_distinguish 4QaIuIu:Iu
+179 style_measure 5QaIuIu<Iu:Iu
+192 select 1<+[4IuQaIuIu]:
+193 select_poll 1<+[4IuQaIuIu]:
+208 request_line_event 3Qa&+#!CnIu:
+209 cancel_line_event 2Qa<[4IuQaIuIu]:
+210 request_char_event 1Qa:
+211 cancel_char_event 1Qa:
+212 request_mouse_event 1Qa:
+213 cancel_mouse_event 1Qa:
+214 request_timer_events 1Iu:
+224 image_get_info 4Iu<Iu<Iu:Iu
+225 image_draw 5QaIuIsIs:Iu
+226 image_draw_scaled 7QaIuIsIsIuIu:Iu
+232 window_flow_break 1Qa:
+233 window_erase_rect 5QaIsIsIuIu:
+234 window_fill_rect 6QaIuIsIsIuIu:
+235 window_set_background_color 2QaIu:
+240 schannel_iterate 3Qd<Iu:Qd
+241 schannel_get_rock 2Qd:Iu
+242 schannel_create 2Iu:Qd
+243 schannel_destroy 1Qd:
+248 schannel_play 3QdIu:Iu
+249 schannel_play_ext 5QdIuIuIu:Iu
+250 schannel_stop 1Qd:
+251 schannel_set_volume 2QdIu:
+252 sound_load_hint 2IuIu:
+256 set_hyperlink 1Iu:
+257 set_hyperlink_stream 2QbIu:
+258 request_hyperlink_event 1Qa:
+259 cancel_hyperlink_event 1Qa:
+288 buffer_to_lower_case_uni 3&+#IuIu:Iu
+289 buffer_to_upper_case_uni 3&+#IuIu:Iu
+290 buffer_to_title_case_uni 4&+#IuIuIu:Iu
+296 put_char_uni 1Iu:
+297 put_string_uni 1U:
+298 put_buffer_uni 1>+#Iu:
+299 put_char_stream_uni 2QbIu:
+300 put_string_stream_uni 2QbU:
+301 put_buffer_stream_uni 2Qb>+#Iu:
+304 get_char_stream_uni 2Qb:Is
+305 get_buffer_stream_uni 3Qb<+#Iu:Iu
+306 get_line_stream_uni 3Qb<+#Iu:Iu
+312 stream_open_file_uni 4QcIuIu:Qb
+313 stream_open_memory_uni 4&+#!IuIuIu:Qb
+320 request_char_event_uni 1Qa:
+321 request_line_event_uni 3Qa&+#!IuIu:
+
