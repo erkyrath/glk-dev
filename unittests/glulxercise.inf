@@ -4040,6 +4040,97 @@ TestClass NullIOTest
 	return len;
 ];
 
+TestClass GlkTest
+	with name 'glk',
+	testfunc [ val;
+		print "Glk opcode:^^";
+
+		@copy 'A' sp;
+		@glk $A0 1 val;
+		print "lowercase 'A'="; check(val, 'a'); print ", ";
+		testglobal = 'B';
+		@copy testglobal sp;
+		@glk $A0 1 val;
+		print "lowercase 'B'="; check(val, 'b'); print ", ";
+		testglobal = 'C';
+		@copy testglobal sp;
+		val = noop();
+		@glk $A0 1 val;
+		print "lowercase 'C'="; check(val, 'c'); print "^";
+		
+		@copy 'A' sp;
+		@glk $A0 1 sp;
+		@copy sp val;
+		print "lowercase 'A'="; check(val, 'a'); print ", ";
+		testglobal = 'B';
+		@copy testglobal sp;
+		@glk $A0 1 sp;
+		@copy sp val;
+		print "lowercase 'B'="; check(val, 'b'); print ", ";
+		testglobal = 'C';
+		@copy testglobal sp;
+		val = noop();
+		@glk $A0 1 sp;
+		@copy sp val;
+		print "lowercase 'C'="; check(val, 'c'); print "^";
+
+		@copy 'D' sp;
+		testglobal = 1;
+		@glk $A0 testglobal val;
+		print "lowercase 'D'="; check(val, 'd'); print ", ";
+		@copy 'E' sp;
+		@copy 1 sp;
+		@glk $A0 sp val;
+		print "lowercase 'E'="; check(val, 'e'); print ", ";
+		@copy 'F' sp;
+		@copy 1 sp;
+		val = noop();
+		@glk $A0 sp val;
+		print "lowercase 'F'="; check(val, 'f'); print "^";
+
+		@copy 'D' sp;
+		testglobal2 = $A0;
+		testglobal = 1;
+		@glk testglobal2 testglobal val;
+		print "lowercase 'D'="; check(val, 'd'); print ", ";
+		@copy 'E' sp;
+		@copy 1 sp;
+		@copy $A0 sp;
+		@glk sp sp val;
+		print "lowercase 'E'="; check(val, 'e'); print ", ";
+		@copy 'F' sp;
+		@copy 1 sp;
+		@copy $A0 sp;
+		val = noop();
+		@glk sp sp val;
+		print "lowercase 'F'="; check(val, 'f'); print "^";
+
+		@copy 999 sp;
+		@copy 'G' sp;
+		testglobal2 = $A0;
+		testglobal = 1;
+		@glk testglobal2 testglobal sp;
+		@copy sp val;
+		print "lowercase 'G'="; check(val, 'g'); print ", ";
+		@copy 'H' sp;
+		@copy 1 sp;
+		@copy $A0 sp;
+		@glk sp sp sp;
+		@copy sp val;
+		print "lowercase 'H'="; check(val, 'h'); print ", ";
+		@copy 'I' sp;
+		@copy 1 sp;
+		@copy $A0 sp;
+		val = noop();
+		@glk sp sp sp;
+		@copy sp val;
+		print "lowercase 'I'="; check(val, 'i'); print "^";
+		@copy sp val;
+		print "guard="; check(val, 999); print "^";
+
+		count_failures();
+	];
+
 Array histogram --> 16;
 
 TestClass RandomTest
