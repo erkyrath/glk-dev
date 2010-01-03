@@ -4042,7 +4042,7 @@ TestClass NullIOTest
 
 TestClass GlkTest
 	with name 'glk',
-	testfunc [ val;
+	testfunc [ val addr strlen;
 		print "Glk opcode:^^";
 
 		@copy 'A' sp;
@@ -4128,6 +4128,59 @@ TestClass GlkTest
 		@copy sp val;
 		print "guard="; check(val, 999); print "^";
 
+		addr = #globals_array + (4 * #g$testglobal);
+		testglobal = 0;
+		@copy addr sp;
+		@copy 0 sp;
+		@glk $20 2 val;
+		print "window="; check(val, gg_mainwin); print ", rock="; check(testglobal, GG_MAINWIN_ROCK); print "^";
+		
+		testglobal = 0;
+		@copy addr sp;
+		@copy 0 sp;
+		@copy 2 sp;
+		@copy $20 sp;
+		@glk sp sp val;
+		print "window="; check(val, gg_mainwin); print ", rock="; check(testglobal, GG_MAINWIN_ROCK); print "^";
+
+		testglobal = 0;
+		@copy addr sp;
+		@copy 0 sp;
+		@copy 2 sp;
+		@copy $20 sp;
+		noop();
+		@glk sp sp val;
+		print "window="; check(val, gg_mainwin); print ", rock="; check(testglobal, GG_MAINWIN_ROCK); print "^";
+
+		testglobal = 0;
+		@copy (-1) sp;
+		@copy 0 sp;
+		@glk $20 2 sp;
+		@copy sp val;
+		@copy sp testglobal;
+		print "window="; check(val, gg_mainwin); print ", rock="; check(testglobal, GG_MAINWIN_ROCK); print "^";
+
+		gg_arguments-->0 = 1; gg_arguments-->1 = 2; gg_arguments-->2 = 3; gg_arguments-->3 = 4; 
+		@copy gg_arguments sp;
+		@glk $C1 1 val;
+		print "select_poll="; check(val, 0); print ", result="; check(gg_arguments-->0, 0); check(gg_arguments-->1, 0); check(gg_arguments-->2, 0); check(gg_arguments-->3, 0); print "^";
+
+		@copy 999 sp;
+		@copy (-1) sp;
+		@glk $C1 1 val;
+		print "select_poll="; check(val, 0); print ", result=";
+		@copy sp val; check(val, 0); @copy sp val; check(val, 0); @copy sp val; check(val, 0); @copy sp val; check(val, 0); print "^";
+		@copy sp val;
+		print "guard="; check(val, 999); print "^";
+
+		strlen = string_to_uniarray("UP-case @{C3}@{E4}@{394}@{3B5}@{414}.", bigubuffer, BIGBUFSIZE);
+		@copy strlen sp;
+		@copy BIGBUFSIZE sp;
+		@copy bigubuffer sp;
+		@glk $120 3 val;
+		print "len="; check(val, strlen); print " ";
+		check_ustr("up-case @{E3}@{E4}@{3B4}@{3B5}@{434}.", val);
+		
 		count_failures();
 	];
 
