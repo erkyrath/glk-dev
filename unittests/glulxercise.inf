@@ -1,7 +1,11 @@
 Constant Story "Glulxercise";
 Constant Headline "A Glulx interpreter unit test^";
-
 Release 3;
+
+! To compile this canonically, do "inform -G glulxercise.inf". No other
+! options.
+
+!### to seriously test: gestalt, get/setmemsize
 
 Constant GG_MAINWIN_ROCK     201;
 Constant GG_SAVESTR_ROCK     301;
@@ -4343,6 +4347,340 @@ TestClass DRandomTest
 		print "^";
 		val = (orig0 ~= histogram-->0);
 		print "Sequences different: "; check(val, 1); print "^";
+		
+		count_failures();
+	];
+
+Array search_a -> $1 $3 $5 $7  $9 $2 $4 $6  $8 $A $80 $90  $A0 $A1 $30 $31
+				$20 $0 $0 $0  $31 $0 $0 $1  $FF $FE $FD $FC  $0 $0 $1 $2;
+Array search_b -> $1 $3 $5 $7  $9 $B $D $F  $20 $21 $28 $2D  $2E $2F $30 $31
+				$40 $42 $44 $46  $50 $53 $57 $59  $E0 $E1 $E2 $E3  $FC $FD $FE $FF;
+
+TestClass SearchTest
+	with name 'search',
+	testfunc [ val ix;
+		print "Search opcodes:^^";
+
+		print "Linear:^";
+		
+		@linearsearch $A1 1 search_a 1 32 0 0 val;
+		print "got "; check(val, search_a+13); print ", ";
+		@linearsearch $A1 1 search_a 1 32 0 4 val;
+		print "got "; check(val, 13); print ", ";
+		@linearsearch $A1 1 search_a 1 8 0 0 val;
+		print "got "; check(val, 0); print ", ";
+		@linearsearch $A1 1 search_a 1 8 0 4 val;
+		print "got "; check(val, -1); print "^";
+		
+		@linearsearch $FFA1 1 search_a 1 32 0 0 val;
+		print "got "; check(val, search_a+13); print ", ";
+		@linearsearch $FF8097A1 1 search_a 1 32 0 4 val;
+		print "got "; check(val, 13); print "^";
+
+		@push 999;
+		@push 0; @push 0; @push 32; @push 1; @push search_a; @push 1; @push $31;
+		@linearsearch sp sp sp sp sp sp sp val;
+		print "got "; check(val, search_a+15); print ", ";
+		@push 4; @push 0; @push 32; @push 1; @push search_a; @push 1; @push $31;
+		@linearsearch sp sp sp sp sp sp sp sp;
+		@copy sp val;
+		print "got "; check(val, 15); print ", ";
+		@copy sp val;
+		print "guard="; check(val, 999); print "^";
+
+		destarray->0 = $A1;
+		@linearsearch destarray 1 search_a 1 32 0 1 val;
+		print "got "; check(val, search_a+13); print ", ";
+		@linearsearch destarray 1 search_a 1 32 0 5 val;
+		print "got "; check(val, 13); print ", ";
+		@linearsearch destarray 1 search_a 1 8 0 1 val;
+		print "got "; check(val, 0); print ", ";
+		@linearsearch destarray 1 search_a 1 8 0 5 val;
+		print "got "; check(val, -1); print "^";
+
+		@linearsearch $FC 1 search_a 1 32 0 2 val;
+		print "got "; check(val, 0); print ", ";
+		@linearsearch $FC 1 search_a 1 32 0 6 val;
+		print "got "; check(val, -1); print ", ";
+		@linearsearch $00 1 search_a 1 32 0 2 val;
+		print "got "; check(val, search_a+17); print ", ";
+		@linearsearch $00 1 search_a 1 32 0 6 val;
+		print "got "; check(val, 17); print "^";
+		
+		@linearsearch $FC 1 search_a 1 (-1) 0 2 val;
+		print "got "; check(val, 0); print ", ";
+		@linearsearch $FC 1 search_a 1 (-1) 0 6 val;
+		print "got "; check(val, -1); print ", ";
+		@linearsearch $80 1 search_a 1 (-1) 0 2 val;
+		print "got "; check(val, search_a+10); print ", ";
+		@linearsearch $80 1 search_a 1 (-1) 0 6 val;
+		print "got "; check(val, 10); print "^";
+		
+		@linearsearch $A0A1 2 search_a 2 16 0 0 val;
+		print "got "; check(val, search_a+12); print ", ";
+		@linearsearch $A0A1 2 search_a 2 16 0 4 val;
+		print "got "; check(val, 6); print ", ";
+		@linearsearch $FFFFA0A1 2 search_a 2 16 0 4 val;
+		print "got "; check(val, 6); print ", ";
+		@linearsearch $A0A2 2 search_a 2 16 0 4 val;
+		print "got "; check(val, -1); print ", ";
+		@linearsearch $A130 2 search_a 4 8 1 0 val;
+		print "got "; check(val, search_a+12); print ", ";
+		@linearsearch $FEFDA130 2 search_a 4 8 1 4 val;
+		print "got "; check(val, 3); print "^";
+
+		destarray->0 = $A0;
+		destarray->1 = $A1;
+		@linearsearch destarray 2 search_a 2 16 0 1 val;
+		print "got "; check(val, search_a+12); print ", ";
+		@linearsearch destarray 2 search_a 2 16 0 5 val;
+		print "got "; check(val, 6); print ", ";
+		destarray->0 = $A1;
+		destarray->1 = $30;
+		@linearsearch destarray 2 search_a 4 8 1 1 val;
+		print "got "; check(val, search_a+12); print ", ";
+		@linearsearch destarray 2 search_a 4 8 1 5 val;
+		print "got "; check(val, 3); print "^";
+
+		@linearsearch $FEFD 2 search_a 4 8 1 0 val;
+		print "got "; check(val, search_a+24); print ", ";
+		@linearsearch $FEFD 2 search_a 4 8 1 4 val;
+		print "got "; check(val, 6); print ", ";
+		@linearsearch $FEFD 2 search_a 4 8 1 2 val;
+		print "got "; check(val, 0); print ", ";
+		@linearsearch $FEFD 2 search_a 4 8 1 6 val;
+		print "got "; check(val, -1); print "^";
+
+		@linearsearch $09020406 4 search_a 4 8 0 0 val;
+		print "got "; check(val, search_a+4); print ", ";
+		@linearsearch $09020406 4 search_a 4 8 0 4 val;
+		print "got "; check(val, 1); print ", ";
+		@linearsearch $09020409 4 search_a 4 8 0 0 val;
+		print "got "; check(val, 0); print ", ";
+		@linearsearch $09020409 4 search_a 4 8 0 4 val;
+		print "got "; check(val, -1); print "^";
+
+		histogram-->0 = $080A8090;
+		@linearsearch histogram 4 search_a 4 8 0 1 val;
+		print "got "; check(val, search_a+8); print ", ";
+		@linearsearch histogram 4 search_a 4 8 0 5 val;
+		print "got "; check(val, 2); print ", ";
+		histogram-->0 = $080A8000;
+		@linearsearch histogram 4 search_a 4 8 0 1 val;
+		print "got "; check(val, 0); print ", ";
+		histogram-->0 = $000A8090;
+		@linearsearch histogram 4 search_a 4 8 0 5 val;
+		print "got "; check(val, -1); print "^";
+		
+		@linearsearch $FDFC0000 4 search_a 5 6 1 0 val;
+		print "got "; check(val, search_a+25); print ", ";
+		@linearsearch $FDFC0000 4 search_a 5 6 1 4 val;
+		print "got "; check(val, 5); print ", ";
+		histogram-->0 = $FDFC0000;
+		@linearsearch histogram 4 search_a 5 6 1 1 val;
+		print "got "; check(val, search_a+25); print ", ";
+		@linearsearch histogram 4 search_a 5 6 1 5 val;
+		print "got "; check(val, 5); print "^";
+
+		histogram-->0 = $FEFDFC00;
+		histogram-->1 = $00019999;
+		@linearsearch histogram 6 search_a 8 4 1 1 val;
+		print "got "; check(val, search_a+24); print ", ";
+		@linearsearch histogram 6 search_a 8 4 1 5 val;
+		print "got "; check(val, 3); print ", ";
+		@linearsearch histogram 8 search_a 8 4 1 1 val;
+		print "got "; check(val, 0); print ", ";
+		@linearsearch histogram 8 search_a 8 4 1 5 val;
+		print "got "; check(val, -1); print ", ";
+		histogram-->0 = $FEFDFC00;
+		histogram-->1 = $00020000;
+		@linearsearch histogram 6 search_a 8 4 1 1 val;
+		print "got "; check(val, 0); print ", ";
+		@linearsearch histogram 6 search_a 8 4 1 5 val;
+		print "got "; check(val, -1); print ", ";
+		histogram-->0 = $0EFDFC00;
+		histogram-->1 = $00010000;
+		@linearsearch histogram 6 search_a 8 4 1 1 val;
+		print "got "; check(val, 0); print ", ";
+		histogram-->0 = $FEFDFC01;
+		histogram-->1 = $00010000;
+		@linearsearch histogram 6 search_a 8 4 1 5 val;
+		print "got "; check(val, -1); print "^";
+		
+		histogram-->0 = $01030507;
+		histogram-->1 = $09020406;
+		@linearsearch histogram 8 search_a 16 2 0 1 val;
+		print "got "; check(val, search_a+0); print ", ";
+		@linearsearch histogram 8 search_a 16 2 0 5 val;
+		print "got "; check(val, 0); print ", ";
+		histogram-->0 = $080A8090;
+		histogram-->1 = $A0A13031;
+		@linearsearch histogram 8 search_a 16 2 0 1 val;
+		print "got "; check(val, 0); print ", ";
+		@linearsearch histogram 8 search_a 16 2 0 5 val;
+		print "got "; check(val, -1); print ", ";
+		@linearsearch histogram 8 search_a 16 2 8 1 val;
+		print "got "; check(val, search_a+0); print ", ";
+		@linearsearch histogram 8 search_a 16 2 8 5 val;
+		print "got "; check(val, 0); print "^";
+
+		print "Binary:^";
+		
+		@binarysearch $2F 1 search_b 1 32 0 0 val;
+		print "got "; check(val, search_b+13); print ", ";
+		@binarysearch $2F 1 search_b 1 32 0 4 val;
+		print "got "; check(val, 13); print ", ";
+		@binarysearch $2F 1 search_b 1 8 0 0 val;
+		print "got "; check(val, 0); print ", ";
+		@binarysearch $2F 1 search_b 1 8 0 4 val;
+		print "got "; check(val, -1); print "^";
+		
+		@binarysearch $FF2F 1 search_b 1 32 0 0 val;
+		print "got "; check(val, search_b+13); print ", ";
+		@binarysearch $FF80972F 1 search_b 1 32 0 4 val;
+		print "got "; check(val, 13); print "^";
+
+		@push 999;
+		@push 0; @push 0; @push 32; @push 1; @push search_b; @push 1; @push $31;
+		@binarysearch sp sp sp sp sp sp sp val;
+		print "got "; check(val, search_b+15); print ", ";
+		@push 4; @push 0; @push 32; @push 1; @push search_b; @push 1; @push $31;
+		@binarysearch sp sp sp sp sp sp sp sp;
+		@copy sp val;
+		print "got "; check(val, 15); print ", ";
+		@copy sp val;
+		print "guard="; check(val, 999); print "^";
+
+		print "got "; 
+		for (ix=0 : ix<32 : ix++) {
+			val = search_b->ix;
+			@binarysearch val 1 search_b 1 32 0 0 val;
+			check(val, search_b+ix); print ", ";
+		}
+		print "^";
+		print "got "; 
+		for (ix=0 : ix<31 : ix++) {
+			val = search_b->ix;
+			@binarysearch val 1 search_b 1 31 0 0 val;
+			check(val, search_b+ix); print ", ";
+		}
+		print "^";
+
+		destarray->0 = $2F;
+		@binarysearch destarray 1 search_b 1 32 0 1 val;
+		print "got "; check(val, search_b+13); print ", ";
+		@binarysearch destarray 1 search_b 1 32 0 5 val;
+		print "got "; check(val, 13); print ", ";
+		@binarysearch destarray 1 search_b 1 8 0 1 val;
+		print "got "; check(val, 0); print ", ";
+		@binarysearch destarray 1 search_b 1 8 0 5 val;
+		print "got "; check(val, -1); print "^";
+		
+		@binarysearch $2E2F 2 search_b 2 16 0 0 val;
+		print "got "; check(val, search_b+12); print ", ";
+		@binarysearch $2E2F 2 search_b 2 16 0 4 val;
+		print "got "; check(val, 6); print ", ";
+		@binarysearch $FFFF2E2F 2 search_b 2 16 0 4 val;
+		print "got "; check(val, 6); print ", ";
+		@binarysearch $2E2E 2 search_b 2 16 0 4 val;
+		print "got "; check(val, -1); print ", ";
+		@binarysearch $2F30 2 search_b 4 8 1 0 val;
+		print "got "; check(val, search_b+12); print ", ";
+		@binarysearch $FEFD2F30 2 search_b 4 8 1 4 val;
+		print "got "; check(val, 3); print "^";
+
+		destarray->0 = $2E;
+		destarray->1 = $2F;
+		@binarysearch destarray 2 search_b 2 16 0 1 val;
+		print "got "; check(val, search_b+12); print ", ";
+		@binarysearch destarray 2 search_b 2 16 0 5 val;
+		print "got "; check(val, 6); print ", ";
+		destarray->0 = $2F;
+		destarray->1 = $30;
+		@binarysearch destarray 2 search_b 4 8 1 1 val;
+		print "got "; check(val, search_b+12); print ", ";
+		@binarysearch destarray 2 search_b 4 8 1 5 val;
+		print "got "; check(val, 3); print "^";
+
+		@binarysearch $E1E2 2 search_b 4 8 1 0 val;
+		print "got "; check(val, search_b+24); print ", ";
+		@binarysearch $E1E2 2 search_b 4 8 1 4 val;
+		print "got "; check(val, 6); print "^";
+
+		@binarysearch $090B0D0F 4 search_b 4 8 0 0 val;
+		print "got "; check(val, search_b+4); print ", ";
+		@binarysearch $090B0D0F 4 search_b 4 8 0 4 val;
+		print "got "; check(val, 1); print ", ";
+		@binarysearch $090B0D0E 4 search_b 4 8 0 0 val;
+		print "got "; check(val, 0); print ", ";
+		@binarysearch $090B0D0E 4 search_b 4 8 0 4 val;
+		print "got "; check(val, -1); print "^";
+
+		histogram-->0 = $2021282D;
+		@binarysearch histogram 4 search_b 4 8 0 1 val;
+		print "got "; check(val, search_b+8); print ", ";
+		@binarysearch histogram 4 search_b 4 8 0 5 val;
+		print "got "; check(val, 2); print ", ";
+		histogram-->0 = $20212800;
+		@binarysearch histogram 4 search_b 4 8 0 1 val;
+		print "got "; check(val, 0); print ", ";
+		histogram-->0 = $0021282D;
+		@binarysearch histogram 4 search_b 4 8 0 5 val;
+		print "got "; check(val, -1); print "^";
+		
+		@binarysearch $E2E3FCFD 4 search_b 5 6 1 0 val;
+		print "got "; check(val, search_b+25); print ", ";
+		@binarysearch $E2E3FCFD 4 search_b 5 6 1 4 val;
+		print "got "; check(val, 5); print ", ";
+		histogram-->0 = $E2E3FCFD;
+		@binarysearch histogram 4 search_b 5 6 1 1 val;
+		print "got "; check(val, search_b+25); print ", ";
+		@binarysearch histogram 4 search_b 5 6 1 5 val;
+		print "got "; check(val, 5); print "^";
+
+		histogram-->0 = $E1E2E3FC;
+		histogram-->1 = $FDFE9999;
+		@binarysearch histogram 6 search_b 8 4 1 1 val;
+		print "got "; check(val, search_b+24); print ", ";
+		@binarysearch histogram 6 search_b 8 4 1 5 val;
+		print "got "; check(val, 3); print ", ";
+		@binarysearch histogram 8 search_b 8 4 1 1 val;
+		print "got "; check(val, 0); print ", ";
+		@binarysearch histogram 8 search_b 8 4 1 5 val;
+		print "got "; check(val, -1); print ", ";
+		histogram-->0 = $E1E2E3FC;
+		histogram-->1 = $FDFD0000;
+		@binarysearch histogram 6 search_b 8 4 1 1 val;
+		print "got "; check(val, 0); print ", ";
+		@binarysearch histogram 6 search_b 8 4 1 5 val;
+		print "got "; check(val, -1); print ", ";
+		histogram-->0 = $01E2E3FC;
+		histogram-->1 = $FDFE0000;
+		@binarysearch histogram 6 search_b 8 4 1 1 val;
+		print "got "; check(val, 0); print ", ";
+		histogram-->0 = $FEFDFC01;
+		histogram-->1 = $FDFE0000;
+		@binarysearch histogram 6 search_b 8 4 1 5 val;
+		print "got "; check(val, -1); print "^";
+		
+		histogram-->0 = $01030507;
+		histogram-->1 = $090B0D0F;
+		@binarysearch histogram 8 search_b 16 2 0 1 val;
+		print "got "; check(val, search_b+0); print ", ";
+		@binarysearch histogram 8 search_b 16 2 0 5 val;
+		print "got "; check(val, 0); print ", ";
+		histogram-->0 = $2021282D;
+		histogram-->1 = $2E2F3031;
+		@binarysearch histogram 8 search_b 16 2 0 1 val;
+		print "got "; check(val, 0); print ", ";
+		@binarysearch histogram 8 search_b 16 2 0 5 val;
+		print "got "; check(val, -1); print ", ";
+		@binarysearch histogram 8 search_b 16 2 8 1 val;
+		print "got "; check(val, search_b+0); print ", ";
+		@binarysearch histogram 8 search_b 16 2 8 5 val;
+		print "got "; check(val, 0); print "^";
+
+		!### @linkedsearch
 		
 		count_failures();
 	];
