@@ -4355,11 +4355,23 @@ Array search_a -> $1 $3 $5 $7  $9 $2 $4 $6  $8 $A $80 $90  $A0 $A1 $30 $31
 				$20 $0 $0 $0  $31 $0 $0 $1  $FF $FE $FD $FC  $0 $0 $1 $2;
 Array search_b -> $1 $3 $5 $7  $9 $B $D $F  $20 $21 $28 $2D  $2E $2F $30 $31
 				$40 $42 $44 $46  $50 $53 $57 $59  $E0 $E1 $E2 $E3  $FC $FD $FE $FF;
-
+Array search_c --> $01030507 0 $080A8090 0 $20000000 0 $FFFEFDFC 0
+				$31020406 0 $A0A13031 0 $31000001 0 $00000102 0;
+				
 TestClass SearchTest
 	with name 'search',
 	testfunc [ val ix;
 		print "Search opcodes:^^";
+
+		if (search_c-->1 == 0) {
+			search_c-->1 = search_c + 4*14;
+			search_c-->15 = search_c + 4*2;
+			search_c-->3 = search_c + 4*12;
+			search_c-->13 = search_c + 4*4;
+			search_c-->5 = search_c + 4*10;
+			search_c-->11 = search_c + 4*6;
+			search_c-->7 = search_c + 4*8;
+		}
 
 		print "Linear:^";
 		
@@ -4680,7 +4692,243 @@ TestClass SearchTest
 		@binarysearch histogram 8 search_b 16 2 8 5 val;
 		print "got "; check(val, 0); print "^";
 
-		!### @linkedsearch
+		print "Linked:^";
 		
+		@linkedsearch $01 1 search_c 0 4 0 val;
+		print "got "; check(val, search_c+0); print ", ";
+		@linkedsearch $FFFFFFFF01 1 search_c 0 4 0 val;
+		print "got "; check(val, search_c+0); print ", ";
+		@linkedsearch $31 1 search_c 0 4 0 val;
+		print "got "; check(val, search_c+6*8); print ", ";
+		@linkedsearch $00 1 search_c 0 4 0 val;
+		print "got "; check(val, search_c+7*8); print ", ";
+		@linkedsearch $08 1 search_c 0 4 0 val;
+		print "got "; check(val, search_c+1*8); print ", ";
+		@linkedsearch $A1 1 search_c 0 4 0 val;
+		print "got "; check(val, 0); print "^";
+		
+		@linkedsearch $01 1 search_c 0 4 2 val;
+		print "got "; check(val, search_c+0); print ", ";
+		@linkedsearch $31 1 search_c 0 4 2 val;
+		print "got "; check(val, 0); print ", ";
+		@linkedsearch $00 1 search_c 0 4 2 val;
+		print "got "; check(val, search_c+7*8); print ", ";
+		@linkedsearch $08 1 search_c 0 4 2 val;
+		print "got "; check(val, 0); print ", ";
+		@linkedsearch $A1 1 search_c 0 4 2 val;
+		print "got "; check(val, 0); print "^";
+		
+		@linkedsearch $0103 2 search_c 0 4 0 val;
+		print "got "; check(val, search_c+0); print ", ";
+		@linkedsearch $FFFF0103 2 search_c 0 4 0 val;
+		print "got "; check(val, search_c+0); print ", ";
+		@linkedsearch $3100 2 search_c 0 4 0 val;
+		print "got "; check(val, search_c+6*8); print ", ";
+		@linkedsearch $0000 2 search_c 0 4 0 val;
+		print "got "; check(val, search_c+7*8); print ", ";
+		@linkedsearch $080A 2 search_c 0 4 0 val;
+		print "got "; check(val, search_c+1*8); print ", ";
+		@linkedsearch $A130 2 search_c 0 4 0 val;
+		print "got "; check(val, 0); print ", ";
+		@linkedsearch $0104 2 search_c 0 4 0 val;
+		print "got "; check(val, 0); print ", ";
+		@linkedsearch $0203 2 search_c 0 4 0 val;
+		print "got "; check(val, 0); print "^";
+		
+		@linkedsearch $0103 2 search_c 0 4 2 val;
+		print "got "; check(val, search_c+0); print ", ";
+		@linkedsearch $3100 2 search_c 0 4 2 val;
+		print "got "; check(val, 0); print ", ";
+		@linkedsearch $0000 2 search_c 0 4 2 val;
+		print "got "; check(val, search_c+7*8); print ", ";
+		@linkedsearch $080A 2 search_c 0 4 2 val;
+		print "got "; check(val, 0); print ", ";
+		@linkedsearch $A130 2 search_c 0 4 2 val;
+		print "got "; check(val, 0); print "^";
+		
+		@linkedsearch $0305 2 search_c 1 4 0 val;
+		print "got "; check(val, search_c+0); print ", ";
+		@linkedsearch $0001 2 search_c 1 4 0 val;
+		print "got "; check(val, search_c+7*8); print ", ";
+		@linkedsearch $0000 2 search_c 1 4 0 val;
+		print "got "; check(val, search_c+6*8); print ", ";
+		@linkedsearch $FEFD 2 search_c 1 4 0 val;
+		print "got "; check(val, search_c+3*8); print ", ";
+		@linkedsearch $0103 2 search_c 1 4 0 val;
+		print "got "; check(val, 0); print "^";
+		
+		@linkedsearch $0305 2 search_c 1 4 2 val;
+		print "got "; check(val, search_c+0); print ", ";
+		@linkedsearch $0001 2 search_c 1 4 2 val;
+		print "got "; check(val, search_c+7*8); print ", ";
+		@linkedsearch $0000 2 search_c 1 4 2 val;
+		print "got "; check(val, search_c+6*8); print ", ";
+		@linkedsearch $FEFD 2 search_c 1 4 2 val;
+		print "got "; check(val, 0); print ", ";
+		@linkedsearch $0103 2 search_c 1 4 2 val;
+		print "got "; check(val, 0); print "^";
+		
+		@linkedsearch $01030507 4 search_c 0 4 0 val;
+		print "got "; check(val, search_c+0); print ", ";
+		@linkedsearch $31000001 4 search_c 0 4 0 val;
+		print "got "; check(val, search_c+6*8); print ", ";
+		@linkedsearch $00000102 4 search_c 0 4 0 val;
+		print "got "; check(val, search_c+7*8); print ", ";
+		@linkedsearch $080A8090 4 search_c 0 4 0 val;
+		print "got "; check(val, search_c+1*8); print ", ";
+		@linkedsearch $A0A23031 4 search_c 0 4 0 val;
+		print "got "; check(val, 0); print "^";
+		
+		@linkedsearch $01030507 4 search_c 0 4 2 val;
+		print "got "; check(val, search_c+0); print ", ";
+		@linkedsearch $31000001 4 search_c 0 4 2 val;
+		print "got "; check(val, search_c+6*8); print ", ";
+		@linkedsearch $00000102 4 search_c 0 4 2 val;
+		print "got "; check(val, search_c+7*8); print ", ";
+		@linkedsearch $080A8090 4 search_c 0 4 2 val;
+		print "got "; check(val, search_c+1*8); print ", ";
+		@linkedsearch $A0A23031 4 search_c 0 4 2 val;
+		print "got "; check(val, 0); print "^";
+
+		histogram-->0 = $01000000;
+		@linkedsearch histogram 1 search_c 0 4 1 val;
+		print "got "; check(val, search_c+0); print ", ";
+		histogram-->0 = $01FFFFFF;
+		@linkedsearch histogram 1 search_c 0 4 1 val;
+		print "got "; check(val, search_c+0); print ", ";
+		histogram-->0 = $31000000;
+		@linkedsearch histogram 1 search_c 0 4 1 val;
+		print "got "; check(val, search_c+6*8); print ", ";
+		histogram-->0 = $00000000;
+		@linkedsearch histogram 1 search_c 0 4 1 val;
+		print "got "; check(val, search_c+7*8); print ", ";
+		histogram-->0 = $08000000;
+		@linkedsearch histogram 1 search_c 0 4 1 val;
+		print "got "; check(val, search_c+1*8); print ", ";
+		histogram-->0 = $A1000000;
+		@linkedsearch histogram 1 search_c 0 4 1 val;
+		print "got "; check(val, 0); print "^";
+		
+		histogram-->0 = $01000000;
+		@linkedsearch histogram 1 search_c 0 4 3 val;
+		print "got "; check(val, search_c+0); print ", ";
+		histogram-->0 = $31000000;
+		@linkedsearch histogram 1 search_c 0 4 3 val;
+		print "got "; check(val, 0); print ", ";
+		histogram-->0 = $00000000;
+		@linkedsearch histogram 1 search_c 0 4 3 val;
+		print "got "; check(val, search_c+7*8); print ", ";
+		histogram-->0 = $08000000;
+		@linkedsearch histogram 1 search_c 0 4 3 val;
+		print "got "; check(val, 0); print ", ";
+		histogram-->0 = $A1000000;
+		@linkedsearch histogram 1 search_c 0 4 3 val;
+		print "got "; check(val, 0); print "^";
+		
+		histogram-->0 = $01030000;
+		@linkedsearch histogram 2 search_c 0 4 1 val;
+		print "got "; check(val, search_c+0); print ", ";
+		histogram-->0 = $0103FFFF;
+		@linkedsearch histogram 2 search_c 0 4 1 val;
+		print "got "; check(val, search_c+0); print ", ";
+		histogram-->0 = $31000000;
+		@linkedsearch histogram 2 search_c 0 4 1 val;
+		print "got "; check(val, search_c+6*8); print ", ";
+		histogram-->0 = $00000000;
+		@linkedsearch histogram 2 search_c 0 4 1 val;
+		print "got "; check(val, search_c+7*8); print ", ";
+		histogram-->0 = $080A0000;
+		@linkedsearch histogram 2 search_c 0 4 1 val;
+		print "got "; check(val, search_c+1*8); print ", ";
+		histogram-->0 = $A1300000;
+		@linkedsearch histogram 2 search_c 0 4 1 val;
+		print "got "; check(val, 0); print ", ";
+		histogram-->0 = $01040000;
+		@linkedsearch histogram 2 search_c 0 4 1 val;
+		print "got "; check(val, 0); print ", ";
+		histogram-->0 = $02030000;
+		@linkedsearch histogram 2 search_c 0 4 1 val;
+		print "got "; check(val, 0); print "^";
+		
+		histogram-->0 = $01030000;
+		@linkedsearch histogram 2 search_c 0 4 3 val;
+		print "got "; check(val, search_c+0); print ", ";
+		histogram-->0 = $31000000;
+		@linkedsearch histogram 2 search_c 0 4 3 val;
+		print "got "; check(val, 0); print ", ";
+		histogram-->0 = $00000000;
+		@linkedsearch histogram 2 search_c 0 4 3 val;
+		print "got "; check(val, search_c+7*8); print ", ";
+		histogram-->0 = $080A0000;
+		@linkedsearch histogram 2 search_c 0 4 3 val;
+		print "got "; check(val, 0); print ", ";
+		histogram-->0 = $A1300000;
+		@linkedsearch histogram 2 search_c 0 4 3 val;
+		print "got "; check(val, 0); print "^";
+		
+		histogram-->0 = $03050000;
+		@linkedsearch histogram 2 search_c 1 4 1 val;
+		print "got "; check(val, search_c+0); print ", ";
+		histogram-->0 = $00010000;
+		@linkedsearch histogram 2 search_c 1 4 1 val;
+		print "got "; check(val, search_c+7*8); print ", ";
+		histogram-->0 = $00000000;
+		@linkedsearch histogram 2 search_c 1 4 1 val;
+		print "got "; check(val, search_c+6*8); print ", ";
+		histogram-->0 = $FEFD0000;
+		@linkedsearch histogram 2 search_c 1 4 1 val;
+		print "got "; check(val, search_c+3*8); print ", ";
+		histogram-->0 = $01030000;
+		@linkedsearch histogram 2 search_c 1 4 1 val;
+		print "got "; check(val, 0); print "^";
+		
+		histogram-->0 = $03050000;
+		@linkedsearch histogram 2 search_c 1 4 3 val;
+		print "got "; check(val, search_c+0); print ", ";
+		histogram-->0 = $00010000;
+		@linkedsearch histogram 2 search_c 1 4 3 val;
+		print "got "; check(val, search_c+7*8); print ", ";
+		histogram-->0 = $00000000;
+		@linkedsearch histogram 2 search_c 1 4 3 val;
+		print "got "; check(val, search_c+6*8); print ", ";
+		histogram-->0 = $FEFD0000;
+		@linkedsearch histogram 2 search_c 1 4 3 val;
+		print "got "; check(val, 0); print ", ";
+		histogram-->0 = $01030000;
+		@linkedsearch histogram 2 search_c 1 4 3 val;
+		print "got "; check(val, 0); print "^";
+		
+		histogram-->0 = $01030507;
+		@linkedsearch histogram 4 search_c 0 4 1 val;
+		print "got "; check(val, search_c+0); print ", ";
+		histogram-->0 = $31000001;
+		@linkedsearch histogram 4 search_c 0 4 1 val;
+		print "got "; check(val, search_c+6*8); print ", ";
+		histogram-->0 = $00000102;
+		@linkedsearch histogram 4 search_c 0 4 1 val;
+		print "got "; check(val, search_c+7*8); print ", ";
+		histogram-->0 = $080A8090;
+		@linkedsearch histogram 4 search_c 0 4 1 val;
+		print "got "; check(val, search_c+1*8); print ", ";
+		histogram-->0 = $A0A23031;
+		@linkedsearch histogram 4 search_c 0 4 1 val;
+		print "got "; check(val, 0); print "^";
+		
+		histogram-->0 = $01030507;
+		@linkedsearch histogram 4 search_c 0 4 3 val;
+		print "got "; check(val, search_c+0); print ", ";
+		histogram-->0 = $31000001;
+		@linkedsearch histogram 4 search_c 0 4 3 val;
+		print "got "; check(val, search_c+6*8); print ", ";
+		histogram-->0 = $00000102;
+		@linkedsearch histogram 4 search_c 0 4 3 val;
+		print "got "; check(val, search_c+7*8); print ", ";
+		histogram-->0 = $080A8090;
+		@linkedsearch histogram 4 search_c 0 4 3 val;
+		print "got "; check(val, search_c+1*8); print ", ";
+		histogram-->0 = $A0A23031;
+		@linkedsearch histogram 4 search_c 0 4 3 val;
+		print "got "; check(val, 0); print "^";
+
 		count_failures();
 	];
