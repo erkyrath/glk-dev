@@ -4930,5 +4930,16 @@ TestClass SearchTest
 		@linkedsearch histogram 4 search_c 0 4 3 val;
 		print "got "; check(val, 0); print "^";
 
+		@push 999;
+		@push 0; @push 4; @push 0; @push search_c; @push 1; @push $31;
+		@linkedsearch sp sp sp sp sp sp val;
+		print "got "; check(val, search_c+6*8); print ", ";
+		@push 0; @push 4; @push 0; @push search_c; @push 1; @push $08;
+		@linkedsearch sp sp sp sp sp sp sp;
+		@copy sp val;
+		print "got "; check(val, search_c+1*8); print ", ";
+		@copy sp val;
+		print "guard="; check(val, 999); print "^";
+
 		count_failures();
 	];
