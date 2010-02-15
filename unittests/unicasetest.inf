@@ -284,11 +284,11 @@ Array title_strings -->
         }
     }
 
-	if (1) {
-		testarray-->0 = $fb03;
-		testarray-->1 = '.';
-		startlen = 1;
-		
+    if (1) {
+        testarray-->0 = $fb03;
+        testarray-->1 = '.';
+        startlen = 1;
+        
         print "Truncating test:  ";
         print_buffer(testarray, startlen);
         print "^";
@@ -302,17 +302,17 @@ Array title_strings -->
             print "  FAILED -- wrong length^";
         }
         else {
-			if (testarray-->0 ~= 'F') {
-				errorcount++;
-				print "  FAILED -- should be F^";
-			}
-			if (testarray-->1 ~= '.') {
-				errorcount++;
-				print "  FAILED -- array overflow^";
-			}
-		}
-	}
-	
+            if (testarray-->0 ~= 'F') {
+                errorcount++;
+                print "  FAILED -- should be F^";
+            }
+            if (testarray-->1 ~= '.') {
+                errorcount++;
+                print "  FAILED -- array overflow^";
+            }
+        }
+    }
+    
     if (errorcount) {
         print "^FAILED with ", errorcount, " errors.^";
     }
@@ -355,12 +355,12 @@ Array title_strings -->
             }
         }
     }
-	
-	if (1) {
-		testarray-->0 = $130;
-		testarray-->1 = '.';
-		startlen = 1;
-		
+    
+    if (1) {
+        testarray-->0 = $130;
+        testarray-->1 = '.';
+        startlen = 1;
+        
         print "Truncating test:  ";
         print_buffer(testarray, startlen);
         print "^";
@@ -374,17 +374,17 @@ Array title_strings -->
             print "  FAILED -- wrong length^";
         }
         else {
-			if (testarray-->0 ~= 'i') {
-				errorcount++;
-				print "  FAILED -- should be i^";
-			}
-			if (testarray-->1 ~= '.') {
-				errorcount++;
-				print "  FAILED -- array overflow^";
-			}
-		}
-	}
-	
+            if (testarray-->0 ~= 'i') {
+                errorcount++;
+                print "  FAILED -- should be i^";
+            }
+            if (testarray-->1 ~= '.') {
+                errorcount++;
+                print "  FAILED -- array overflow^";
+            }
+        }
+    }
+    
     if (errorcount) {
         print "^FAILED with ", errorcount, " errors.^";
     }
@@ -433,12 +433,12 @@ Array title_strings -->
             }
         }
     }
-	
-	if (1) {
-		testarray-->0 = $1e96;
-		testarray-->1 = '.';
-		startlen = 1;
-		
+    
+    if (1) {
+        testarray-->0 = $1e96;
+        testarray-->1 = '.';
+        startlen = 1;
+        
         print "Truncating test:  ";
         print_buffer(testarray, startlen);
         print "^";
@@ -452,16 +452,16 @@ Array title_strings -->
             print "  FAILED -- wrong length^";
         }
         else {
-			if (testarray-->0 ~= 'H') {
-				errorcount++;
-				print "  FAILED -- should be i^";
-			}
-			if (testarray-->1 ~= '.') {
-				errorcount++;
-				print "  FAILED -- array overflow^";
-			}
-		}
-	}
+            if (testarray-->0 ~= 'H') {
+                errorcount++;
+                print "  FAILED -- should be i^";
+            }
+            if (testarray-->1 ~= '.') {
+                errorcount++;
+                print "  FAILED -- array overflow^";
+            }
+        }
+    }
 
     if (errorcount) {
         print "^FAILED with ", errorcount, " errors.^";
