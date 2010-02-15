@@ -1,7 +1,7 @@
 Constant Story "UniCaseTest";
 Constant Headline "Not a game.^";
 
-Release 1;
+Release 2;
 
 Global mainwin = 0;
 Array gg_event --> 4;
@@ -247,6 +247,7 @@ Array title_strings -->
 
 [ test_upper errorcount ix jx src target startlen targetlen newlen val;
     errorcount = 0;
+
     for (ix=0 : up_down_strings-->ix : ix=ix+3) {
         src = up_down_strings-->ix;
         target = up_down_strings-->(ix+1);
@@ -283,6 +284,35 @@ Array title_strings -->
         }
     }
 
+	if (1) {
+		testarray-->0 = $fb03;
+		testarray-->1 = '.';
+		startlen = 1;
+		
+        print "Truncating test:  ";
+        print_buffer(testarray, startlen);
+        print "^";
+
+        newlen = glk($0121, testarray, startlen, startlen); ! buffer_to_upper_case_uni
+        print "Upper: ";
+        print_buffer(testarray, 1);
+        print "^";
+        if (newlen ~= 3) {
+            errorcount++;
+            print "  FAILED -- wrong length^";
+        }
+        else {
+			if (testarray-->0 ~= 'F') {
+				errorcount++;
+				print "  FAILED -- should be F^";
+			}
+			if (testarray-->1 ~= '.') {
+				errorcount++;
+				print "  FAILED -- array overflow^";
+			}
+		}
+	}
+	
     if (errorcount) {
         print "^FAILED with ", errorcount, " errors.^";
     }
@@ -325,7 +355,36 @@ Array title_strings -->
             }
         }
     }
+	
+	if (1) {
+		testarray-->0 = $130;
+		testarray-->1 = '.';
+		startlen = 1;
+		
+        print "Truncating test:  ";
+        print_buffer(testarray, startlen);
+        print "^";
 
+        newlen = glk($0120, testarray, startlen, startlen); ! buffer_to_lower_case_uni
+        print "Lower: ";
+        print_buffer(testarray, 1);
+        print "^";
+        if (newlen ~= 2) {
+            errorcount++;
+            print "  FAILED -- wrong length^";
+        }
+        else {
+			if (testarray-->0 ~= 'i') {
+				errorcount++;
+				print "  FAILED -- should be i^";
+			}
+			if (testarray-->1 ~= '.') {
+				errorcount++;
+				print "  FAILED -- array overflow^";
+			}
+		}
+	}
+	
     if (errorcount) {
         print "^FAILED with ", errorcount, " errors.^";
     }
@@ -374,6 +433,35 @@ Array title_strings -->
             }
         }
     }
+	
+	if (1) {
+		testarray-->0 = $1e96;
+		testarray-->1 = '.';
+		startlen = 1;
+		
+        print "Truncating test:  ";
+        print_buffer(testarray, startlen);
+        print "^";
+
+        newlen = glk($0122, testarray, startlen, startlen, 0); ! buffer_to_title_case_uni
+        print "Title: ";
+        print_buffer(testarray, 1);
+        print "^";
+        if (newlen ~= 2) {
+            errorcount++;
+            print "  FAILED -- wrong length^";
+        }
+        else {
+			if (testarray-->0 ~= 'H') {
+				errorcount++;
+				print "  FAILED -- should be i^";
+			}
+			if (testarray-->1 ~= '.') {
+				errorcount++;
+				print "  FAILED -- array overflow^";
+			}
+		}
+	}
 
     if (errorcount) {
         print "^FAILED with ", errorcount, " errors.^";
