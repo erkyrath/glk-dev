@@ -1,0 +1,381 @@
+Constant Story "UniCaseTest";
+Constant Headline "Not a game.^";
+
+Release 1;
+
+Global mainwin = 0;
+Array gg_event --> 4;
+Constant BUFLEN = 240;
+Array input_buffer -> 4+BUFLEN;
+Array gg_tokenbuf -> DICT_WORD_SIZE;
+Constant MAX_BUFFER_WORDS = 20;
+Constant PARSE_BUFFER_LEN = 244;    ! 4 + MAX_BUFFER_WORDS*4;
+Array parse_buffer --> PARSE_BUFFER_LEN/WORDSIZE;
+
+Constant HDR_GLULXVERSION  $04;     ! long word
+Constant ROM_GAMERELEASE   $34;     ! short word
+Constant ROM_GAMESERIAL    $36;     ! six ASCII characters
+
+Constant MAINWIN_ROCK 100;
+
+[ Main;
+  @setiosys 2 0; ! select Glk I/O system
+  mainwin = glk($0023, 0, 0, 0, 3, MAINWIN_ROCK); ! glk_window_open
+  glk($002F, mainwin); ! glk_set_window
+
+  new_line;
+  Banner();
+  new_line;
+
+  RoomDesc();
+
+  mainloop();
+];
+
+[ mainloop numwords wd addr;
+
+  while (true) {
+    print "^>";
+    readline();
+
+    addr = input_buffer;
+    if (addr-->0 == 0) {
+      print "(Zero-length input.)^";
+      continue;
+    }
+
+    tokenise(input_buffer, parse_buffer);
+    numwords = parse_buffer-->0;
+    if (numwords == 0) {
+      print "(Whitespace input.)^";
+      continue;
+    }
+
+    wd = parse_buffer-->1;  ! the first word
+    if (wd == 'look' or 'l//' or 'help' or '?//') {
+      RoomDesc();
+    }
+    else if (wd == 'version') {
+      Banner();
+    }
+    else if (wd == 'quit' or 'q//') {
+      print "Goodbye!^";
+      quit;
+    }
+    else if (wd == 'upper' or 'up' or 'u//') {
+      test_upper();
+    }
+    else if (wd == 'lower' or 'down' or 'd//') {
+      test_lower();
+    }
+    else if (wd == 'title') {
+      test_title();
+    }
+    else {
+      print "I didn't understand that.^";
+    }
+  }
+];
+
+[ readline count   addr;
+  glk($00D0, mainwin, input_buffer+4, BUFLEN, 0); ! request_line_event
+  while (true) {
+    glk($00C0, gg_event); ! select
+    if (gg_event-->0 == 3 && gg_event-->1 == mainwin) {
+      count = gg_event-->2;
+      break;
+    }
+  }
+  addr = input_buffer;
+  addr-->0 = count;
+];
+
+[ tokenise buf tab
+    cx numwords len bx ix wx wpos wlen val res dictlen entrylen;
+    len = buf-->0;
+    buf = buf+WORDSIZE;
+
+    ! First, split the buffer up into words. We use the standard Infocom
+    ! list of word separators (comma, period, double-quote).
+
+    cx = 0;
+    numwords = 0;
+    while (cx < len) {
+        while (cx < len && buf->cx == ' ') cx++;
+        if (cx >= len) break;
+        bx = cx;
+        if (buf->cx == '.' or ',' or '"') cx++;
+        else {
+            while (cx < len && buf->cx ~= ' ' or '.' or ',' or '"') cx++;
+        }
+        tab-->(numwords*3+2) = (cx-bx);
+        tab-->(numwords*3+3) = WORDSIZE+bx;
+        numwords++;
+        if (numwords >= MAX_BUFFER_WORDS) break;
+    }
+    tab-->0 = numwords;
+
+    ! Now we look each word up in the dictionary.
+
+    dictlen = #dictionary_table-->0;
+    entrylen = DICT_WORD_SIZE + 7;
+
+    for (wx=0 : wx<numwords : wx++) {
+        wlen = tab-->(wx*3+2);
+        wpos = tab-->(wx*3+3);
+
+        ! Copy the word into the gg_tokenbuf array, clipping to DICT_WORD_SIZE
+        ! characters and lower case.
+        if (wlen > DICT_WORD_SIZE) wlen = DICT_WORD_SIZE;
+        cx = wpos - WORDSIZE;
+        for (ix=0 : ix<wlen : ix++) gg_tokenbuf->ix = glk($00A0, buf->(cx+ix));
+        for (: ix<DICT_WORD_SIZE : ix++) gg_tokenbuf->ix = 0;
+
+        val = #dictionary_table + WORDSIZE;
+        @binarysearch gg_tokenbuf DICT_WORD_SIZE val entrylen dictlen 1 1 res;
+        tab-->(wx*3+1) = res;
+    }
+];
+
+[ Banner  i ix;
+   if (Story ~= 0) {
+    glk($0086, 3); ! set header style
+    print (string) Story;
+    glk($0086, 0); ! set normal style
+  }
+  if (Headline ~= 0) print ": ", (string) Headline;
+  print "Release ";
+  @aloads ROM_GAMERELEASE 0 i;
+  print i;
+  print " / Serial number ";
+  for (i=0 : i<6 : i++) print (char) ROM_GAMESERIAL->i;
+  print " / Inform v"; inversion;
+  print ", compiler options ";
+  i = false;
+  #Ifdef STRICT_MODE;
+  print "S"; i++;
+  #Endif; ! STRICT_MODE
+  #Ifdef INFIX;
+  print "X"; i++;
+  #Ifnot;
+  #Ifdef DEBUG;
+  print "D"; i++;
+  #Endif; ! DEBUG
+  #Endif; ! INFIX
+  if (~~i) print "(none)";
+  new_line;
+
+  @gestalt 1 0 ix;
+  print "Interpreter version ", ix / $10000, ".", (ix & $FF00) / $100,
+  ".", ix & $FF, " / ";
+  @gestalt 0 0 ix;
+  print "VM ", ix / $10000, ".", (ix & $FF00) / $100, ".", ix & $FF, " / ";
+  ix = HDR_GLULXVERSION-->0;
+  print "game file format ", ix / $10000, ".", (ix & $FF00) / $100, ".", ix & $FF, "^";
+];
+
+[ RoomDesc;
+  print "A voice booooms out: Welcome to the test chamber.^^";
+  print "Type ~help~ to repeat this message, ~quit~ to exit,
+    ~upper~ to test uppercase, ~lower~ to test lowercase,
+    or ~title~ to test titlecase.^";
+];
+
+Array testarray --> BUFLEN;
+Array targetarray --> BUFLEN;
+
+[ uni_to_buffer arr val  len str oldstr;
+    oldstr = glk($0048); ! stream_get_current
+    str = glk($0139, arr, BUFLEN, 1, 0); ! stream_open_memory_uni
+    if (str == 0) return 0;
+
+    glk($0047, str); ! stream_set_current
+
+    if (val->0 == $c0 or $c1)
+        val();
+    else
+        @streamstr val;
+
+    glk($0047, oldstr); ! stream_set_current
+    @copy $ffffffff sp;
+    @copy str sp;
+    @glk $0044 2 0; ! stream_close
+    @copy sp len;
+    @copy sp 0;
+
+    return len;
+];
+
+[ print_buffer arr len;
+    print "~";
+    glk($012a, arr, len); ! put_buffer_uni
+    print "~ (", len, " chars)";
+];
+
+Array up_down_strings -->
+  "Ordinary 'line' of WORDS."
+  "ORDINARY 'LINE' OF WORDS."
+  "ordinary 'line' of words."
+  ! Latin-1
+  "@{c0}@{d8}@{df}@{b5}@{e0}@{fe}@{ff}@{bc}@{a1}"
+  "@{c0}@{d8}SS@{39c}@{c0}@{de}@{178}@{bc}@{a1}"
+  "@{e0}@{f8}@{df}@{b5}@{e0}@{fe}@{ff}@{bc}@{a1}"
+  ! Fancy Latin, Greek, Cyrillic
+  "@{130}@{133}@{178}@{3a0}@{3c0}@{3bc}@{39c}@{390}@{404}@{411}@{454}@{431}"
+  "@{130}@{132}@{178}@{3a0}@{3a0}@{39c}@{39c}@{399}@{308}@{301}@{404}@{411}@{404}@{411}"
+  "i@{307}@{133}@{ff}@{3c0}@{3c0}@{3bc}@{3bc}@{390}@{454}@{431}@{454}@{431}"
+  ! Fancier Latin
+  "@{1e98}@{1ea2}@{1ea3}@{1f80}@{fb00}@{fb06}@{fb03}"
+  "W@{30a}@{1ea2}@{1ea2}@{1f08}@{399}FFSTFFI"
+  "@{1e98}@{1ea3}@{1ea3}@{1f80}@{fb00}@{fb06}@{fb03}"
+  0;
+
+Array title_strings -->
+  "ordinary 'line' of WORDS."
+  "Ordinary 'line' of WORDS."
+  "ordinary 'line' of WORDS."
+  "Ordinary 'line' of words."
+  "ALL CAPS!"
+  "ALL CAPS!"
+  "ALL CAPS!"
+  "All caps!"
+  "@{1f80} x."
+  "@{1f88} x."
+  "@{fb04}@{fb01}XY"
+  "Ffl@{fb01}xy"
+  0;
+
+[ test_upper errorcount ix jx src target startlen targetlen newlen val;
+    errorcount = 0;
+    for (ix=0 : up_down_strings-->ix : ix=ix+3) {
+        src = up_down_strings-->ix;
+        target = up_down_strings-->(ix+1);
+        startlen = uni_to_buffer(testarray, src);
+        targetlen = uni_to_buffer(targetarray, target);
+        
+        print "Test:  ";
+        print_buffer(testarray, startlen);
+        print "^";
+
+        newlen = glk($0121, testarray, BUFLEN, startlen); ! buffer_to_upper_case_uni
+        print "Upper: ";
+        print_buffer(testarray, newlen);
+        print "^";
+
+        if (newlen ~= targetlen) {
+            errorcount++;
+            print "  FAILED -- wrong length^";
+        }
+        else {
+            for (jx=0 : jx<newlen : jx++) {
+                if (targetarray-->jx ~= testarray-->jx) {
+                    errorcount++;
+                    print "  FAILED -- different at char ", jx, ": ";
+                    val = testarray-->jx;
+                    @streamunichar val;
+                    print " should be ";
+                    val = targetarray-->jx;
+                    @streamunichar val;
+                    print "^";
+                    break;
+                }
+            }
+        }
+    }
+
+    if (errorcount) {
+        print "^FAILED with ", errorcount, " errors.^";
+    }
+];
+
+[ test_lower errorcount ix jx src target startlen targetlen newlen val;
+    errorcount = 0;
+    for (ix=0 : up_down_strings-->ix : ix=ix+3) {
+        src = up_down_strings-->ix;
+        target = up_down_strings-->(ix+2);
+        startlen = uni_to_buffer(testarray, src);
+        targetlen = uni_to_buffer(targetarray, target);
+        
+        print "Test:  ";
+        print_buffer(testarray, startlen);
+        print "^";
+
+        newlen = glk($0120, testarray, BUFLEN, startlen); ! buffer_to_lower_case_uni
+        print "Lower: ";
+        print_buffer(testarray, newlen);
+        print "^";
+
+        if (newlen ~= targetlen) {
+            errorcount++;
+            print "  FAILED -- wrong length^";
+        }
+        else {
+            for (jx=0 : jx<newlen : jx++) {
+                if (targetarray-->jx ~= testarray-->jx) {
+                    errorcount++;
+                    print "  FAILED -- different at char ", jx, ": ";
+                    val = testarray-->jx;
+                    @streamunichar val;
+                    print " should be ";
+                    val = targetarray-->jx;
+                    @streamunichar val;
+                    print "^";
+                    break;
+                }
+            }
+        }
+    }
+
+    if (errorcount) {
+        print "^FAILED with ", errorcount, " errors.^";
+    }
+];
+
+[ test_title errorcount lowerrest ix jx src target startlen targetlen newlen val;
+    errorcount = 0;
+    lowerrest = 0;
+    for (ix=0 : title_strings-->ix : ix=ix+2) {
+        src = title_strings-->ix;
+        target = title_strings-->(ix+1);
+        startlen = uni_to_buffer(testarray, src);
+        targetlen = uni_to_buffer(targetarray, target);
+        lowerrest = (ix & 2);
+        
+        print "Test:                   ";
+        print_buffer(testarray, startlen);
+        print "^";
+
+        newlen = glk($0122, testarray, BUFLEN, startlen, lowerrest); ! buffer_to_title_case_uni
+        print "Title ";
+        if (lowerrest)
+            print "(rest lowered):   ";
+        else
+            print "(rest unchanged): ";
+        print_buffer(testarray, newlen);
+        print "^";
+
+        if (newlen ~= targetlen) {
+            errorcount++;
+            print "  FAILED -- wrong length^";
+        }
+        else {
+            for (jx=0 : jx<newlen : jx++) {
+                if (targetarray-->jx ~= testarray-->jx) {
+                    errorcount++;
+                    print "  FAILED -- different at char ", jx, ": ";
+                    val = testarray-->jx;
+                    @streamunichar val;
+                    print " should be ";
+                    val = targetarray-->jx;
+                    @streamunichar val;
+                    print "^";
+                    break;
+                }
+            }
+        }
+    }
+
+    if (errorcount) {
+        print "^FAILED with ", errorcount, " errors.^";
+    }
+];
