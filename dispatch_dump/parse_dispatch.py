@@ -584,7 +584,7 @@ print 'var proto_map = {'
 for id in idarray:
     func = functions[id]
     if (func.form):
-        print '// %d %s %s' % (func.id, func.name, func.proto)
+        print '// %d (0x%03X): %s - %s' % (func.id, func.id, func.name, func.proto)
         print '%d : %s,' % (func.id, func.tojs())
 print '};'
 print '// End of auto-generated table.'
