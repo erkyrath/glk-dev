@@ -5,6 +5,8 @@ Release 2;
 
 Global mainwin = 0;
 Global altwin = 0;
+Global curtimer = 0;
+Global timer_counter = 0;
 Array gg_event --> 4;
 Constant BUFLEN = 80;
 Array input_buffer -> 4+BUFLEN;
@@ -41,7 +43,7 @@ Constant ALTWIN_ROCK 101;
   mainloop();
 ];
 
-[ mainloop numwords wd addr win olddir;
+[ mainloop numwords wd addr win olddir val;
 
   while (true) {
     print "^>";
@@ -126,6 +128,26 @@ Constant ALTWIN_ROCK 101;
     else if (wd == 'size' or 'sizes') {
       announce_window_sizes();
     }
+    else if (wd == 'timer') {
+      if (~~parse_number()) {
+        if (curtimer)
+          val = 0;
+        else
+          val = 1;
+      }
+      else {
+        val = num_understood;
+      }
+      if (val > 60)
+        val = 60;
+      curtimer = val;
+      glk($00D6, curtimer*1000); ! request_timer_events
+      ! ### gestalt test and warning
+      if (curtimer)
+        print "Timer will fire every ", curtimer, " seconds.^";
+      else
+        print "Timer is now off.^";
+    }
     else {
       print "I didn't understand that.^";
     }
@@ -140,7 +162,13 @@ Constant ALTWIN_ROCK 101;
   glk($00D0, mainwin, input_buffer+4, BUFLEN, 0); ! request_line_event
   while (true) {
     glk($00C0, gg_event); ! select
+    if (gg_event-->0 == 1) {
+      ! timer input
+      handle_timer();
+      continue;
+    }
     if (gg_event-->0 == 3 && gg_event-->1 == mainwin) {
+      ! line input
       count = gg_event-->2;
       break;
     }
@@ -208,6 +236,16 @@ Constant ALTWIN_ROCK 101;
     }
     num_understood = val;
     return true;
+];
+
+[ parse_number  numwords wx;
+  num_understood = 0;
+  numwords = parse_buffer-->0;
+  for (wx=1 : wx<numwords : wx++) {
+    if (isnumber(wx))
+      rtrue;
+  }
+  rfalse;
 ];
 
 [ parse_window_params  numwords wx wd;
@@ -389,4 +427,24 @@ Constant ALTWIN_ROCK 101;
         glk($0025, win, gg_event+0, gg_event+4); ! window_get_size
         print "  size: ", gg_event-->0, " by ", gg_event-->1, ".^";
     }
+];
+
+[ handle_timer  count wintype;
+  timer_counter++;
+  
+  if (altwin) {
+    wintype = glk($0028, altwin); ! window_get_type
+    if (wintype == 4) 
+      glk($002A, altwin); ! glk_clear_window
+    glk($002F, altwin); ! glk_set_window
+    print "Timer event ", timer_counter, "!^";
+    glk($002F, mainwin); ! glk_set_window
+  }
+  else {
+    glk($00D1, mainwin, gg_event); ! cancel_line_event
+    count = gg_event-->2;
+    print "Input interrupted by timer event.^";
+    print "^>";
+    glk($00D0, mainwin, input_buffer+4, BUFLEN, count); ! request_line_event
+  }
 ];
