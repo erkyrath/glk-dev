@@ -460,8 +460,22 @@ Constant ALTWIN_ROCK 101;
   }
   else {
     glk($00D1, mainwin, gg_event); ! cancel_line_event
-    count = gg_event-->2;
-    print "Input interrupted by timer event.^";
+    print "Input interrupted by timer event.";
+    count = 0;
+    if (gg_event-->0 == 3 && gg_event-->1 == mainwin) {
+      count = gg_event-->2;
+      if (count == 0) {
+        print " (Input line was empty.)^";
+      }
+      else {
+        print " (Input line had ", count, " chars: ~";
+        glk($0084, input_buffer+4, count); ! put_buffer
+        print "~)^";
+      }
+    }
+    else {
+      print " (No input line??)^";
+    }
     print "^>";
     glk($00D0, mainwin, input_buffer+4, BUFLEN, count); ! request_line_event
   }
