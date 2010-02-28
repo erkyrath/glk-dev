@@ -148,6 +148,10 @@ Constant ALTWIN_ROCK 101;
       else
         print "Timer is now off.^";
     }
+    else if (wd == 'poll') {
+      glk($00C1, gg_event); ! select_poll
+      print "Event poll: ", (printeventtype) gg_event-->0, "^";
+    }
     else {
       print "I didn't understand that.^";
     }
@@ -324,6 +328,20 @@ Constant ALTWIN_ROCK 101;
   print "A voice booooms out: Welcome to the test chamber.^^";
   print "Type ~help~ to repeat this message, ~quit~ to exit,
     ###.^";
+];
+
+[ printeventtype evtype;
+    switch (evtype) {
+        0: print "none";
+        1: print "timer";
+        2: print "char input";
+        3: print "line input";
+        4: print "mouse input";
+        5: print "window arrangement";
+        6: print "graphics redraw";
+        7: print "sound notify";
+        8: print "hyperlink";
+    }
 ];
 
 [ printwintype wintype;
