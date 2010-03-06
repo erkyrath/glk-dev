@@ -24,6 +24,10 @@ Constant ROM_GAMESERIAL    $36;     ! six ASCII characters
 
   RoomDesc();
   RunTest();
+  print "This test should have created seven files, named ~testfile1~
+    to ~testfile7~. These files should be identical -- each 26 bytes
+    long, containing the string ~Purple monkey dishwasher.~ followed
+    by a Unix newline (ctrl-J).^";
 ];
 
 [ Banner  i ix;
@@ -262,5 +266,5 @@ Constant filemode_WriteAppend = 5;
     glk($0044, str, gg_result); ! stream_close
     check_result_counts(26, 0);
 
-    print "^All files created.^";
+    print "^All files created.^^";
 ];
