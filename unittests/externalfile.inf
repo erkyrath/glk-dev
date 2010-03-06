@@ -1,0 +1,266 @@
+Constant Story "ExternalFile";
+Constant Headline "Not a game.^";
+
+Release 1;
+
+Global mainwin = 0;
+Constant BUFLEN = 80;
+Array buffer -> BUFLEN+4;
+Array buffer2 -> BUFLEN+4;
+Array gg_result --> 2;
+
+Constant HDR_GLULXVERSION  $04;     ! long word
+Constant ROM_GAMERELEASE   $34;     ! short word
+Constant ROM_GAMESERIAL    $36;     ! six ASCII characters
+
+[ Main;
+  @setiosys 2 0; ! select Glk I/O system
+  mainwin = glk($0023, 0, 0, 0, 3, 0); ! glk_window_open
+  glk($002F, mainwin); ! glk_set_window
+
+  new_line;
+  Banner();
+  new_line;
+
+  RoomDesc();
+  RunTest();
+];
+
+[ Banner  i ix;
+   if (Story ~= 0) {
+    glk($0086, 3); ! set header style
+    print (string) Story;
+    glk($0086, 0); ! set normal style
+  }
+  if (Headline ~= 0) print ": ", (string) Headline;
+  print "Release ";
+  @aloads ROM_GAMERELEASE 0 i;
+  print i;
+  print " / Serial number ";
+  for (i=0 : i<6 : i++) print (char) ROM_GAMESERIAL->i;
+  print " / Inform v"; inversion;
+  print ", compiler options ";
+  i = false;
+  #Ifdef STRICT_MODE;
+  print "S"; i++;
+  #Endif; ! STRICT_MODE
+  #Ifdef INFIX;
+  print "X"; i++;
+  #Ifnot;
+  #Ifdef DEBUG;
+  print "D"; i++;
+  #Endif; ! DEBUG
+  #Endif; ! INFIX
+  if (~~i) print "(none)";
+  new_line;
+
+  @gestalt 1 0 ix;
+  print "Interpreter version ", ix / $10000, ".", (ix & $FF00) / $100,
+  ".", ix & $FF, " / ";
+  @gestalt 0 0 ix;
+  print "VM ", ix / $10000, ".", (ix & $FF00) / $100, ".", ix & $FF, " / ";
+  ix = HDR_GLULXVERSION-->0;
+  print "game file format ", ix / $10000, ".", (ix & $FF00) / $100, ".", ix & $FF, "^";
+];
+
+[ RoomDesc;
+    print "A voice booooms out: Welcome to the test chamber.^^";
+];
+
+[ make_fref name   len fref;
+    len = name.print_to_array(buffer, BUFLEN);
+    buffer->3 = $E0;
+    buffer->(4+len) = 0;
+    fref = glk($0061, 0, buffer+3, 0); ! fileref_create_by_name
+    ! (This is a type-data, binary file.)
+    if (~~fref) {
+        print "Unable to create fileref: ", name, "^";
+        quit;
+    }
+    return fref;
+];
+
+[ delete_if_exists fref name   val;
+    val = glk($0067, fref); ! fileref_does_file_exist
+    if (val) {
+        print "(Deleting existing file: ", (string) name, ")^";
+        glk($0066, fref); ! fileref_delete_file
+    }
+];
+
+[ open_file fref name   mode str;
+    str = glk($0042, fref, mode, 0); ! stream_open_file
+    if (~~str) {
+        print "Unable to open stream: ", (string) name, "^";
+        quit;
+    }
+    return str;
+];
+
+[ write_stream str val   len;
+    len = val.print_to_array(buffer, BUFLEN);
+    glk($0085, str, buffer+4, len); ! put_buffer_stream
+];
+
+[ compare_string buf blen val   len ix;
+    len = val.print_to_array(buffer2, BUFLEN);
+    if (len ~= blen) {
+        print "String does not match -- wrong length: ", len, ", not ", blen, "^";
+        quit;
+    }
+    for (ix=0 : ix<len : ix++) {
+        if (buf->ix ~= buffer2->(4+ix)) {
+            print "String does not match -- character ", ix, " is ", (char) buf->ix, ", not ", (char) buffer2->(4+ix), "^";
+            quit;
+        }
+    }
+];
+
+[ check_result_counts readcount writecount;
+    if (gg_result-->0 ~= readcount) {
+        print "Read count was wrong: ", gg_result-->0, ", not ", readcount, "^";
+        quit;
+    }
+    if (gg_result-->1 ~= writecount) {
+        print "Read count was wrong: ", gg_result-->1, ", not ", writecount, "^";
+        quit;
+    }
+];
+
+Constant filemode_Write = 1;
+Constant filemode_Read = 2;
+Constant filemode_ReadWrite = 3;
+Constant filemode_WriteAppend = 5;
+
+[ RunTest name fref str len;
+
+    ! Write once, close, then read.
+    
+    name = "testfile1";
+    print "Testing: ", (string) name, "^";
+    fref = make_fref(name);
+    delete_if_exists(fref, name);
+    str = open_file(fref, name, filemode_Write);
+    write_stream(str, "Purple monkey dishwasher.^");
+    glk($0044, str, gg_result); ! stream_close
+    check_result_counts(0, 26);
+
+    str = open_file(fref, name, filemode_Read);
+    len = glk($0092, str, buffer, BUFLEN); ! get_buffer_stream
+    compare_string(buffer, len, "Purple monkey dishwasher.^");
+    glk($0044, str, gg_result); ! stream_close
+    check_result_counts(26, 0);
+
+    ! Write, reopen, write, then read.
+    
+    name = "testfile2";
+    print "Testing: ", (string) name, "^";
+    fref = make_fref(name);
+    delete_if_exists(fref, name);
+    str = open_file(fref, name, filemode_Write);
+    write_stream(str, "Obsequious, purple, and clairvoyant.^");
+    glk($0044, str, gg_result); ! stream_close
+    check_result_counts(0, 37);
+    str = open_file(fref, name, filemode_Write);
+    write_stream(str, "Purple monkey dishwasher.^");
+    glk($0044, str, gg_result); ! stream_close
+    check_result_counts(0, 26);
+
+    str = open_file(fref, name, filemode_Read);
+    len = glk($0092, str, buffer, BUFLEN); ! get_buffer_stream
+    compare_string(buffer, len, "Purple monkey dishwasher.^");
+    glk($0044, str, gg_result); ! stream_close
+    check_result_counts(26, 0);
+
+    ! Write, seek to beginning, write, then close and read.
+    
+    name = "testfile3";
+    print "Testing: ", (string) name, "^";
+    fref = make_fref(name);
+    delete_if_exists(fref, name);
+    str = open_file(fref, name, filemode_Write);
+    write_stream(str, "Orange gerbil dishwasher.^");
+    glk($0045, str, 0, 0); ! stream_set_position
+    write_stream(str, "Purple monkey");
+    glk($0044, str, gg_result); ! stream_close
+    check_result_counts(0, 39);
+
+    str = open_file(fref, name, filemode_Read);
+    len = glk($0092, str, buffer, BUFLEN); ! get_buffer_stream
+    compare_string(buffer, len, "Purple monkey dishwasher.^");
+    glk($0044, str, gg_result); ! stream_close
+    check_result_counts(26, 0);
+
+    ! Write, seek, and read.
+    
+    name = "testfile4";
+    print "Testing: ", (string) name, "^";
+    fref = make_fref(name);
+    delete_if_exists(fref, name);
+    str = open_file(fref, name, filemode_ReadWrite);
+    write_stream(str, "Purple monkey dishwasher.^");
+    glk($0045, str, 0, 0); ! stream_set_position
+    len = glk($0092, str, buffer, BUFLEN); ! get_buffer_stream
+    compare_string(buffer, len, "Purple monkey dishwasher.^");
+    glk($0044, str, gg_result); ! stream_close
+    check_result_counts(26, 26);
+
+    ! Write, seek, write, seek, read.
+    
+    name = "testfile5";
+    print "Testing: ", (string) name, "^";
+    fref = make_fref(name);
+    delete_if_exists(fref, name);
+    str = open_file(fref, name, filemode_ReadWrite);
+    write_stream(str, "Purple rabbit dishwasher.^");
+    glk($0045, str, 7, 0); ! stream_set_position
+    write_stream(str, "monkey");
+    glk($0045, str, 0, 0); ! stream_set_position
+    len = glk($0092, str, buffer, BUFLEN); ! get_buffer_stream
+    compare_string(buffer, len, "Purple monkey dishwasher.^");
+    glk($0044, str, gg_result); ! stream_close
+    check_result_counts(26, 32);
+
+    ! Write, close, append, write, close, read.
+    
+    name = "testfile6";
+    print "Testing: ", (string) name, "^";
+    fref = make_fref(name);
+    delete_if_exists(fref, name);
+    str = open_file(fref, name, filemode_Write);
+    write_stream(str, "Purple");
+    glk($0044, str, gg_result); ! stream_close
+    check_result_counts(0, 6);
+
+    str = open_file(fref, name, filemode_WriteAppend);
+    write_stream(str, " monkey dishwasher.^");
+    glk($0044, str, gg_result); ! stream_close
+    check_result_counts(0, 20);
+
+    str = open_file(fref, name, filemode_Read);
+    len = glk($0092, str, buffer, BUFLEN); ! get_buffer_stream
+    compare_string(buffer, len, "Purple monkey dishwasher.^");
+    glk($0044, str, gg_result); ! stream_close
+    check_result_counts(26, 0);
+
+    ! Append, seek, write, close, read.
+    
+    name = "testfile7";
+    print "Testing: ", (string) name, "^";
+    fref = make_fref(name);
+    delete_if_exists(fref, name);
+    str = open_file(fref, name, filemode_WriteAppend);
+    write_stream(str, "Purple monkey chef.^");
+    glk($0045, str, 14, 0); ! stream_set_position
+    write_stream(str, "dishwasher.^");
+    glk($0044, str, gg_result); ! stream_close
+    check_result_counts(0, 32);
+
+    str = open_file(fref, name, filemode_Read);
+    len = glk($0092, str, buffer, BUFLEN); ! get_buffer_stream
+    compare_string(buffer, len, "Purple monkey dishwasher.^");
+    glk($0044, str, gg_result); ! stream_close
+    check_result_counts(26, 0);
+
+    print "^All files created.^";
+];
