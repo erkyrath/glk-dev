@@ -1,7 +1,7 @@
 Constant Story "ExternalFile";
 Constant Headline "Not a game.^";
 
-Release 1;
+Release 2;
 
 Global mainwin = 0;
 Constant BUFLEN = 80;
