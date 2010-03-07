@@ -9,6 +9,8 @@ Array buffer -> BUFLEN+4;
 Array buffer2 -> BUFLEN+4;
 Array gg_result --> 2;
 
+Global errorcount = 0;
+
 Constant HDR_GLULXVERSION  $04;     ! long word
 Constant ROM_GAMERELEASE   $34;     ! short word
 Constant ROM_GAMESERIAL    $36;     ! six ASCII characters
@@ -28,6 +30,8 @@ Constant ROM_GAMESERIAL    $36;     ! six ASCII characters
     to ~testfile7~. These files should be identical -- each 26 bytes
     long, containing the string ~Purple monkey dishwasher.~ followed
     by a Unix newline (ctrl-J).^";
+  if (errorcount)
+    print "^However, something went wrong.^";
 ];
 
 [ Banner  i ix;
@@ -110,12 +114,14 @@ Constant ROM_GAMESERIAL    $36;     ! six ASCII characters
     len = val.print_to_array(buffer2, BUFLEN);
     if (len ~= blen) {
         print "String does not match -- wrong length: ", len, ", not ", blen, "^";
-        quit;
+        errorcount++;
+        return;
     }
     for (ix=0 : ix<len : ix++) {
         if (buf->ix ~= buffer2->(4+ix)) {
             print "String does not match -- character ", ix, " is ", (char) buf->ix, ", not ", (char) buffer2->(4+ix), "^";
-            quit;
+            errorcount++;
+            return;
         }
     }
 ];
@@ -123,11 +129,11 @@ Constant ROM_GAMESERIAL    $36;     ! six ASCII characters
 [ check_result_counts readcount writecount;
     if (gg_result-->0 ~= readcount) {
         print "Read count was wrong: ", gg_result-->0, ", not ", readcount, "^";
-        quit;
+        errorcount++;
     }
     if (gg_result-->1 ~= writecount) {
         print "Read count was wrong: ", gg_result-->1, ", not ", writecount, "^";
-        quit;
+        errorcount++;
     }
 ];
 
@@ -266,5 +272,8 @@ Constant filemode_WriteAppend = 5;
     glk($0044, str, gg_result); ! stream_close
     check_result_counts(26, 0);
 
-    print "^All files created.^^";
+    if (errorcount)
+        print "^FAILED: ", errorcount, " errors occurred.^^";
+    else
+        print "^All files created.^^";
 ];
