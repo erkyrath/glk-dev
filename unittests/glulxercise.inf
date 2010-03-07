@@ -806,6 +806,66 @@ TestClass ArithTest
 		count_failures();
 	];
 
+TestClass CompoundArithTest
+	with name 'comarith' 'comparith',
+	testfunc [ val xloc yloc zloc;
+		print "Compound arithmetic expressions:^^";
+
+		xloc = 7;
+		yloc = 2;
+		zloc = -4;
+		val = (xloc + yloc) * zloc;
+		print "(7+2)*-4="; check(val, -36); print ", ";
+
+		testglobal = 7;
+		yloc = 2;
+		zloc = -4;
+		noop();
+		val = (testglobal + yloc) * zloc;
+		print "(7+2)*-4="; check(val, -36); print "^";
+
+		xloc = $10000;
+		yloc = $10000;
+		zloc = 16;
+		val = (xloc * yloc) / zloc + 1;
+		print "($10000*$10000)/16+1="; check(val, 1); print ", ";
+
+		xloc = $10000;
+		yloc = $10000;
+		zloc = 16;
+		noop();
+		val = (xloc * yloc) / zloc + 1;
+		print "($10000*$10000)/16+1="; check(val, 1); print "^";
+
+		xloc = $7FFFFFFF;
+		yloc = 2;
+		zloc = 16;
+		val = (xloc + yloc) / zloc;
+		print "($7FFFFFFF+2)/16="; check(val, -$7FFFFFF); print ", ";
+
+		xloc = $7FFFFFFF;
+		yloc = 2;
+		zloc = 16;
+		noop();
+		val = (xloc + yloc) / zloc;
+		print "($7FFFFFFF+2)/16="; check(val, -$7FFFFFF); print "^";
+
+		xloc = -$7FFFFFFF;
+		yloc = 2;
+		zloc = 16;
+		val = (xloc - yloc) / zloc;
+		print "(-$7FFFFFFF-2)/16="; check(val, $7FFFFFF); print ", ";
+
+		xloc = -$7FFFFFFF;
+		yloc = 2;
+		zloc = 16;
+		noop();
+		val = (xloc - yloc) / zloc;
+		print "(-$7FFFFFFF-2)/16="; check(val, $7FFFFFF); print "^";
+		
+		count_failures();
+	];
+
 TestClass BitwiseTest
 	with name 'bitwise' 'bits' 'bit',
 	testfunc [ val;
