@@ -5095,6 +5095,13 @@ TestClass MemCopyTest
 		check_array_seq(destarray, 1,2,3,4,5,6,7,8,9,10,11,12);
 		
 		fill_array_seq(destarray);
+		addr = destarray+8;
+		addr2 = destarray+6;
+		@mcopy 0 addr addr2;
+		print "0, arr+8, arr+6:";
+		check_array_seq(destarray, 1,2,3,4,5,6,7,8,9,10,11,12);
+		
+		fill_array_seq(destarray);
 		addr = destarray+4;
 		addr2 = destarray+4;
 		@mcopy 4 addr addr2;
