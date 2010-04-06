@@ -412,6 +412,24 @@ Class TestClass
 	}
 ];
 
+[ check_bytelist _vararg_count    arr ix wanted;
+	@copy sp arr;
+	_vararg_count--;
+	
+	for (ix=0 : ix<_vararg_count : ix++) {
+		@copy sp wanted;
+		if (ix)
+			print ", ";
+		if (wanted == arr->ix) {
+			print wanted;
+		}
+		else {
+			failures++;
+			print arr->ix, " (should be ", wanted, " FAIL)";
+		}
+	}
+];
+
 [ check_str str len  newlen ix good ch;
 	good = true;
 	newlen = string_to_array(str, bigbuffer2, BIGBUFSIZE);
@@ -5009,22 +5027,6 @@ TestClass SearchTest
 		arr->ix = (ix+1);
 ];
 
-[ check_array_seq _vararg_count arr ix val;
-	if (_vararg_count ~= 13) {
-		failures++;
-		print "(check_array_seq: stack had wrong count!)^";
-	}
-	@pull arr;
-	ix = 0;
-	while (ix<12) {
-		print " ";
-		@pull val;
-		check(arr->ix, val);
-		ix++;
-	}
-	print "^";
-];
-
 TestClass MemZeroTest
 	with name 'mzero' 'memzero',
 	testfunc [ addr val;
@@ -5040,28 +5042,28 @@ TestClass MemZeroTest
 		fill_array_seq(destarray);
 		addr = destarray+4;
 		@mzero 0 addr;
-		print "0, arr+4:";
-		check_array_seq(destarray, 1,2,3,4,5,6,7,8,9,10,11,12);
+		print "0, arr+4: ";
+		check_bytelist(destarray, 1,2,3,4,5,6,7,8,9,10,11,12); print "^";
 
 		fill_array_seq(destarray);
 		addr = destarray+4;
 		@mzero 1 addr;
-		print "1, arr+4:";
-		check_array_seq(destarray, 1,2,3,4,0,6,7,8,9,10,11,12);
+		print "1, arr+4: ";
+		check_bytelist(destarray, 1,2,3,4,0,6,7,8,9,10,11,12); print "^";
 
 		fill_array_seq(destarray);
 		testglobal = destarray;
 		@mzero 6 testglobal;
-		print "6, arr+0:";
-		check_array_seq(destarray, 0,0,0,0,0,0,7,8,9,10,11,12);
+		print "6, arr+0: ";
+		check_bytelist(destarray, 0,0,0,0,0,0,7,8,9,10,11,12); print "^";
 
 		fill_array_seq(destarray);
 		addr = destarray+2;
 		@copy addr sp;
 		@copy 3 sp;
 		@mzero sp sp;
-		print "3, arr+2:";
-		check_array_seq(destarray, 1,2,0,0,0,6,7,8,9,10,11,12);
+		print "3, arr+2: ";
+		check_bytelist(destarray, 1,2,0,0,0,6,7,8,9,10,11,12); print "^";
 
 		fill_array_seq(destarray);
 		addr = destarray+3;
@@ -5069,8 +5071,8 @@ TestClass MemZeroTest
 		@copy 4 sp;
 		noop();
 		@mzero sp sp;
-		print "4, arr+3:";
-		check_array_seq(destarray, 1,2,3,0,0,0,0,8,9,10,11,12);
+		print "4, arr+3: ";
+		check_bytelist(destarray, 1,2,3,0,0,0,0,8,9,10,11,12); print "^";
 
 		count_failures();
 	];
@@ -5091,43 +5093,43 @@ TestClass MemCopyTest
 		addr = destarray+4;
 		addr2 = destarray+6;
 		@mcopy 0 addr addr2;
-		print "0, arr+4, arr+6:";
-		check_array_seq(destarray, 1,2,3,4,5,6,7,8,9,10,11,12);
+		print "0, arr+4, arr+6: ";
+		check_bytelist(destarray, 1,2,3,4,5,6,7,8,9,10,11,12); print "^";
 		
 		fill_array_seq(destarray);
 		addr = destarray+8;
 		addr2 = destarray+6;
 		@mcopy 0 addr addr2;
-		print "0, arr+8, arr+6:";
-		check_array_seq(destarray, 1,2,3,4,5,6,7,8,9,10,11,12);
+		print "0, arr+8, arr+6: ";
+		check_bytelist(destarray, 1,2,3,4,5,6,7,8,9,10,11,12); print "^";
 		
 		fill_array_seq(destarray);
 		addr = destarray+4;
 		addr2 = destarray+4;
 		@mcopy 4 addr addr2;
-		print "4, arr+4, arr+4:";
-		check_array_seq(destarray, 1,2,3,4,5,6,7,8,9,10,11,12);
+		print "4, arr+4, arr+4: ";
+		check_bytelist(destarray, 1,2,3,4,5,6,7,8,9,10,11,12); print "^";
 		
 		fill_array_seq(destarray);
 		addr = destarray+4;
 		addr2 = destarray+6;
 		@mcopy 5 addr addr2;
-		print "5, arr+4, arr+6:";
-		check_array_seq(destarray, 1,2,3,4,5,6,5,6,7,8,9,12);
+		print "5, arr+4, arr+6: ";
+		check_bytelist(destarray, 1,2,3,4,5,6,5,6,7,8,9,12); print "^";
 		
 		fill_array_seq(destarray);
 		addr = destarray+6;
 		addr2 = destarray+4;
 		@mcopy 5 addr addr2;
-		print "5, arr+6, arr+4:";
-		check_array_seq(destarray, 1,2,3,4,7,8,9,10,11,10,11,12);
+		print "5, arr+6, arr+4: ";
+		check_bytelist(destarray, 1,2,3,4,7,8,9,10,11,10,11,12); print "^";
 		
 		fill_array_seq(destarray);
 		testglobal = destarray+1;
 		testglobal2 = destarray+8;
 		@mcopy 3 testglobal testglobal2;
-		print "3, arr+1, arr+8:";
-		check_array_seq(destarray, 1,2,3,4,5,6,7,8,2,3,4,12);
+		print "3, arr+1, arr+8: ";
+		check_bytelist(destarray, 1,2,3,4,5,6,7,8,2,3,4,12); print "^";
 		
 		fill_array_seq(destarray);
 		val = destarray+1;
@@ -5136,8 +5138,8 @@ TestClass MemCopyTest
 		@copy val sp;
 		@copy 3 sp;
 		@mcopy sp sp sp;
-		print "3, arr+8, arr+1:";
-		check_array_seq(destarray, 1,9,10,11,5,6,7,8,9,10,11,12);
+		print "3, arr+8, arr+1: ";
+		check_bytelist(destarray, 1,9,10,11,5,6,7,8,9,10,11,12); print "^";
 		
 		fill_array_seq(destarray);
 		val = destarray+1;
@@ -5147,8 +5149,8 @@ TestClass MemCopyTest
 		@copy 2 sp;
 		noop();
 		@mcopy sp sp sp;
-		print "2, arr+8, arr+1:";
-		check_array_seq(destarray, 1,9,10,4,5,6,7,8,9,10,11,12);
+		print "2, arr+8, arr+1: ";
+		check_bytelist(destarray, 1,9,10,4,5,6,7,8,9,10,11,12); print "^";
 
 		count_failures();
 	];
