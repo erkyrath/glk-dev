@@ -5186,8 +5186,8 @@ TestClass UndoTest
 			failures++;
 			print "Restoring undo...^";
 			@restoreundo val;
-			if (val == 0) {
-				print "@@64restoreundo failed (value 0)!^";
+			if (val == 1) {
+				print "@@64restoreundo failed (value 1)!^";
 			}
 			else {
 				print "@@64restoreundo failed with unknown return value: ", val, "^";
@@ -5222,8 +5222,8 @@ TestClass UndoTest
 			failures++;
 			print "Restoring undo...^";
 			@restoreundo testglobal2;
-			if (testglobal2 == 0) {
-				print "@@64restoreundo failed (value 0)!^";
+			if (testglobal2 == 1) {
+				print "@@64restoreundo failed (value 1)!^";
 			}
 			else {
 				print "@@64restoreundo failed with unknown return value: ", testglobal2, "^";
@@ -5258,8 +5258,8 @@ TestClass UndoTest
 			failures++;
 			print "Restoring undo...^";
 			@restoreundo val;
-			if (val == 0) {
-				print "@@64restoreundo failed (value 0)!^";
+			if (val == 1) {
+				print "@@64restoreundo failed (value 1)!^";
 			}
 			else {
 				print "@@64restoreundo failed with unknown return value: ", val, "^";
@@ -5299,8 +5299,8 @@ TestClass UndoTest
 			print "Restoring undo...^";
 			@restoreundo sp;
 			@pull testglobal2;
-			if (testglobal2 == 0) {
-				print "@@64restoreundo failed (value 0)!^";
+			if (testglobal2 == 1) {
+				print "@@64restoreundo failed (value 1)!^";
 			}
 			else {
 				print "@@64restoreundo failed with unknown return value: ", testglobal2, "^";
@@ -5341,8 +5341,8 @@ TestClass UndoTest
 			failures++;
 			print "Restoring undo...^";
 			@restoreundo testglobal2;
-			if (testglobal2 == 0) {
-				print "@@64restoreundo failed (value 0)!^";
+			if (testglobal2 == 1) {
+				print "@@64restoreundo failed (value 1)!^";
 			}
 			else {
 				print "@@64restoreundo failed with unknown return value: ", testglobal2, "^";
@@ -5378,3 +5378,89 @@ TestClass UndoTest
 	return val;
 ];
 
+TestClass MultiUndoTest
+	with name 'multiundo',
+	testfunc [ val loc;
+		print "Multi-level undo:^^";
+
+		@gestalt 3 0 val; ! Undo
+		if (val)
+			print "Interpreter claims to support undo.^^";
+		else
+			print "Interpreter claims to not support undo. (Continuing test anyway...)^^";
+
+		loc = 99;
+		testglobal = 999;
+		@saveundo val;
+		if (val == 1) {
+			print "First @@64saveundo failed!^";
+			failures++;
+			count_failures();
+			return;
+		}
+		if (val == 0) {
+			print "Undo 1 saved...^";
+			! The following changes will be undone.
+			loc = 77;
+			testglobal = 777;
+			failures++;
+
+			@saveundo val;
+			if (val == 1) {
+				print "Second @@64saveundo failed!^";
+				failures++;
+				count_failures();
+				return;
+			}
+			if (val == 0) {
+				print "Undo 2 saved...^";
+				! The following changes will be undone.
+				loc = 55;
+				testglobal = 555;
+				failures++;
+
+				print "Restoring undo 2...^";
+				@restoreundo val;
+				if (val == 1) {
+					print "Second @@64restoreundo failed (value 1)!^";
+				}
+				else {
+					print "Second @@64restoreundo failed with unknown return value: ", val, "^";
+				}
+				failures++;
+				count_failures();
+				return;
+			}
+			else if (val ~= -1) {
+				print "Unknown @@64saveundo return value: ", val, "^";
+				failures++;
+				count_failures();
+				return;
+			}
+			
+			print "Undo 2 succeeded, return value "; check(val, -1); print ".^";
+			print "loc="; check(loc, 77); print " glob="; check(testglobal, 777); print "^";
+			
+			print "Restoring undo 1...^";
+			@restoreundo val;
+			if (val == 1) {
+				print "First @@64restoreundo failed (value 1)!^";
+			}
+			else {
+				print "First @@64restoreundo failed with unknown return value: ", val, "^";
+			}
+			failures++;
+			count_failures();
+			return;
+		}
+		else if (val ~= -1) {
+			print "Unknown @@64saveundo return value: ", val, "^";
+			failures++;
+			count_failures();
+			return;
+		}
+		print "Undo 1 succeeded, return value "; check(val, -1); print ".^";
+		print "loc="; check(loc, 99); print " glob="; check(testglobal, 999); print "^";
+		
+		count_failures();
+	];
