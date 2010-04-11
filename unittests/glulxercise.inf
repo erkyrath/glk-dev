@@ -5027,6 +5027,11 @@ TestClass SearchTest
 		arr->ix = (ix+1);
 ];
 
+[ fill_array_val arr val  ix;
+	for (ix=0 : ix<12 : ix++)
+		arr->ix = val;
+];
+
 TestClass MemZeroTest
 	with name 'mzero' 'memzero',
 	testfunc [ addr val;
@@ -5464,3 +5469,152 @@ TestClass MultiUndoTest
 		
 		count_failures();
 	];
+
+TestClass VerifyTest
+	with name 'verify',
+	testfunc [ val;
+		print "Verify:^^";
+
+		@verify val;
+		print "verify="; check(val, 0); print "^";
+		
+		@verify testglobal;
+		print "verify="; check(testglobal, 0); print "^";
+
+		@verify sp;
+		@copy sp val;
+		print "verify="; check(val, 0); print "^";
+
+		count_failures();
+	];
+
+TestClass ProtectTest
+	with name 'protect',
+	testfunc [ val addr;
+		print "Protect:^^";
+
+		@gestalt 3 0 val; ! Undo
+		if (~~val)
+			print "Interpreter claims to not support undo. (Continuing test anyway...)^^";
+
+		addr = destarray+3;
+		@protect addr 6;
+		fill_array_seq(destarray);
+		@saveundo val;
+		if (val == 1) {
+			print "@@64saveundo failed!^";
+			failures++;
+			count_failures();
+			return;
+		}
+		if (val == 0) {
+			print "Undo saved...^";
+			! The following changes will be undone.
+			fill_array_val(destarray, 99);
+			failures++;
+			print "Restoring undo...^";
+			@restoreundo val;
+			if (val == 1) {
+				print "@@64restoreundo failed (value 1)!^";
+			}
+			else {
+				print "@@64restoreundo failed with unknown return value: ", val, "^";
+			}
+			failures++;
+			count_failures();
+			return;
+		}
+		else if (val ~= -1) {
+			print "Unknown @@64saveundo return value: ", val, "^";
+			failures++;
+			count_failures();
+			return;
+		}
+		print "Undo succeeded, return value "; check(val, -1); print ".^";
+		
+		print "Protected 3,6: ";
+		check_bytelist(destarray, 1,2,3,99,99,99,99,99,99,10,11,12); print "^";
+
+
+		addr = destarray+6;
+		@copy 1 sp;
+		@copy addr sp;
+		@protect sp sp;
+		fill_array_seq(destarray);
+		@saveundo val;
+		if (val == 1) {
+			print "@@64saveundo failed!^";
+			failures++;
+			count_failures();
+			return;
+		}
+		if (val == 0) {
+			print "Undo saved...^";
+			! The following changes will be undone.
+			fill_array_val(destarray, 99);
+			failures++;
+			print "Restoring undo...^";
+			@restoreundo val;
+			if (val == 1) {
+				print "@@64restoreundo failed (value 1)!^";
+			}
+			else {
+				print "@@64restoreundo failed with unknown return value: ", val, "^";
+			}
+			failures++;
+			count_failures();
+			return;
+		}
+		else if (val ~= -1) {
+			print "Unknown @@64saveundo return value: ", val, "^";
+			failures++;
+			count_failures();
+			return;
+		}
+		print "Undo succeeded, return value "; check(val, -1); print ".^";
+		
+		print "Protected 6,1: ";
+		check_bytelist(destarray, 1,2,3,4,5,6,99,8,9,10,11,12); print "^";
+
+
+		@protect 0 0;
+		fill_array_seq(destarray);
+		@saveundo val;
+		if (val == 1) {
+			print "@@64saveundo failed!^";
+			failures++;
+			count_failures();
+			return;
+		}
+		if (val == 0) {
+			print "Undo saved...^";
+			! The following changes will be undone.
+			fill_array_val(destarray, 99);
+			failures++;
+			print "Restoring undo...^";
+			@restoreundo val;
+			if (val == 1) {
+				print "@@64restoreundo failed (value 1)!^";
+			}
+			else {
+				print "@@64restoreundo failed with unknown return value: ", val, "^";
+			}
+			failures++;
+			count_failures();
+			return;
+		}
+		else if (val ~= -1) {
+			print "Unknown @@64saveundo return value: ", val, "^";
+			failures++;
+			count_failures();
+			return;
+		}
+		print "Undo succeeded, return value "; check(val, -1); print ".^";
+		
+		print "Unprotected: ";
+		check_bytelist(destarray, 1,2,3,4,5,6,7,8,9,10,11,12); print "^";
+
+
+		count_failures();
+	];
+
