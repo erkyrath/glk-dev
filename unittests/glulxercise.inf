@@ -1,3 +1,5 @@
+!% $MEMORY_MAP_EXTENSION=256
+
 Constant Story "Glulxercise";
 Constant Headline "A Glulx interpreter unit test^";
 Release 3;
@@ -23,11 +25,11 @@ Array gg_arguments --> 8;
 !Constant HDR_MAGICNUMBER   $00;     ! long word
 Constant HDR_GLULXVERSION  $04;     ! long word
 !Constant HDR_RAMSTART      $08;     ! long word
-!Constant HDR_EXTSTART      $0C;     ! long word
-!Constant HDR_ENDMEM        $10;     ! long word
+Constant HDR_EXTSTART      $0C;     ! long word
+Constant HDR_ENDMEM        $10;     ! long word
 !Constant HDR_STACKSIZE     $14;     ! long word
 !Constant HDR_STARTFUNC     $18;     ! long word
-!Constant HDR_DECODINGTBL   $1C;     ! long word
+Constant HDR_DECODINGTBL   $1C;     ! long word
 !Constant HDR_CHECKSUM      $20;     ! long word
 !Constant ROM_INFO          $24;     ! four ASCII characters
 !Constant ROM_MEMORYLAYOUT  $28;     ! long word
@@ -3778,7 +3780,7 @@ TestClass StringsTest
 [ tablestring val len;
 	@setstringtbl encoding_table;
 	len = string_to_array(val, bigbuffer, BIGBUFSIZE);
-	val = 0-->7;
+	val = HDR_DECODINGTBL-->0;
 	@setstringtbl val;
 	return len;
 ];
@@ -3786,7 +3788,7 @@ TestClass StringsTest
 [ tableustring val len;
 	@setstringtbl encoding_table;
 	len = string_to_uniarray(val, bigubuffer, BIGBUFSIZE);
-	val = 0-->7;
+	val = HDR_DECODINGTBL-->0;
 	@setstringtbl val;
 	return len;
 ];
@@ -3806,7 +3808,7 @@ TestClass StringsTest
 ];
 
 [ nativeprint _vararg_count   ix val;
-	val = 0-->7;
+	val = HDR_DECODINGTBL-->0;
 	@setstringtbl val;
 	for (ix=0 : ix<_vararg_count : ix++) {
 		if (ix) @streamchar 32;
@@ -4001,7 +4003,7 @@ TestClass FilterTest
 	@setstringtbl encoding_table;
 	@setiosys 1 prependequal;
 	len = string_to_array(val, bigbuffer, BIGBUFSIZE);
-	val = 0-->7;
+	val = HDR_DECODINGTBL-->0;
 	@setiosys 2 0;
 	@setstringtbl val;
 	return len;
@@ -4011,7 +4013,7 @@ TestClass FilterTest
 	@setiosys 1 appendequal;
 	@setstringtbl encoding_table;
 	len = string_to_array(val, bigbuffer, BIGBUFSIZE);
-	val = 0-->7;
+	val = HDR_DECODINGTBL-->0;
 	@setstringtbl val;
 	@setiosys 2 0;
 	return len;
@@ -4106,7 +4108,7 @@ TestClass NullIOTest
 	@setstringtbl encoding_table;
 	@setiosys 0 0;
 	len = string_to_array(val, bigbuffer, BIGBUFSIZE);
-	val = 0-->7;
+	val = HDR_DECODINGTBL-->0;
 	@setiosys 2 0;
 	@setstringtbl val;
 	return len;
@@ -4116,7 +4118,7 @@ TestClass NullIOTest
 	@setiosys 0 0;
 	@setstringtbl encoding_table;
 	len = string_to_array(val, bigbuffer, BIGBUFSIZE);
-	val = 0-->7;
+	val = HDR_DECODINGTBL-->0;
 	@setstringtbl val;
 	@setiosys 2 0;
 	return len;
@@ -5618,3 +5620,81 @@ TestClass ProtectTest
 		count_failures();
 	];
 
+TestClass MemSizeTest
+	with name 'memsize' 'msize',
+	testfunc [ val res addr extstart endmem newendmem;
+		print "Memory-size extension:^^";
+
+		extstart = HDR_EXTSTART-->0;
+		endmem = HDR_ENDMEM-->0;
+
+		@gestalt 3 0 val; ! Undo
+		if (~~val) {
+			print "Interpreter claims to not support memory resizing.^^";
+			@getmemsize val;
+			print "Initial memsize="; check_hex(val, endmem); print "^";
+			print "Trying @@64setmemsize, which should fail...^";
+			newendmem = endmem + $100;
+			@setmemsize newendmem res;
+			print "@@64setmemsize="; check(res, 1); print "^";
+			count_failures();
+			return;
+		}
+
+		if (extstart == endmem) {
+			print "This game file was compiled with a version of Inform
+				that does not understand the $MEMORY_MAP_EXTENSION option.^";
+		}
+		else {
+			print "ExtStart=", (Hex) extstart, "; ";
+			print "EndMem="; check_hex(endmem, extstart+$100); print "^";
+		}
+
+		@getmemsize val;
+		print "Initial memsize="; check_hex(val, endmem); print "^";
+
+		addr = endmem-2;
+		val = addr->0;
+		print "Value at ", (Hex)addr, "="; check(val, 0); print "^";
+		addr = endmem-1;
+		addr->0 = 75;
+		val = addr->0;
+		print "Write/read at ", (Hex)addr, "="; check(val, 75); print "^";
+
+		newendmem = endmem + $100;
+		@setmemsize newendmem res;
+		print "@@64setmemsize="; check(res, 0); print "^";
+		@getmemsize val;
+		print "New memsize="; check_hex(val, newendmem); print "^";
+		
+		addr = endmem-1;
+		addr->0 = 75;
+		val = addr->0;
+		print "Write/read at ", (Hex)addr, "="; check(val, 75); print "^";
+		
+		addr = newendmem-1;
+		addr->0 = 234;
+		val = addr->0;
+		print "Write/read at ", (Hex)addr, "="; check(val, 234); print "^";
+		
+		@setmemsize endmem res;
+		print "@@64setmemsize="; check(res, 0); print "^";
+		@getmemsize val;
+		print "Restored memsize="; check_hex(val, endmem); print "^";
+		
+		@setmemsize newendmem res;
+		print "@@64setmemsize="; check(res, 0); print "^";
+		@getmemsize val;
+		print "New memsize="; check_hex(val, newendmem); print "^";
+		
+		addr = newendmem-1;
+		val = addr->0;
+		print "Write/read at ", (Hex)addr, "="; check(val, 0); print "^";
+		
+		@setmemsize endmem res;
+		print "@@64setmemsize="; check(res, 0); print "^";
+		@getmemsize val;
+		print "Restored memsize="; check_hex(val, endmem); print "^";
+		
+		count_failures();
+	];
