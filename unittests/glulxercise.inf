@@ -63,6 +63,7 @@ Global total_failures = 0;
 		startovertest-->2 = 3;
 		print "Restoring undo...^";
 		@restoreundo ix;
+		print "Undo failed (", ix, ")! Exiting.^";
 		@quit;
 	}
 	
@@ -5738,6 +5739,8 @@ TestClass UndoMemSizeTest
 		endmem = HDR_ENDMEM-->0;
 		print "ExtStart=", (Hex) extstart, "; ";
 		print "EndMem="; check_hex(endmem, extstart+$100); print "^";
+		@getmemsize val;
+		print "Original memsize="; check_hex(val, endmem); print "^";
 
 		addr = endmem + $80;
 		newendmem = endmem + $100;
@@ -5900,3 +5903,95 @@ TestClass UndoRestartTest
 		
 		count_failures();
 	];
+
+TestClass HeapTest
+	with name 'heap',
+	testfunc [ val endmem newendmem blk1 blk2;
+		print "Heap:^^";
+		
+		@gestalt 7 0 val; ! MAlloc
+		if (~~val) {
+			print "Interpreter claims to not support heap allocation. Skipping test.^^";
+			count_failures();
+			return;
+		}
+
+		endmem = HDR_ENDMEM-->0;
+		@getmemsize val;
+		print "Original memsize="; check_hex(val, endmem); print "^";
+		
+		@gestalt 8 0 val; ! MAllocHeap
+		print "Current heap: "; check_hex(val, 0); print "^";
+
+		print "Allocating 16...^";
+		@malloc 16 blk1;
+		if (blk1 == 0) {
+			failures++;
+			print "Allocation failed.^";
+			count_failures();
+			return;
+		}
+
+		@gestalt 8 0 val; ! MAllocHeap
+		print "Heap starts at "; check_hex(val, endmem);
+		@getmemsize newendmem;
+		print ", ends at ", (Hex) newendmem, "^";
+		if (newendmem <= endmem) {
+			failures++;
+			print "Heap size is not positive.^";
+		}
+		if (blk1 < endmem || blk1+16 > newendmem) {
+			failures++;
+			print "Block is outside heap.^";
+		}
+
+		print "Allocating 512...^";
+		@malloc 512 blk2;
+		if (blk2 == 0) {
+			failures++;
+			print "Allocation failed.^";
+			count_failures();
+			return;
+		}
+		
+		@gestalt 8 0 val; ! MAllocHeap
+		print "Heap starts at "; check_hex(val, endmem);
+		@getmemsize newendmem;
+		print ", ends at ", (Hex) newendmem, "^";
+		if (newendmem <= endmem) {
+			failures++;
+			print "Heap size is not positive.^";
+		}
+		if (blk2 < endmem || blk2+512 > newendmem) {
+			failures++;
+			print "Block is outside heap.^";
+		}
+
+		print "Freeing 16...^";
+		@mfree blk1;
+		
+		@getmemsize newendmem;
+		print "Heap ends at ", (Hex) newendmem, "^";
+		@gestalt 8 0 val; ! MAllocHeap
+		if (val == 0) {
+			failures++;
+			print "Heap is inactive.^";
+		}
+		if (blk2 < endmem || blk2+512 > newendmem) {
+			failures++;
+			print "Block is outside heap.^";
+		}
+		
+		print "Freeing 512...^";
+		@mfree blk2;
+		
+		@gestalt 8 0 val; ! MAllocHeap
+		print "Final heap: "; check_hex(val, 0); print "^";
+		endmem = HDR_ENDMEM-->0;
+		@getmemsize val;
+		print "Final memsize="; check_hex(val, endmem); print "^";
+
+		count_failures();
+	];
+
+
