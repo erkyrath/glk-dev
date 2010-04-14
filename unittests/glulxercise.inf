@@ -7,7 +7,7 @@ Release 3;
 ! To compile this canonically, do "inform -G glulxercise.inf". No other
 ! options.
 
-!### to seriously test: gestalt, get/setmemsize
+!### to seriously test: gestalt
 
 Constant GG_MAINWIN_ROCK     201;
 Constant GG_SAVESTR_ROCK     301;
@@ -54,6 +54,17 @@ Global total_failures = 0;
 
 	! deal with some compiler warnings
 	ix = PrintShortName;
+
+	if (startovertest-->0 == 1234 && startovertest-->1 == 2 && startovertest-->2 == 0) {
+		! Part of UndoRestartTest.
+		new_line;
+		print "A voice booooms out: You've been here before!^^";
+		startovertest-->1 = 3;
+		startovertest-->2 = 3;
+		print "Restoring undo...^";
+		@restoreundo ix;
+		@quit;
+	}
 	
 	new_line;
 	Banner();
@@ -92,8 +103,8 @@ Global total_failures = 0;
 		}
 	}
 	else {
-		! There was already a story window. We should erase it.
-		glk($002A, gg_mainwin); ! window_clear
+		! There was already a story window.
+		! glk($002A, gg_mainwin); ! window_clear
 	}
 
 	glk($002F, gg_mainwin); ! set_window
@@ -5835,4 +5846,57 @@ TestClass UndoMemSizeTest
 		count_failures();
 	];
 
-!### badass restart/undo/protect test
+Array startovertest --> 4;
+	
+TestClass UndoRestartTest
+	with name 'undorestart',
+	short_name "undorestart",
+	testfunc [ val;
+		print "Undo of restart:^^";
+
+		@gestalt 3 0 val; ! Undo
+		if (~~val) {
+			print "Interpreter claims to not support undo. Skipping test.^^";
+			count_failures();
+			return;
+		}
+
+		@protect startovertest 8;
+		startovertest-->0 = 1234;
+		startovertest-->1 = 1;
+		startovertest-->2 = 1; ! unprotected
+
+		@saveundo val;
+		if (val == 1) {
+			print "@@64saveundo failed!^";
+			failures++;
+			count_failures();
+			return;
+		}
+		if (val == 0) {
+			print "Undo saved...^";
+			startovertest-->1 = 2;
+			startovertest-->2 = 2;
+			failures++;
+			@restart;
+			count_failures();
+			return;
+		}
+		else if (val ~= -1) {
+			print "Unknown @@64saveundo return value: ", val, "^";
+			failures++;
+			count_failures();
+			return;
+		}
+		print "Undo succeeded, return value "; check(val, -1); print ".^";
+
+		print "Magic number "; check(startovertest-->0, 1234);
+		print ", "; check(startovertest-->1, 3);
+		print ", "; check(startovertest-->2, 1); print "^";
+		
+		startovertest-->0 = 0;
+		startovertest-->1 = 0;
+		startovertest-->2 = 0;
+		
+		count_failures();
+	];
