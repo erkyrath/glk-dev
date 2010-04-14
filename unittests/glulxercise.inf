@@ -414,7 +414,7 @@ Class TestClass
 	}
 ];
 
-[ check_bytelist _vararg_count    arr ix wanted;
+[ check_bytelist _vararg_count    arr ix wanted val;
 	@copy sp arr;
 	_vararg_count--;
 	
@@ -422,12 +422,13 @@ Class TestClass
 		@copy sp wanted;
 		if (ix)
 			print ", ";
-		if (wanted == arr->ix) {
+		@aloadb arr ix val;
+		if (wanted == val) {
 			print wanted;
 		}
 		else {
 			failures++;
-			print arr->ix, " (should be ", wanted, " FAIL)";
+			print val, " (should be ", wanted, " FAIL)";
 		}
 	}
 ];
@@ -5024,14 +5025,17 @@ TestClass SearchTest
 		count_failures();
 	];
 
-[ fill_array_seq arr  ix;
-	for (ix=0 : ix<12 : ix++)
-		arr->ix = (ix+1);
+[ fill_array_seq arr  ix val;
+	for (ix=0 : ix<12 : ix++) {
+		val = ix+1;
+		@astoreb arr ix val;
+	}
 ];
 
 [ fill_array_val arr val  ix;
-	for (ix=0 : ix<12 : ix++)
-		arr->ix = val;
+	for (ix=0 : ix<12 : ix++) {
+		@astoreb arr ix val;
+	}
 ];
 
 TestClass MemZeroTest
@@ -5628,7 +5632,7 @@ TestClass MemSizeTest
 		extstart = HDR_EXTSTART-->0;
 		endmem = HDR_ENDMEM-->0;
 
-		@gestalt 3 0 val; ! Undo
+		@gestalt 2 0 val; ! ResizeMem
 		if (~~val) {
 			print "Interpreter claims to not support memory resizing.^^";
 			@getmemsize val;
@@ -5698,3 +5702,137 @@ TestClass MemSizeTest
 		
 		count_failures();
 	];
+
+TestClass UndoMemSizeTest
+	with name 'undomemsize' 'undomem' 'undomsize',
+	short_name "undomemsize",
+	testfunc [ val res addr extstart endmem newendmem;
+		print "Undo of memory-size extension:^^";
+
+		@gestalt 2 0 val; ! ResizeMem
+		if (~~val) {
+			print "Interpreter claims to not support memory resizing. Skipping test.^^";
+			count_failures();
+			return;
+		}
+
+		@gestalt 3 0 val; ! Undo
+		if (~~val) {
+			print "Interpreter claims to not support undo. Skipping test.^^";
+			count_failures();
+			return;
+		}
+
+		extstart = HDR_EXTSTART-->0;
+		endmem = HDR_ENDMEM-->0;
+		print "ExtStart=", (Hex) extstart, "; ";
+		print "EndMem="; check_hex(endmem, extstart+$100); print "^";
+
+		addr = endmem + $80;
+		newendmem = endmem + $100;
+		@setmemsize newendmem res;
+		print "@@64setmemsize="; check(res, 0); print "^";
+		@getmemsize val;
+		print "New memsize="; check_hex(val, newendmem); print "^";
+
+		fill_array_seq(addr);
+		print "Wrote: ", (Hex) addr, ": ";
+		check_bytelist(addr, 1,2,3,4,5,6,7,8,9,10,11,12); print "^";
+
+		
+		@saveundo val;
+		if (val == 1) {
+			print "@@64saveundo failed!^";
+			failures++;
+			count_failures();
+			return;
+		}
+		if (val == 0) {
+			print "Undo saved...^";
+			! The following changes will be undone.
+			fill_array_val(addr, 99);
+			@setmemsize endmem res;
+			print "@@64setmemsize="; check(res, 0); print "^";
+			@getmemsize val;
+			print "Shrunk memsize="; check_hex(val, endmem); print "^";
+			failures++;
+			print "Restoring undo...^";
+			@restoreundo val;
+			if (val == 1) {
+				print "@@64restoreundo failed (value 1)!^";
+			}
+			else {
+				print "@@64restoreundo failed with unknown return value: ", val, "^";
+			}
+			failures++;
+			count_failures();
+			return;
+		}
+		else if (val ~= -1) {
+			print "Unknown @@64saveundo return value: ", val, "^";
+			failures++;
+			count_failures();
+			return;
+		}
+		print "Undo succeeded, return value "; check(val, -1); print ".^";
+		
+		@getmemsize val;
+		print "Restored memsize="; check_hex(val, newendmem); print "^";
+		print "Restored: ", (Hex) addr, ": ";
+		check_bytelist(addr, 1,2,3,4,5,6,7,8,9,10,11,12); print "^";
+
+
+		val = addr+1;
+		@protect val 5;
+		@saveundo val;
+		if (val == 1) {
+			print "@@64saveundo failed!^";
+			failures++;
+			count_failures();
+			return;
+		}
+		if (val == 0) {
+			print "Undo saved...^";
+			! The following changes will be undone.
+			fill_array_val(addr, 77);
+			@setmemsize endmem res;
+			print "@@64setmemsize="; check(res, 0); print "^";
+			@getmemsize val;
+			print "Shrunk memsize="; check_hex(val, endmem); print "^";
+			failures++;
+			print "Restoring undo...^";
+			@restoreundo val;
+			if (val == 1) {
+				print "@@64restoreundo failed (value 1)!^";
+			}
+			else {
+				print "@@64restoreundo failed with unknown return value: ", val, "^";
+			}
+			failures++;
+			count_failures();
+			return;
+		}
+		else if (val ~= -1) {
+			print "Unknown @@64saveundo return value: ", val, "^";
+			failures++;
+			count_failures();
+			return;
+		}
+		print "Undo succeeded, return value "; check(val, -1); print ".^";
+		
+		@getmemsize val;
+		print "Restored memsize="; check_hex(val, newendmem); print "^";
+		print "Restored: ", (Hex) addr, ": ";
+		check_bytelist(addr, 1,0,0,0,0,0,7,8,9,10,11,12); print "^";
+
+
+		@protect 0 0;
+		@setmemsize endmem res;
+		print "@@64setmemsize="; check(res, 0); print "^";
+		@getmemsize val;
+		print "Restored memsize="; check_hex(val, endmem); print "^";
+
+		count_failures();
+	];
+
+!### badass restart/undo/protect test
