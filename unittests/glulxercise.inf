@@ -5995,3 +5995,118 @@ TestClass HeapTest
 	];
 
 
+TestClass UndoHeapTest
+	with name 'undoheap',
+	testfunc [ val endmem newendmem blk1 blk2;
+		print "Heap:^^";
+		
+		@gestalt 7 0 val; ! MAlloc
+		if (~~val) {
+			print "Interpreter claims to not support heap allocation. Skipping test.^^";
+			count_failures();
+			return;
+		}
+
+		@gestalt 3 0 val; ! Undo
+		if (~~val) {
+			print "Interpreter claims to not support undo. Skipping test.^^";
+			count_failures();
+			return;
+		}
+
+		endmem = HDR_ENDMEM-->0;
+		@getmemsize val;
+		print "Original memsize="; check_hex(val, endmem); print "^";
+		
+		@gestalt 8 0 val; ! MAllocHeap
+		print "Current heap: "; check_hex(val, 0); print "^";
+
+		print "Allocating 16...^";
+		@malloc 16 blk1;
+		if (blk1 == 0) {
+			failures++;
+			print "Allocation failed.^";
+			count_failures();
+			return;
+		}
+		print "Allocating 512...^";
+		@malloc 512 blk2;
+		if (blk2 == 0) {
+			failures++;
+			print "Allocation failed.^";
+			count_failures();
+			return;
+		}
+		
+		@gestalt 8 0 val; ! MAllocHeap
+		print "Heap starts at "; check_hex(val, endmem);
+		@getmemsize newendmem;
+		print ", ends at ", (Hex) newendmem, "^";
+		if (newendmem <= endmem) {
+			failures++;
+			print "Heap size is not positive.^";
+		}
+
+		
+		@saveundo val;
+		if (val == 1) {
+			print "@@64saveundo failed!^";
+			failures++;
+			count_failures();
+			return;
+		}
+		if (val == 0) {
+			print "Undo saved...^";
+			! The following changes will be undone.
+			print "Freeing 16...^";
+			@mfree blk1;
+			print "Freeing 512...^";
+			@mfree blk2;
+			@gestalt 8 0 val; ! MAllocHeap
+			print "Final heap: "; check_hex(val, 0); print "^";
+			failures++;
+			print "Restoring undo...^";
+			@restoreundo val;
+			if (val == 1) {
+				print "@@64restoreundo failed (value 1)!^";
+			}
+			else {
+				print "@@64restoreundo failed with unknown return value: ", val, "^";
+			}
+			failures++;
+			count_failures();
+			return;
+		}
+		else if (val ~= -1) {
+			print "Unknown @@64saveundo return value: ", val, "^";
+			failures++;
+			count_failures();
+			return;
+		}
+		print "Undo succeeded, return value "; check(val, -1); print ".^";
+		
+
+		@gestalt 8 0 val; ! MAllocHeap
+		print "Heap starts at "; check_hex(val, endmem);
+		@getmemsize newendmem;
+		print ", ends at ", (Hex) newendmem, "^";
+		if (newendmem <= endmem) {
+			failures++;
+			print "Heap size is not positive.^";
+		}
+		
+		print "Freeing 16...^";
+		@mfree blk1;
+		print "Freeing 512...^";
+		@mfree blk2;
+		
+		@gestalt 8 0 val; ! MAllocHeap
+		print "Final heap: "; check_hex(val, 0); print "^";
+		endmem = HDR_ENDMEM-->0;
+		@getmemsize val;
+		print "Final memsize="; check_hex(val, endmem); print "^";
+
+		count_failures();
+	];
+
+
