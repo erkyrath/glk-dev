@@ -388,6 +388,16 @@ Class TestClass
 	rfalse;
 ];
 
+[ check_nonzero val;
+	if (val) {
+		print (Hex) val;
+		rtrue;
+	}
+	failures++;
+	print val, " (should be nonzero FAIL)";
+	rfalse;
+];
+
 [ check_range val wantmin wantmax;
 	if (val >= wantmin && val <= wantmax) {
 		print val;
@@ -5906,7 +5916,7 @@ TestClass UndoRestartTest
 
 TestClass HeapTest
 	with name 'heap',
-	testfunc [ val endmem newendmem blk1 blk2;
+	testfunc [ val endmem newendmem blk1 blk2 blk3;
 		print "Heap:^^";
 		
 		@gestalt 7 0 val; ! MAlloc
@@ -5984,6 +5994,57 @@ TestClass HeapTest
 		
 		print "Freeing 512...^";
 		@mfree blk2;
+		
+		@gestalt 8 0 val; ! MAllocHeap
+		print "Final heap: "; check_hex(val, 0); print "^";
+		endmem = HDR_ENDMEM-->0;
+		@getmemsize val;
+		print "Final memsize="; check_hex(val, endmem); print "^";
+
+		@malloc 19 blk1;
+		print "blk1(19)="; check_nonzero(blk1); print ", ";
+		@malloc 23 blk2;
+		print "blk2(23)="; check_nonzero(blk2); print ", ";
+		@malloc 17 blk3;
+		print "blk3(17)="; check_nonzero(blk3); print "^";
+
+		@mfree blk2;
+		print "free blk2, ";
+		@malloc 23 blk2;
+		print "blk2(23)="; check_nonzero(blk2); print "^";
+
+		@mfree blk1;
+		print "free blk1, ";
+		@malloc 19 blk1;
+		print "blk1(19)="; check_nonzero(blk1); print "^";
+
+		@mfree blk2;
+		print "free blk2, ";
+		@malloc 23 blk2;
+		print "blk2(23)="; check_nonzero(blk2); print "^";
+
+		@mfree blk1;
+		print "free blk1, ";
+		@mfree blk2;
+		print "free blk2^";
+
+		@malloc 25 blk1;
+		print "blk1(25)="; check_nonzero(blk1); print ", ";
+		@malloc 17 blk2;
+		print "blk2(17)="; check_nonzero(blk2); print "^";
+		
+		@mfree blk2;
+		print "free blk2, ";
+		@malloc 41 blk2;
+		print "blk2(41)="; check_nonzero(blk2); print "^";
+
+		@mfree blk1;
+		print "free blk1, ";
+		@mfree blk2;
+		print "free blk2, ";
+		@mfree blk3;
+		print "free blk3^";
+		
 		
 		@gestalt 8 0 val; ! MAllocHeap
 		print "Final heap: "; check_hex(val, 0); print "^";
