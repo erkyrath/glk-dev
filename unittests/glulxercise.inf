@@ -7,8 +7,6 @@ Release 3;
 ! To compile this canonically, do "inform -G glulxercise.inf". No other
 ! options.
 
-!### to seriously test: gestalt
-
 Constant GG_MAINWIN_ROCK     201;
 Constant GG_SAVESTR_ROCK     301;
 Constant GG_SCRIPTSTR_ROCK   302;
@@ -529,6 +527,11 @@ Class TestClass
 TestClass LookAction
 	with name 'look' 'l//' 'help' '?//',
 	testfunc LookSub,
+	has meta;
+	
+TestClass VersionAction
+	with name 'version',
+	testfunc Banner,
 	has meta;
 	
 TestClass AllAction
@@ -3369,6 +3372,35 @@ TestClass StackTest
 		@stkcount val;
 		@call arghasher val val;
 		print "hash(2,6,4,3,1)="; check(val, 43); print "^";
+		
+		count_failures();
+	];
+
+TestClass GestaltTest
+	with name 'gestalt',
+	testfunc [ val;
+		print "Gestalt:^^";
+
+		@gestalt 4 0 val; ! IOSystem
+		print "gestalt(4,0)="; check(val, 1); print ", ";
+		@gestalt 4 1 val; ! IOSystem
+		print "gestalt(4,1)="; check(val, 1); print ", ";
+		@gestalt 4 99 val; ! IOSystem
+		print "gestalt(4,99)="; check(val, 0); print "^";
+
+		@gestalt 1234 5678 val;
+		print "gestalt(1234,5678)="; check(val, 0); print "^";
+
+		testglobal = 0;
+		@gestalt 4 1 testglobal; ! IOSystem
+		print "gestalt(4,1)="; check(testglobal, 1); print "^";
+
+		@copy 99 sp;
+		@gestalt 4 1 sp;
+		@copy sp val;
+		print "gestalt(4,1)="; check(val, 1); print "^";
+		@copy sp val;
+		print "guard="; check(val, 99); print "^";
 		
 		count_failures();
 	];
