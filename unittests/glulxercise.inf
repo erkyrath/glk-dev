@@ -6202,4 +6202,44 @@ TestClass UndoHeapTest
 		count_failures();
 	];
 
+[ do_failure;
+	failures++;
+];
+	
+TestClass AccelTest
+	with name 'acceleration' 'accel' 'accelfunc' 'accelparam',
+	short_name "acceleration",
+	testfunc [ val;
+		print "Acceleration:^";
+		print "(This tests only the operands. For a complete test of the
+			accelfunc and accelparam opcodes, see accelfunctest.ulx.)^^";
+
+		@copy 987 sp;
+		
+		@accelfunc 9999 do_failure;
+		val = 9999;
+		@accelfunc val do_failure;
+		testglobal = 9999;
+		@accelfunc testglobal do_failure;
+		@copy do_failure sp;
+		@copy 9999 sp;
+		@accelfunc sp sp;
+		@accelfunc 0 do_failure;
+		
+		@accelparam 9999 1234;
+		val = 9999;
+		@accelparam val 1234;
+		testglobal = 9999;
+		@accelparam testglobal 1234;
+		@copy 1234 sp;
+		@copy 9999 sp;
+		@accelparam sp sp;
+		@accelparam 0 1234;
+
+		@copy sp val;
+		print "guard="; check(val, 987); print "^";
+			
+		count_failures();
+	];
+
 
