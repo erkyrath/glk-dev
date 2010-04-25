@@ -1276,11 +1276,22 @@ TestClass ExtendTest
 		@copy $0f sp;
 		@sexb sp testglobal;
 		val = testglobal;
-		print "sexb($0f)="; check_hex(val, 15); print ", ";
+		print "sexb($0f)="; check_hex(val, $0f); print ", ";
 		testglobal = $ff;
 		@sexb testglobal sp;
 		@copy sp val;
-		print "sexb($ff)="; check_hex(val, -1); print "^";
+		print "sexb($ff)="; check_hex(val, -1); print ", ";
+		testglobal = $100;
+		@sexb testglobal sp;
+		@copy sp val;
+		print "sexb($100)="; check_hex(val, 0); print ", ";
+		@copy $ffffff01 sp;
+		@sexb sp sp;
+		@copy sp val;
+		print "sexb($ffffff01)="; check_hex(val, 1); print ", ";
+		testglobal = $7f1f1ff1;
+		@sexb testglobal testglobal2;
+		print "sexb($7f1f1ff1)="; check_hex(testglobal2, -15); print "^";
 
 		@sexs $00 val;
 		print "sexs($00)="; check_hex(val, 0); print ", ";
@@ -1312,7 +1323,18 @@ TestClass ExtendTest
 		testglobal = $fffe;
 		@sexs testglobal sp;
 		@copy sp val;
-		print "sexs($fffe)="; check_hex(val, -2); print "^";
+		print "sexs($fffe)="; check_hex(val, -2); print ", ";
+		testglobal = $10000;
+		@sexs testglobal sp;
+		@copy sp val;
+		print "sexs($10000)="; check_hex(val, 0); print ", ";
+		@copy $ffff0001 sp;
+		@sexs sp sp;
+		@copy sp val;
+		print "sexs($ffff0001)="; check_hex(val, 1); print ", ";
+		testglobal = $7f1ffff1;
+		@sexs testglobal testglobal2;
+		print "sexs($7f1ffff1)="; check_hex(testglobal2, -15); print "^";
 		
 		count_failures();
 	];
