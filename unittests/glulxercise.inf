@@ -605,7 +605,7 @@ TestClass AllAction
 		print "~", (name) obj, "~";
 		ix++;
 	}
-	new_line;
+	print ".^";
 	if (total_failures) {
 		print "^", total_failures, " tests have failed so far in this run.^";
 	}
