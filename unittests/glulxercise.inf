@@ -71,7 +71,8 @@ Global total_failures = 0;
 
 	LookSub();
 	TestLoop();
-	
+
+	print "^Exiting via return. (Try ~opquit~ for @@64quit, ~glkquit~ for glk_exit().)^";
 	print "^Goodbye.^";
 ];
 
@@ -267,7 +268,7 @@ Array gg_tokenbuf -> DICT_WORD_SIZE;
 		Keyboard();
 		wd = parse-->1;
 
-		if (wd == 'quit' or 'q//')
+		if (wd == 'quit' or 'q//' or 'exit')
 			return;
 
 		found = nothing;
@@ -532,6 +533,24 @@ TestClass LookAction
 TestClass VersionAction
 	with name 'version',
 	testfunc Banner,
+	has meta;
+	
+TestClass OpQuitAction
+	with name 'opquit' 'opq' 'opexit',
+	testfunc [;
+		print "^Exiting via @@64quit. (Try ~quit~ for return, ~glkquit~ for glk_exit().)^";
+		print "^Goodbye.^";
+		@quit;
+	],
+	has meta;
+	
+TestClass GlkQuitAction
+	with name 'glkquit' 'glkq' 'glkexit',
+	testfunc [ val;
+		print "^Exiting via glk_exit(). (Try ~quit~ for return, ~opquit~ for @@64quit.)^";
+		print "^Goodbye.^";
+		@glk $0001 0 val; ! exit
+	],
 	has meta;
 	
 TestClass AllAction
