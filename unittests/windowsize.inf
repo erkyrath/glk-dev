@@ -45,6 +45,10 @@ Constant ALTWIN_ROCK 101;
 
 [ mainloop numwords wd addr win olddir val;
 
+  val = glk($0004, 12, 3); ! gestalt HyperlinkInput, wintype_TextBuffer
+  if (val)
+    glk($0102, mainwin); ! request_hyperlink_event
+
   while (true) {
     print "^>";
     readline();
@@ -63,8 +67,8 @@ Constant ALTWIN_ROCK 101;
     }
 
     wd = parse_buffer-->1;  ! the first word
-	switch (wd) {
-	
+    switch (wd) {
+    
     'look', 'l//', 'help', '?//':
       RoomDesc();
 
@@ -143,12 +147,28 @@ Constant ALTWIN_ROCK 101;
       if (val > 60)
         val = 60;
       curtimer = val;
+      val = glk($0004, 5, 0); ! gestalt Timer
+      if (~~val)
+        print "This library claims to not support timer events! Testing anyway...^^";
       glk($00D6, curtimer*1000); ! request_timer_events
-      ! ### gestalt test and warning
       if (curtimer)
         print "Timer will fire every ", curtimer, " seconds.^";
       else
         print "Timer is now off.^";
+
+    'link', 'links':
+      val = glk($0004, 11, 0); ! gestalt Hyperlinks
+      if (~~val)
+        print "This library claims to not support hyperlinks! Testing anyway...^^";
+      print "Here is ";
+      glk($0100, 1); ! set_hyperlink
+      print "link 1";
+      glk($0100, 0); ! set_hyperlink
+      print " and ";
+      glk($0100, 2); ! set_hyperlink
+      print "link 2";
+      glk($0100, 0); ! set_hyperlink
+      print ".^";
 
     'poll':
       glk($00C1, gg_event); ! select_poll
@@ -156,7 +176,7 @@ Constant ALTWIN_ROCK 101;
 
     default:
       print "I didn't understand that.^";
-	  
+      
     }
   }
 ];
@@ -172,6 +192,11 @@ Constant ALTWIN_ROCK 101;
     if (gg_event-->0 == 1) {
       ! timer input
       handle_timer();
+      continue;
+    }
+    if (gg_event-->0 == 8) {
+      ! hyperlink input
+      handle_hyperlink(gg_event-->1, gg_event-->2);
       continue;
     }
     if (gg_event-->0 == 3 && gg_event-->1 == mainwin) {
@@ -328,9 +353,23 @@ Constant ALTWIN_ROCK 101;
 ];
 
 [ RoomDesc;
-  print "A voice booooms out: Welcome to the test chamber.^^";
-  print "Type ~help~ to repeat this message, ~quit~ to exit,
-    ###.^";
+    print "A voice booooms out: Welcome to the test chamber.^^";
+    print "Type ~help~ to repeat this message, ~quit~ to exit,
+        or one of the following:^^";
+    print "  ~windows~: List all open windows.^";
+    print "  ~size~: Show the sizes of all open windows.^";
+    print "  ~open PARAMS~: Open a second window. PARAMS can include any of
+        left/right/top/bottom, fixed/proportional, grid/buffer/blank/graphic,
+        and a (numeric) size.^";
+    print "  ~close~: Close the second window.^";
+    print "  ~arrange PARAMS~: Change the second window arrangement. The
+        PARAMS are the same as above. (Note: not all parameters are legal,
+        so you can cause a Glk error with this command.)^";
+    print "  ~timer NUM~: Start (or stop) a timer, which fires every NUM
+        seconds (default 1).^";
+    print "  ~poll~: Poll for upcoming events. (There will normally not be
+        any.)^";
+    print "  ~link~: Display some clickable hyperlinks.^";
 ];
 
 [ printeventtype evtype;
@@ -482,4 +521,36 @@ Constant ALTWIN_ROCK 101;
     print "^>";
     glk($00D0, mainwin, input_buffer+4, BUFLEN, count); ! request_line_event
   }
+];
+
+[ handle_hyperlink win linkval   count;
+  glk($0102, win); ! request_hyperlink_event
+  
+  glk($00D1, mainwin, gg_event); ! cancel_line_event
+  print "Input interrupted by hyperlink event";
+  print ", link ", linkval, ",";
+  if (win == mainwin)
+    print " in main window";
+  else if (win == altwin)
+    print " in second window";
+  else
+    print " in ??? window";
+  print ".";
+  count = 0;
+  if (gg_event-->0 == 3 && gg_event-->1 == mainwin) {
+    count = gg_event-->2;
+    if (count == 0) {
+      print " (Input line was empty.)^";
+    }
+    else {
+      print " (Input line had ", count, " chars: ~";
+      glk($0084, input_buffer+4, count); ! put_buffer
+      print "~)^";
+    }
+  }
+  else {
+    print " (No input line??)^";
+  }
+  print "^>";
+  glk($00D0, mainwin, input_buffer+4, BUFLEN, count); ! request_line_event
 ];
