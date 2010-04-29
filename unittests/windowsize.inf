@@ -165,7 +165,11 @@ Constant ALTWIN_ROCK 101;
       print "link 1";
       glk($0100, 0); ! set_hyperlink
       print " and ";
+      glk($0086, 1); ! set emphasized style
+      print "(in ";
       glk($0100, 2); ! set_hyperlink
+      print "italics) ";
+      glk($0086, 0); ! set normal style
       print "link 2";
       glk($0100, 0); ! set_hyperlink
       print ".^";
