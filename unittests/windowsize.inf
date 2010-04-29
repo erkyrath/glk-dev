@@ -63,20 +63,22 @@ Constant ALTWIN_ROCK 101;
     }
 
     wd = parse_buffer-->1;  ! the first word
-    if (wd == 'look' or 'l//' or 'help' or '?//') {
+	switch (wd) {
+	
+    'look', 'l//', 'help', '?//':
       RoomDesc();
-    }
-    else if (wd == 'version') {
+
+    'version':
       Banner();
-    }
-    else if (wd == 'quit' or 'q//') {
+
+    'quit', 'q//':
       print "Goodbye!^";
       quit;
-    }
-    else if (wd == 'windows' or 'win' or 'list') {
+
+    'windows', 'win', 'list':
       ShowWindows();
-    }
-    else if (wd == 'open' or 'split') {
+
+    'open', 'split':
       if (altwin) {
         print "The window is already split.^";
         continue;
@@ -89,8 +91,8 @@ Constant ALTWIN_ROCK 101;
       }
       print "Created ", (printwindow) altwin, "^";
       announce_window_sizes(true);
-    }
-    else if (wd == 'close' or 'unsplit') {
+
+    'close', 'unsplit':
       if (~~altwin) {
         print "The window is not split.^";
         continue;
@@ -99,8 +101,8 @@ Constant ALTWIN_ROCK 101;
       altwin = 0;
       print "Window closed; it had printed ", gg_event-->1,
         " characters and read in ", gg_event-->0, ".^";
-    }
-    else if (wd == 'setsize' or 'resize' or 'arrange' or 'rearrange') {
+
+    'setsize', 'resize', 'arrange', 'rearrange':
       if (~~altwin) {
         print "The window is not split.^";
         continue;
@@ -124,11 +126,11 @@ Constant ALTWIN_ROCK 101;
       glk($0026, win, dir_understood+split_understood, size_understood, win_understood); ! glk_window_set_arrangement
       print "Changed the parameters of the window split.^";
       announce_window_sizes();
-    }
-    else if (wd == 'size' or 'sizes') {
+
+    'size', 'sizes':
       announce_window_sizes();
-    }
-    else if (wd == 'timer') {
+
+    'timer':
       if (~~parse_number()) {
         if (curtimer)
           val = 0;
@@ -147,13 +149,14 @@ Constant ALTWIN_ROCK 101;
         print "Timer will fire every ", curtimer, " seconds.^";
       else
         print "Timer is now off.^";
-    }
-    else if (wd == 'poll') {
+
+    'poll':
       glk($00C1, gg_event); ! select_poll
       print "Event poll: ", (printeventtype) gg_event-->0, "^";
-    }
-    else {
+
+    default:
       print "I didn't understand that.^";
+	  
     }
   }
 ];
