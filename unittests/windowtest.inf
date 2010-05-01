@@ -80,7 +80,7 @@ Constant ALTWIN_ROCK 101;
       quit;
 
     'windows', 'win', 'list':
-      ShowWindows();
+      show_windows();
 
     'open', 'split':
       if (altwin) {
@@ -136,6 +136,12 @@ Constant ALTWIN_ROCK 101;
 
     'size', 'sizes':
       announce_window_sizes();
+
+    'echo':
+      echo_window();
+
+    'streams', 'str':
+      show_streams();
 
     'timer':
       if (~~parse_number()) {
@@ -361,6 +367,9 @@ Constant ALTWIN_ROCK 101;
     print "  ~arrange PARAMS~: Change the second window arrangement. The
         PARAMS are the same as above. (Note: not all parameters are legal,
         so you can cause a Glk error with this command.)^";
+    print "  ~echo~: Begin echoing all output from the first window to
+        the second window.^";
+    print "  ~streams~: List all open streams.^";
     print "  ~timer NUM~: Start (or stop) a timer, which fires every NUM
         seconds (default 1).^";
     print "  ~poll~: Poll for upcoming events. (There will normally not be
@@ -417,6 +426,15 @@ Constant ALTWIN_ROCK 101;
     rock = glk($0021, win); ! window_get_rock
     wintype = glk($0028, win); ! window_get_type
     print "window ", win, " (", (printwintype) wintype, "), rock ", rock;
+];
+
+[ printstream str  rock;
+    if (~~str) {
+        print "no stream";
+        return;
+    }
+    rock = glk($0041, str); ! stream_get_rock
+    print "stream ", str, ", rock ", rock;
 ];
 
 [ announce_window_sizes altisnew   wintype;
@@ -492,7 +510,7 @@ Constant ALTWIN_ROCK 101;
     }
 ];
 
-[ ShowWindows win  rock parent sibling wintype;
+[ show_windows win  rock parent sibling wintype str;
     win = glk($0022); ! window_get_root
     print "Root window: ", (printwindow) win, "^";
     print "^";
@@ -514,6 +532,12 @@ Constant ALTWIN_ROCK 101;
         
         sibling = glk($0030, win); ! window_get_sibling
         print "  sibling: ", (printwindow) sibling, "^";
+
+        str = glk($002C, win); ! window_get_stream
+        print "  stream: ", (printstream) str, "^";
+        
+        str = glk($002E, win); ! window_get_echo_stream
+        print "  echo stream: ", (printstream) str, "^";
         
         wintype = glk($0028, win); ! window_get_type
         if (wintype == 1) { ! Pair
@@ -523,6 +547,35 @@ Constant ALTWIN_ROCK 101;
         
         glk($0025, win, gg_event+0, gg_event+4); ! window_get_size
         print "  size: ", gg_event-->0, " by ", gg_event-->1, ".^";
+    }
+];
+
+[ echo_window str;
+    if (~~altwin) {
+        print "You must open a second window before using the ~echo~ command.^";
+        return;
+    }
+
+    str = glk($002C, altwin); ! window_get_stream
+    glk($002D, mainwin, str); ! window_set_echo_stream
+    print "Everything printed to the main window will be echoed to the second window.^";
+];
+
+[ show_streams str  rock val;
+    print "All open streams (in no particular order):^^";
+    str = 0;
+    while (true) {
+        str = glk($0040, str, gg_event); ! stream_iterate
+        if (~~str)
+            break;
+        print (printstream) str, "^";
+        
+        rock = glk($0041, str); ! stream_get_rock
+        if (rock ~= gg_event-->0)
+            print "(warning: rock does not match stream_iterate output)^";
+
+        val = glk($0046, str); ! stream_get_position
+        print "  position: ", val, "^";
     }
 ];
 
