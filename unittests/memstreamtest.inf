@@ -1,5 +1,6 @@
 Constant Story "MemStreamTest";
 Constant Headline "^Not a game.^";
+Release 2;
 
 ! Unit test for the glk_stream_open_memory() and glk_stream_open_memory_uni()
 ! calls.
@@ -18,7 +19,9 @@ Object Kitchen "Stream Room"
 		print "A voice booooms out: Try ~stream OBJECT~ to send its
 			description to a byte array (glk_stream_open_memory).
 			Try ~streamuni OBJECT~ to send its description to
-			a Unicode character array (glk_stream_open_memory_uni).^";
+			a Unicode character array (glk_stream_open_memory_uni).
+			~pos~ and ~unipos~ test positioning in byte/Unicode
+			streams.^";
 	],
   has light;
 
@@ -38,6 +41,11 @@ Object -> pie "Greek pie"
   with
 	name 'greek' 'pi' 'pie',
 	description "It's a Greek @{3C0}, made with feta and ink.";
+  
+Object -> restaurant "Russian restaurant"
+  with
+	name 'russian' 'restaurant' 'pectopah',
+	description "It's a Russian @{440}@{435}@{441}@{442}@{43E}@{440}@{430}@{43D}. The food smells good.";
   
 Object -> quotes "quotes"
   with
@@ -59,8 +67,14 @@ Include "Grammar";
 Verb 'stream'
 	* noun -> Stream;
 
-Verb 'streamuni' 'uni'
+Verb 'streamuni' 'uni' 'unistream'
 	* noun -> StreamUni;
+
+Verb 'pos'
+	* -> PosTest;
+
+Verb 'posuni' 'unipos'
+	* -> PosUniTest;
 
 [ StreamSub;
 	DescToStream(noun);
@@ -73,6 +87,14 @@ Verb 'streamuni' 'uni'
 	DescToStreamUni(noun);
 ];
 
+[ PosTestSub;
+	DescToStream(perform_pos_test);
+];
+
+[ PosUniTestSub;
+	DescToStreamUni(perform_pos_test);
+];
+
 Array closeresult --> 2;
 
 Constant BUFLEN 128;
@@ -80,7 +102,22 @@ Constant BUFLEN 128;
 Array chararray -> (BUFLEN+1);
 Array uniarray --> (BUFLEN+1);
 
+Global errorcount;
+
+[ check_pos pos target oldstr;
+	if (pos == target)
+		return;
+		
+	errorcount++;
+	oldstr = glk($0048); ! stream_get_current
+	glk($002F, gg_mainwin); ! set_window
+	print "ERROR: position was ", pos, ", should be ", target, ".^";
+	glk($0047, oldstr); ! stream_set_current
+];
+
 [ DescToStream obj  str oldstr ix ch;
+	errorcount = 0;
+	
 	for (ix=0 : ix<BUFLEN : ix++)
 		chararray->ix = 0;
 	chararray->BUFLEN = 127; ! guard character
@@ -92,7 +129,12 @@ Array uniarray --> (BUFLEN+1);
 	}
 
 	glk($0047, str); ! stream_set_current
-	obj.description();
+	if (obj ofclass Object)
+		obj.description();
+	else if (obj ofclass Routine)
+		obj(str);
+	else
+		print "???";
 	glk($0047, oldstr); ! stream_set_current
 	glk($0044, str, closeresult); ! stream_close
 
@@ -130,10 +172,15 @@ Array uniarray --> (BUFLEN+1);
 	new_line;
 	if (chararray->BUFLEN ~= 127)
 		print "ERROR: Guard character was overwritten!^";
+
+	if (errorcount)
+		print "ERROR: Positions were wrong during printing!^";
 ];
 
 
 [ DescToStreamUni obj  str oldstr ix ch;
+	errorcount = 0;
+	
 	for (ix=0 : ix<BUFLEN : ix++)
 		uniarray-->ix = 0;
 	uniarray-->BUFLEN = 127; ! guard character
@@ -145,7 +192,12 @@ Array uniarray --> (BUFLEN+1);
 	}
 
 	glk($0047, str); ! stream_set_current
-	obj.description();
+	if (obj ofclass Object)
+		obj.description();
+	else if (obj ofclass Routine)
+		obj(str);
+	else
+		print "???";
 	glk($0047, oldstr); ! stream_set_current
 	glk($0044, str, closeresult); ! stream_close
 
@@ -183,4 +235,50 @@ Array uniarray --> (BUFLEN+1);
 	new_line;
 	if (uniarray-->BUFLEN ~= 127)
 		print "ERROR: Guard character was overwritten!^";
+
+	if (errorcount)
+		print "ERROR: Positions were wrong during printing!^";
+];
+
+[ perform_pos_test str   pos;
+	print "                        piecx";
+
+	pos = glk($0046, str); ! stream_get_position
+	check_pos(pos, 29);
+	
+	glk($0045, str, 0, 0); ! stream_set_position
+	
+	pos = glk($0046, str); ! stream_get_position
+	check_pos(pos, 0);
+	
+	print "This!";
+
+	pos = glk($0046, str); ! stream_get_position
+	check_pos(pos, 5);
+	
+	glk($0045, str, -1, 1); ! stream_set_position
+
+	pos = glk($0046, str); ! stream_get_position
+	check_pos(pos, 4);
+
+	print " line was assembled ";
+
+	pos = glk($0046, str); ! stream_get_position
+	check_pos(pos, 24);
+	
+	glk($0045, str, -1, 2); ! stream_set_position
+
+	pos = glk($0046, str); ! stream_get_position
+	check_pos(pos, 28);
+
+	print "ewise";
+
+	pos = glk($0046, str); ! stream_get_position
+	check_pos(pos, 33);
+		
+	glk($0045, str, 33, 0); ! stream_set_position
+
+	print ".^";
+	
+	! "This line was assembled piecewise.^"
 ];
