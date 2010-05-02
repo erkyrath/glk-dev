@@ -550,12 +550,19 @@ Constant ALTWIN_ROCK 101;
     }
 ];
 
-[ echo_window str;
+[ echo_window str curstr;
     if (~~altwin) {
         print "You must open a second window before using the ~echo~ command.^";
         return;
     }
 
+    curstr = glk($002E, mainwin); ! window_get_echo_stream
+    if (curstr) {
+        print "Switching off window echo...^";
+        glk($002D, mainwin, 0); ! window_set_echo_stream
+        return;
+    }
+    
     str = glk($002C, altwin); ! window_get_stream
     glk($002D, mainwin, str); ! window_set_echo_stream
     print "Everything printed to the main window will be echoed to the second window.^";
