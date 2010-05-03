@@ -21,6 +21,7 @@ Object Kitchen "Stream Room"
 			Try ~streamuni OBJECT~ to send its description to
 			a Unicode character array (glk_stream_open_memory_uni).
 			~pos~ and ~unipos~ test positioning in byte/Unicode
+			streams. ~read~ and ~uniread~ test reading from byte/Unicode
 			streams.^";
 	],
   has light;
@@ -76,6 +77,12 @@ Verb 'pos'
 Verb 'posuni' 'unipos'
 	* -> PosUniTest;
 
+Extend 'read' replace
+	* -> ReadTest;
+
+Verb 'readuni' 'uniread'
+	* -> ReadTestUni;
+	
 [ StreamSub;
 	DescToStream(noun);
 ];
@@ -101,6 +108,9 @@ Constant BUFLEN 128;
 
 Array chararray -> (BUFLEN+1);
 Array uniarray --> (BUFLEN+1);
+
+Array chararray2 -> (BUFLEN+1);
+Array uniarray2 --> (BUFLEN+1);
 
 Global errorcount;
 
@@ -282,3 +292,100 @@ Global errorcount;
 	
 	! "This line was assembled piecewise.^"
 ];
+
+[ ReadTestSub ix oldstr str val testlen;
+	for (ix=0 : ix<BUFLEN : ix++)
+		chararray->ix = 0;
+	chararray->BUFLEN = 127; ! guard character
+
+	oldstr = glk($0048); ! stream_get_current
+	str = glk($0043, chararray, BUFLEN, 1, 0); ! stream_open_memory
+	if (str == 0) {
+		"Unable to open memory stream.";
+	}
+
+	glk($0047, str); ! stream_set_current
+	print "!Line one.^Line two.^...Last line.^";
+	glk($0047, oldstr); ! stream_set_current
+	glk($0044, str, closeresult); ! stream_close
+	testlen = closeresult-->1;
+
+	str = glk($0043, chararray, testlen, 2, 0); ! stream_open_memory
+	if (str == 0) {
+		"Unable to open memory stream.";
+	}
+
+	val = glk($0090, str); ! get_char_stream
+	print "Read char '", (char) val, "'^";
+	if (val ~= '!')
+		print "ERROR: should be '!'^";
+
+	val = glk($0091, str, chararray2, BUFLEN); ! get_line_stream
+	print "Read line of ", val, " chars: ";
+	glk($0084, chararray2, val); ! put_buffer
+
+	val = glk($0092, str, chararray2, 13); ! get_buffer_stream
+	print "Read buffer of ", val, " chars: ";
+	glk($0084, chararray2, val); ! put_buffer
+	new_line;
+
+	val = glk($0092, str, chararray2, 20); ! get_buffer_stream
+	print "Read buffer of ", val, " chars: ";
+	glk($0084, chararray2, val); ! put_buffer
+	new_line;
+
+	glk($0044, str, closeresult); ! stream_close
+	if (closeresult-->1 ~= 0)
+		print "ERROR: Stream records ", closeresult-->0, " chars written --
+			should be zero.^";
+	print "(Read from char stream: ", closeresult-->0, " chars)^";
+];
+
+[ ReadTestUniSub ix oldstr str val testlen;
+	for (ix=0 : ix<BUFLEN : ix++)
+		uniarray-->ix = 0;
+	uniarray-->BUFLEN = 127; ! guard character
+
+	oldstr = glk($0048); ! stream_get_current
+	str = glk($0139, uniarray, BUFLEN, 1, 0); ! stream_open_memory_uni
+	if (str == 0) {
+		"Unable to open memory stream.";
+	}
+
+	glk($0047, str); ! stream_set_current
+	print "!Li@{3B7}e one.^Li@{3B7}e two.^...Last li@{3B7}e.^";
+	glk($0047, oldstr); ! stream_set_current
+	glk($0044, str, closeresult); ! stream_close
+	testlen = closeresult-->1;
+
+	str = glk($0139, uniarray, testlen, 2, 0); ! stream_open_memory_uni
+	if (str == 0) {
+		"Unable to open memory stream.";
+	}
+
+	val = glk($0130, str); ! get_char_stream_uni
+	print "Read char '", (char) val, "'^";
+	if (val ~= '!')
+		print "ERROR: should be '!'^";
+
+	val = glk($0132, str, uniarray2, BUFLEN); ! get_line_stream_uni
+	print "Read line of ", val, " chars: ";
+	glk($012A, uniarray2, val); ! put_buffer_uni
+
+	val = glk($0131, str, uniarray2, 13); ! get_buffer_stream_uni
+	print "Read buffer of ", val, " chars: ";
+	glk($012A, uniarray2, val); ! put_buffer_uni
+	new_line;
+
+	val = glk($0131, str, uniarray2, 20); ! get_buffer_stream_uni
+	print "Read buffer of ", val, " chars: ";
+	glk($012A, uniarray2, val); ! put_buffer_uni
+	new_line;
+
+	glk($0044, str, closeresult); ! stream_close
+	if (closeresult-->1 ~= 0)
+		print "ERROR: Stream records ", closeresult-->0, " chars written --
+			should be zero.^";
+	print "(Read from unicode char stream: ", closeresult-->0, " chars)^";
+];
+
