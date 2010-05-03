@@ -334,6 +334,16 @@ Global errorcount;
 	glk($0084, chararray2, val); ! put_buffer
 	new_line;
 
+	val = glk($0090, str); ! get_char_stream
+	print "Read char ", val, "^";
+	if (val ~= -1)
+		print "ERROR: should be -1^";
+
+	val = glk($0091, str, chararray2, BUFLEN); ! get_line_stream
+	print "Read line of ", val, " chars^";
+	if (val ~= 0)
+		print "ERROR: should be 0^";
+
 	glk($0044, str, closeresult); ! stream_close
 	if (closeresult-->1 ~= 0)
 		print "ERROR: Stream records ", closeresult-->0, " chars written --
@@ -381,6 +391,16 @@ Global errorcount;
 	print "Read buffer of ", val, " chars: ";
 	glk($012A, uniarray2, val); ! put_buffer_uni
 	new_line;
+
+	val = glk($0130, str); ! get_char_stream_uni
+	print "Read char ", val, "^";
+	if (val ~= -1)
+		print "ERROR: should be -1^";
+
+	val = glk($0132, str, uniarray2, BUFLEN); ! get_line_stream_uni
+	print "Read line of ", val, " chars^";
+	if (val ~= 0)
+		print "ERROR: should be 0^";
 
 	glk($0044, str, closeresult); ! stream_close
 	if (closeresult-->1 ~= 0)
