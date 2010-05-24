@@ -4364,6 +4364,37 @@ TestClass GlkTest
 		count_failures();
 	];
 
+TestClass GiDispaTest
+	with name 'gidispa' 'dispa',
+	testfunc [ val;
+		print "Glk dispatch layer:^^";
+
+		val = string_to_uniarray(gidispa_testfunc, bigubuffer, BIGBUFSIZE);
+		check_ustr("XYZ@{42F} C string. C @{DC}n@{EF}co@{3B4}e @{201C}@{30A9}@{201D} 123 @{2155}@{2156}@{2157}.", val); print "^";
+		print "length: "; check(val, 37); print "^";
+		
+		count_failures();
+	];
+
+Array gidispa_bytebuf -> '1' '2' '3' '4';
+Array gidispa_wordbuf --> $2155 $2156 $2157 $2158;
+
+[ gidispa_testfunc;
+	glk($0080, 'X'); ! put_char
+	glk($0080, 'Y'+$FE00); ! put_char
+	glk($0128, 'Z'); ! put_char_uni
+	glk($0128, $042F); ! put_char_uni
+	print " ";
+	glk($0082, cstring_str); ! put_string
+	print " ";
+	glk($0129, cunistring_str); ! put_string_uni
+	print " ";
+	glk($0084, gidispa_bytebuf, 3); ! put_buffer
+	print " ";
+	glk($012A, gidispa_wordbuf, 3); ! put_buffer
+	@streamchar '.';
+];
+
 Array histogram --> 16;
 
 TestClass RandomTest
