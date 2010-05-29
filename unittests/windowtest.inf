@@ -21,6 +21,7 @@ Global split_understood;
 Global type_understood;
 Global size_understood;
 Global win_understood;
+Global filemode_understood;
 
 Constant HDR_GLULXVERSION  $04;     ! long word
 Constant ROM_GAMERELEASE   $34;     ! short word
@@ -142,6 +143,10 @@ Constant ALTWIN_ROCK 101;
 
     'streams', 'str':
       show_streams();
+
+    'dialog':
+      parse_file_params();
+      select_file_dialog();
 
     'timer':
       if (~~parse_number()) {
@@ -282,6 +287,21 @@ Constant ALTWIN_ROCK 101;
   rfalse;
 ];
 
+[ parse_file_params  numwords wx wd;
+  filemode_understood = 2;
+  
+  numwords = parse_buffer-->0;
+  for (wx=1 : wx<numwords : wx++) {
+    wd = parse_buffer-->(wx*3+1);
+    switch (wd) {
+      'write', 'w//': filemode_understood = 1;
+      'read', 'r//': filemode_understood = 2;
+      'readwrite', 'rw': filemode_understood = 3;
+      'writeappend', 'a//', 'append': filemode_understood = 5;
+    }
+  }
+];
+
 [ parse_window_params  numwords wx wd;
   dir_understood = 2;
   split_understood = $10;
@@ -370,6 +390,7 @@ Constant ALTWIN_ROCK 101;
     print "  ~echo~: Begin echoing all output from the first window to
         the second window.^";
     print "  ~streams~: List all open streams.^";
+    print "  ~dialog MODE~: Open a file-selection dialog.^";
     print "  ~timer NUM~: Start (or stop) a timer, which fires every NUM
         seconds (default 1).^";
     print "  ~poll~: Poll for upcoming events. (There will normally not be
@@ -584,6 +605,24 @@ Constant ALTWIN_ROCK 101;
         val = glk($0046, str); ! stream_get_position
         print "  position: ", val, "^";
     }
+];
+
+[ select_file_dialog fref val;
+    print "Select a data file. (It will not actually be created or read.)^";
+    fref = glk($0062, 0+$100, filemode_understood, 123); ! fileref_create_by_prompt
+    if (~~fref) {
+        print "No file selected.^";
+        return;
+    }
+
+    val = glk($0065, fref); ! fileref_get_rock
+    print "Created fileref (rock ", val, "), for a file";
+    val = glk($0067, fref); ! fileref_does_file_exist
+    if (val)
+        print " which exists.^";
+    else
+        print " which does not exist.^";
+    glk($0063, fref); ! fileref_destroy
 ];
 
 [ handle_timer  count wintype;
