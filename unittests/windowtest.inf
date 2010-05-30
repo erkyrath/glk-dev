@@ -5,11 +5,13 @@ Release 2;
 
 Global mainwin = 0;
 Global altwin = 0;
+Global altwininput = false;
 Global curtimer = 0;
 Global timer_counter = 0;
 Array gg_event --> 4;
 Constant BUFLEN = 80;
 Array input_buffer -> 4+BUFLEN;
+Array inputalt_buffer -> 4+BUFLEN;
 Array gg_tokenbuf -> DICT_WORD_SIZE;
 Constant MAX_BUFFER_WORDS = 20;
 Constant PARSE_BUFFER_LEN = 244;    ! 4 + MAX_BUFFER_WORDS*4;
@@ -44,7 +46,7 @@ Constant ALTWIN_ROCK 101;
   mainloop();
 ];
 
-[ mainloop numwords wd addr win olddir val;
+[ mainloop numwords wd addr win olddir val wintype;
 
   val = glk($0004, 12, 3); ! gestalt HyperlinkInput, wintype_TextBuffer
   if (val)
@@ -105,8 +107,21 @@ Constant ALTWIN_ROCK 101;
         print "The window is not split.^";
         continue;
       }
+      glk($00D1, altwin, gg_event); ! cancel_line_event
+      if (gg_event-->0 == 3) {
+        print "Window had line input pending";
+        print " (", gg_event-->2, " chars)";
+        if (gg_event-->2) {
+          print " ~";
+          for (val=0 : val<gg_event-->2 : val++)
+            print (char) inputalt_buffer->val;
+          print "~";
+        }
+        print ".^";
+      }
       glk($0024, altwin, gg_event); ! window_close
       altwin = 0;
+      altwininput = false;
       print "Window closed; it had printed ", gg_event-->1,
         " characters and read in ", gg_event-->0, ".^";
 
@@ -115,7 +130,7 @@ Constant ALTWIN_ROCK 101;
         print "The window is not split.^";
         continue;
       }
-      win = glk($0029, win_understood); ! window_get_parent
+      win = glk($0029, altwin); ! window_get_parent
       if (~~win) {
         print "Unable to locate parent of secondary window.^";
         continue;
@@ -143,6 +158,25 @@ Constant ALTWIN_ROCK 101;
 
     'streams', 'str':
       show_streams();
+
+    'getline':
+      if (~~altwin) {
+        print "The window is not split.^";
+        continue;
+      }
+      if (altwininput) {
+        print "The secondary window is already reading line input.^";
+        continue;
+      }
+      glk($002F, altwin); ! glk_set_window
+      wintype = glk($0028, altwin); ! window_get_type
+      if (wintype == 4)
+        glk($002A, altwin); ! glk_clear_window
+      print ">";
+      glk($002F, mainwin); ! glk_set_window
+      glk($00D0, altwin, inputalt_buffer, BUFLEN, 0); ! request_line_event
+      altwininput = true;
+      print "Requested line input from secondary window.^";
 
     'dialog':
       parse_file_params();
@@ -204,6 +238,12 @@ Constant ALTWIN_ROCK 101;
       ! hyperlink input
       glk($0102, gg_event-->1); ! request_hyperlink_event
       handle_hyperlink(gg_event-->1, gg_event-->2);
+      continue;
+    }
+    if (gg_event-->0 == 3 && gg_event-->1 == altwin) {
+      ! line input
+      altwininput = false;
+      handle_secondary_getline(gg_event-->2);
       continue;
     }
     if (gg_event-->0 == 3 && gg_event-->1 == mainwin) {
@@ -387,8 +427,9 @@ Constant ALTWIN_ROCK 101;
     print "  ~arrange PARAMS~: Change the second window arrangement. The
         PARAMS are the same as above. (Note: not all parameters are legal,
         so you can cause a Glk error with this command.)^";
+    print "  ~getline~: Request line input in the second window.^";
     print "  ~echo~: Begin echoing all output from the first window to
-        the second window.^";
+        the second window. (Causes a Glk error if mixed with ~getline~.)^";
     print "  ~streams~: List all open streams.^";
     print "  ~dialog MODE~: Open a file-selection dialog.^";
     print "  ~timer NUM~: Start (or stop) a timer, which fires every NUM
@@ -458,13 +499,23 @@ Constant ALTWIN_ROCK 101;
     print "stream ", str, ", rock ", rock;
 ];
 
-[ announce_window_sizes altisnew   wintype;
+[ announce_window_sizes altisnew   wintype cancelled;
     glk($0025, mainwin, gg_event+0, gg_event+4); ! window_get_size
     print "This window is now ", gg_event-->0, " by ", gg_event-->1, "^";
 
     if (altwin) {
+        if (altwininput) {
+            glk($00D1, altwin, gg_event); ! cancel_line_event
+            cancelled = true;
+            altwininput = false;
+        }
         wintype = glk($0028, altwin); ! window_get_type
         glk($002F, altwin); ! glk_set_window
+        if (wintype == 4)
+            glk($002A, altwin); ! glk_clear_window
+        if (cancelled)
+            print "(Cancelled input) ";
+            
         if (wintype == 3) {
             if (altisnew)
                 print "This is a new buffer window, size ";
@@ -472,7 +523,6 @@ Constant ALTWIN_ROCK 101;
                 print "Buffer window size now ";
         }
         else if (wintype == 4) {
-            glk($002A, altwin); ! glk_clear_window
             if (altisnew)
                 print "This is a new grid window, size ";
             else
@@ -490,7 +540,7 @@ Constant ALTWIN_ROCK 101;
     }
 ];
 
-[ print_hyperlink_text   wintype;
+[ print_hyperlink_text   wintype cancelled;
     print "Here is ";
     glk($0100, 1); ! set_hyperlink
     print "link 1";
@@ -506,8 +556,18 @@ Constant ALTWIN_ROCK 101;
     print ".^";
 
     if (altwin) {
+        if (altwininput) {
+            glk($00D1, altwin, gg_event); ! cancel_line_event
+            cancelled = true;
+            altwininput = false;
+        }
         wintype = glk($0028, altwin); ! window_get_type
         glk($002F, altwin); ! glk_set_window
+        if (wintype == 4)
+            glk($002A, altwin); ! glk_clear_window
+        if (cancelled)
+            print "(Cancelled input) ";
+        
         if (wintype == 3) {
             print "Buffer: ";
             glk($0100, 3); ! set_hyperlink
@@ -518,7 +578,6 @@ Constant ALTWIN_ROCK 101;
             print ".^";
         }
         else if (wintype == 4) {
-            glk($002A, altwin); ! glk_clear_window
             print "Grid: ";
             glk($0100, 3); ! set_hyperlink
             print "link 3...";
@@ -628,7 +687,7 @@ Constant ALTWIN_ROCK 101;
 [ handle_timer  count wintype;
   timer_counter++;
   
-  if (altwin) {
+  if (altwin && ~~altwininput) {
     wintype = glk($0028, altwin); ! window_get_type
     if (wintype == 4) 
       glk($002A, altwin); ! glk_clear_window
@@ -657,6 +716,18 @@ Constant ALTWIN_ROCK 101;
     print "^>";
     glk($00D0, mainwin, input_buffer+4, BUFLEN, count); ! request_line_event
   }
+];
+
+[ handle_secondary_getline count wintype val;
+  wintype = glk($0028, altwin); ! window_get_type
+  if (wintype == 4) 
+    glk($002A, altwin); ! glk_clear_window
+  glk($002F, altwin); ! glk_set_window
+  print "Line input (", count, " chars): ~";
+  for (val=0 : val<count : val++)
+    print (char) inputalt_buffer->val;
+  print "~.^";
+  glk($002F, mainwin); ! glk_set_window
 ];
 
 [ handle_hyperlink win linkval   count;
