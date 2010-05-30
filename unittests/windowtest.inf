@@ -79,8 +79,16 @@ Constant ALTWIN_ROCK 101;
       Banner();
 
     'quit', 'q//':
-      print "Goodbye!^";
-      quit;
+      print "Exiting via @@64quit... Goodbye!^";
+      @quit;
+
+    'exit':
+      print "Exiting via glk_exit()... Goodbye!^";
+      glk($0001);
+
+    'return':
+      print "Exiting via returning from Main()... Goodbye!^";
+      return;
 
     'windows', 'win', 'list':
       show_windows();
@@ -416,7 +424,7 @@ Constant ALTWIN_ROCK 101;
 
 [ RoomDesc;
     print "A voice booooms out: Welcome to the test chamber.^^";
-    print "Type ~help~ to repeat this message, ~quit~ to exit,
+    print "Type ~help~ to repeat this message, ~quit~/~exit~/~return~ to exit,
         or one of the following:^^";
     print "  ~windows~: List all open windows.^";
     print "  ~size~: Show the sizes of all open windows.^";
