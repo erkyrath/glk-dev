@@ -24,6 +24,9 @@ Global type_understood;
 Global size_understood;
 Global win_understood;
 Global filemode_understood;
+Global operand_understood;
+
+Global testglobal;
 
 Constant HDR_GLULXVERSION  $04;     ! long word
 Constant ROM_GAMERELEASE   $34;     ! short word
@@ -188,6 +191,7 @@ Constant ALTWIN_ROCK 101;
 
     'dialog':
       parse_file_params();
+      parse_operand_params();
       select_file_dialog();
 
     'timer':
@@ -346,6 +350,21 @@ Constant ALTWIN_ROCK 101;
       'read', 'r//': filemode_understood = 2;
       'readwrite', 'rw': filemode_understood = 3;
       'writeappend', 'a//', 'append': filemode_understood = 5;
+    }
+  }
+];
+
+[ parse_operand_params  numwords wx wd;
+  operand_understood = 'local';
+  
+  numwords = parse_buffer-->0;
+  for (wx=1 : wx<numwords : wx++) {
+    wd = parse_buffer-->(wx*3+1);
+    switch (wd) {
+      'stack': operand_understood = 'stack';
+      'offstack': operand_understood = 'offstack';
+      'local': operand_understood = 'local';
+      'global': operand_understood = 'global';
     }
   }
 ];
@@ -676,7 +695,44 @@ Constant ALTWIN_ROCK 101;
 
 [ select_file_dialog fref val;
     print "Select a data file. (It will not actually be created or read.)^";
-    fref = glk($0062, 0+$100, filemode_understood, 123); ! fileref_create_by_prompt
+
+    if (operand_understood == 'local') {
+        fref = -1;
+        @push 123; ! rock
+        @push filemode_understood;
+        @push $100; ! fileusage_Data | fileusage_TextMode
+        @glk $0062 3 fref; ! fileref_create_by_prompt
+    }
+    else if (operand_understood == 'global') {
+        testglobal = -1;
+        @push 123; ! rock
+        @push filemode_understood;
+        @push $100; ! fileusage_Data | fileusage_TextMode
+        @glk $0062 3 testglobal; ! fileref_create_by_prompt
+        fref = testglobal;
+    }
+    else if (operand_understood == 'stack') {
+        fref = -1;
+        @push 123; ! rock
+        @push filemode_understood;
+        @push $100; ! fileusage_Data | fileusage_TextMode
+        noop();
+        @glk $0062 3 sp; ! fileref_create_by_prompt
+        @copy sp fref;
+    }
+    else if (operand_understood == 'offstack') {
+        fref = -1;
+        @push 123; ! rock
+        @push filemode_understood;
+        @push $100; ! fileusage_Data | fileusage_TextMode
+        @glk $0062 3 sp; ! fileref_create_by_prompt
+        @copy sp fref;
+    }
+    else {
+        print "Operand mode not understood.^";
+        return;
+    }
+    
     if (~~fref) {
         print "No file selected.^";
         return;
@@ -690,6 +746,9 @@ Constant ALTWIN_ROCK 101;
     else
         print " which does not exist.^";
     glk($0063, fref); ! fileref_destroy
+];
+
+[ noop;
 ];
 
 [ handle_timer  count wintype;
