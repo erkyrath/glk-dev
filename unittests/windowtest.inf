@@ -189,6 +189,33 @@ Constant ALTWIN_ROCK 101;
       altwininput = true;
       print "Requested line input from secondary window.^";
 
+    'dropline':
+      if (~~altwin) {
+        print "The window is not split.^";
+        continue;
+      }
+      if (~~altwininput) {
+        print "The secondary window is not reading line input.^";
+        continue;
+      }
+      glk($00D1, altwin, gg_event); ! cancel_line_event
+      if (gg_event-->0 == 3) {
+        print "Window had line input pending";
+        print " (", gg_event-->2, " chars)";
+        if (gg_event-->2) {
+          print " ~";
+          for (val=0 : val<gg_event-->2 : val++)
+            print (char) inputalt_buffer->val;
+          print "~";
+        }
+        print ".^";
+      }
+      altwininput = false;
+      glk($002F, altwin); ! glk_set_window
+      print "(cancel)^";
+      glk($002F, mainwin); ! glk_set_window
+      print "Cancelled line input from secondary window.^";
+      
     'dialog':
       parse_file_params();
       parse_operand_params();
@@ -455,6 +482,7 @@ Constant ALTWIN_ROCK 101;
         PARAMS are the same as above. (Note: not all parameters are legal,
         so you can cause a Glk error with this command.)^";
     print "  ~getline~: Request line input in the second window.^";
+    print "  ~dropline~: Cancel line input in the second window.^";
     print "  ~echo~: Begin echoing all output from the first window to
         the second window. (Causes a Glk error if mixed with ~getline~.)^";
     print "  ~streams~: List all open streams.^";
