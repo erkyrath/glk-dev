@@ -2354,7 +2354,7 @@ TestClass ArrayBitTest
 		for (ix=0 : ix < 32 : ix++) {
 			arr = (8*(3-(ix/8)) + (ix&7));
 			@shiftl 1 arr arr;
-			res = res + arr;
+			res = res | arr;
 			@astorebit destarray ix 1;
 			@aload destarray 0 val;
 			check_hex(val, res); print ", ";
@@ -2364,7 +2364,7 @@ TestClass ArrayBitTest
 		for (ix=0 : ix < 32 : ix++) {
 			arr = (8*(3-(ix/8)) + (ix&7));
 			@shiftl 1 arr arr;
-			res = res - arr;
+			res = res & (~arr);
 			@copy ix sp;
 			@copy destarray sp;
 			if (testglobal) testglobal++;
@@ -6315,3 +6315,31 @@ TestClass AccelTest
 	];
 
 
+TestClass Safari5Test
+	with name 'safari5',
+	testfunc [ val arr res;
+		print "Safari 5 bug:^";
+		print "This tests for a known Javascript bug in Safari 5,
+			MacOS 10.5.8, Intel (not PPC). You should only see
+			this fail on Quixe on that browser setup. This failure
+			does not represent a Glulx error. I just want to be
+			able to track it.^^";
+
+			@push $80000000;
+			@push $80FFFFFF;
+			@sub sp sp val;
+			print "Folded: "; check_hex(val, $FFFFFF); print "^";
+
+			@push $80000000;
+			@push $80FFFFFF;
+			noop();
+			@sub sp sp val;
+			print "Stack: "; check_hex(val, $FFFFFF); print "^";
+
+			arr = $80000000;
+			res = $80FFFFFF;
+			val = res - arr;
+			print "Locals: "; check_hex(val, $FFFFFF); print "^";
+			
+		count_failures();
+	];
