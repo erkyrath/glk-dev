@@ -170,6 +170,9 @@ Constant ALTWIN_ROCK 101;
     'streams', 'str':
       show_streams();
 
+    'styles':
+      show_styles();
+
     'getline':
       if (~~altwin) {
         print "The window is not split.^";
@@ -486,6 +489,7 @@ Constant ALTWIN_ROCK 101;
     print "  ~echo~: Begin echoing all output from the first window to
         the second window. (Causes a Glk error if mixed with ~getline~.)^";
     print "  ~streams~: List all open streams.^";
+    print "  ~styles~: Display a sample line of each text style.^";
     print "  ~dialog MODE~: Open a file-selection dialog.^";
     print "  ~timer NUM~: Start (or stop) a timer, which fires every NUM
         seconds (default 1).^";
@@ -719,6 +723,19 @@ Constant ALTWIN_ROCK 101;
         val = glk($0046, str); ! stream_get_position
         print "  position: ", val, "^";
     }
+];
+
+Array style_names --> "Normal" "Emphasized" "Preformatted" "Header"
+  "Subheader" "Alert" "Note" "BlockQuote" "Input" "User1" "User2";
+
+[ show_styles ix;
+	print "The eleven standard Glk styles:^^";
+    for (ix=0 : ix<11 : ix++) {
+        glk($0086, ix); ! set the given style
+        print "This is style ", ix, ": ", (string) style_names-->ix;
+		new_line;
+    }
+    glk($0086, 0); ! set normal style
 ];
 
 [ select_file_dialog fref val;
