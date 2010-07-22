@@ -6314,6 +6314,37 @@ TestClass AccelTest
 		count_failures();
 	];
 
+TestClass FloatConvTest
+	with name 'floatconv',
+	testfunc [ val;
+		print "Floating-point conversion:^";
+
+		@gestalt 11 0 val; ! Float
+		if (~~val) {
+			print "Interpreter claims to not support floating-point. Skipping test.^^";
+			count_failures();
+			return;
+		}
+
+		@numtof 0 val;
+		print "numtof 0="; check_hex(val, 0); print ", ";
+		@numtof 1 val;
+		print "numtof 1="; check_hex(val, $3F800000); print ", ";
+		@numtof -1 val;
+		print "numtof -1="; check_hex(val, $BF800000); print ", ";
+		@numtof 2 val;
+		print "numtof 2="; check_hex(val, $40000000); print ", ";
+		@numtof -2 val;
+		print "numtof -2="; check_hex(val, $C0000000); print ", ";
+		@numtof 100 val;
+		print "numtof 100="; check_hex(val, $42C80000); print ", ";
+		@numtof -100 val;
+		print "numtof -100="; check_hex(val, $C2C80000); print ", ";
+
+!### global, local, stack
+		
+		count_failures();
+	];
 
 TestClass Safari5Test
 	with name 'safari5',
