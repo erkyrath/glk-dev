@@ -7,6 +7,10 @@ Release 3;
 ! To compile this canonically, do "inform -G glulxercise.inf". No other
 ! options.
 
+! Comment out the following line if you are using an Inform 6 compiler
+! that lacks the new floating-point opcodes.
+Constant FLOAT_OPCODES_AVAILABLE;
+
 Constant GG_MAINWIN_ROCK     201;
 Constant GG_SAVESTR_ROCK     301;
 Constant GG_SCRIPTSTR_ROCK   302;
@@ -6314,6 +6318,19 @@ TestClass AccelTest
 		count_failures();
 	];
 
+#ifdef FLOAT_OPCODES_AVAILABLE;
+
+Constant M_0    = $0;
+Constant M_1    = $3F800000;
+Constant M_PI   = $40490FDB;
+Constant M_2PI  = $40C90FDB;
+Constant M_E    = $402DF854;
+Constant M_N0   = $80000000; ! negative zero
+Constant M_INF  = $7F800000; ! infinity
+Constant M_NINF = $FF800000; ! negative infinity
+Constant M_NAN  = $7F800001; ! one of many NaN values
+Constant M_NNAN = $FF800001; ! another, with a sign bit
+	
 TestClass FloatConvTest
 	with name 'floatconv',
 	testfunc [ val;
@@ -6336,15 +6353,340 @@ TestClass FloatConvTest
 		print "numtof 2="; check_hex(val, $40000000); print ", ";
 		@numtof -2 val;
 		print "numtof -2="; check_hex(val, $C0000000); print ", ";
+		@numtof 33 val;
+		print "numtof 33="; check_hex(val, $42040000); print ", ";
+		@numtof -33 val;
+		print "numtof -33="; check_hex(val, $C2040000); print ", ";
 		@numtof 100 val;
 		print "numtof 100="; check_hex(val, $42C80000); print ", ";
 		@numtof -100 val;
 		print "numtof -100="; check_hex(val, $C2C80000); print ", ";
+		@numtof 12345 val;
+		print "numtof 12345="; check_hex(val, $4640E400); print ", ";
+		@numtof -12345 val;
+		print "numtof -12345="; check_hex(val, $C640E400); print ", ";
+		@numtof 9876543 val;
+		print "numtof 9876543="; check_hex(val, $4B16B43F); print ", ";
+		@numtof -9876543 val;
+		print "numtof -9876543="; check_hex(val, $CB16B43F); print ", ";
+		@numtof $1000000 val;
+		print "numtof $1000000="; check_hex(val, $4B800000); print ", ";
+		@numtof -$1000000 val;
+		print "numtof -$1000000="; check_hex(val, $CB800000); print ", ";
+		@numtof $1000001 val;
+		print "numtof $1000001="; check_hex(val, $4B800000); print ", ";
+		@numtof -$1000001 val;
+		print "numtof -$1000001="; check_hex(val, $CB800000); print ", ";
+		@numtof $1234CDEF val;
+		print "numtof $1234CDEF="; check_hex(val, $4D91A66F); print ", ";
+		@numtof -$1234CDEF val;
+		print "numtof -$1234CDEF="; check_hex(val, $CD91A66F); print ", ";
+		@numtof $7FFFFFFF val;
+		print "numtof $7FFFFFFF="; check_hex(val, $4F000000); print ", ";
+		@numtof -$7FFFFFFF val;
+		print "numtof -$7FFFFFFF="; check_hex(val, $CF000000); print ", ";
+		@numtof $80000000 val;
+		print "numtof $80000000="; check_hex(val, $CF000000); print "^";
 
-!### global, local, stack
+		testglobal = 0;
+		@numtof testglobal val;
+		print "numtof 0="; check_hex(val, 0); print ", ";
+		testglobal = 1;
+		@numtof testglobal val;
+		print "numtof 1="; check_hex(val, $3F800000); print ", ";
+		testglobal = -1;
+		@numtof testglobal val;
+		print "numtof -1="; check_hex(val, $BF800000); print ", ";
+		testglobal = 2;
+		@numtof testglobal val;
+		print "numtof 2="; check_hex(val, $40000000); print ", ";
+		testglobal = -2;
+		@numtof testglobal val;
+		print "numtof -2="; check_hex(val, $C0000000); print ", ";
+		testglobal = 33;
+		@numtof testglobal val;
+		print "numtof 33="; check_hex(val, $42040000); print ", ";
+		testglobal = -33;
+		@numtof testglobal val;
+		print "numtof -33="; check_hex(val, $C2040000); print ", ";
+		testglobal = 100;
+		@numtof testglobal val;
+		print "numtof 100="; check_hex(val, $42C80000); print ", ";
+		testglobal = -100;
+		@numtof testglobal val;
+		print "numtof -100="; check_hex(val, $C2C80000); print ", ";
+		testglobal = 12345;
+		@numtof testglobal val;
+		print "numtof 12345="; check_hex(val, $4640E400); print ", ";
+		testglobal = -12345;
+		@numtof testglobal val;
+		print "numtof -12345="; check_hex(val, $C640E400); print ", ";
+		testglobal = 9876543;
+		@numtof testglobal val;
+		print "numtof 9876543="; check_hex(val, $4B16B43F); print ", ";
+		testglobal = -9876543;
+		@numtof testglobal val;
+		print "numtof -9876543="; check_hex(val, $CB16B43F); print ", ";
+		testglobal = $1000000;
+		@numtof testglobal val;
+		print "numtof $1000000="; check_hex(val, $4B800000); print ", ";
+		testglobal = -$1000000;
+		@numtof testglobal val;
+		print "numtof -$1000000="; check_hex(val, $CB800000); print ", ";
+		testglobal = $1000001;
+		@numtof testglobal val;
+		print "numtof $1000001="; check_hex(val, $4B800000); print ", ";
+		testglobal = -$1000001;
+		@numtof testglobal val;
+		print "numtof -$1000001="; check_hex(val, $CB800000); print ", ";
+		testglobal = $1234CDEF;
+		@numtof testglobal val;
+		print "numtof $1234CDEF="; check_hex(val, $4D91A66F); print ", ";
+		testglobal = -$1234CDEF;
+		@numtof testglobal val;
+		print "numtof -$1234CDEF="; check_hex(val, $CD91A66F); print ", ";
+		testglobal = $7FFFFFFF;
+		@numtof testglobal val;
+		print "numtof $7FFFFFFF="; check_hex(val, $4F000000); print ", ";
+		testglobal = -$7FFFFFFF;
+		@numtof testglobal val;
+		print "numtof -$7FFFFFFF="; check_hex(val, $CF000000); print ", ";
+		testglobal = $80000000;
+		@numtof testglobal val;
+		print "numtof $80000000="; check_hex(val, $CF000000); print "^";
+
+		@push 0;
+		noop();
+		@numtof sp val;
+		print "numtof 0="; check_hex(val, 0); print ", ";
+		@push 1;
+		@numtof sp val;
+		print "numtof 1="; check_hex(val, $3F800000); print ", ";
+		@push -1;
+		noop();
+		@numtof sp val;
+		print "numtof -1="; check_hex(val, $BF800000); print ", ";
+		@push 2;
+		@numtof sp val;
+		print "numtof 2="; check_hex(val, $40000000); print ", ";
+		@push -2;
+		noop();
+		@numtof sp val;
+		print "numtof -2="; check_hex(val, $C0000000); print ", ";
+		@push 33;
+		@numtof sp val;
+		print "numtof 33="; check_hex(val, $42040000); print ", ";
+		@push -33;
+		noop();
+		@numtof sp val;
+		print "numtof -33="; check_hex(val, $C2040000); print ", ";
+		@push 100;
+		@numtof sp val;
+		print "numtof 100="; check_hex(val, $42C80000); print ", ";
+		@push -100;
+		noop();
+		@numtof sp val;
+		print "numtof -100="; check_hex(val, $C2C80000); print ", ";
+		@push 12345;
+		@numtof sp val;
+		print "numtof 12345="; check_hex(val, $4640E400); print ", ";
+		@push -12345;
+		noop();
+		@numtof sp val;
+		print "numtof -12345="; check_hex(val, $C640E400); print ", ";
+		@push 9876543;
+		@numtof sp val;
+		print "numtof 9876543="; check_hex(val, $4B16B43F); print ", ";
+		@push -9876543;
+		noop();
+		@numtof sp val;
+		print "numtof -9876543="; check_hex(val, $CB16B43F); print ", ";
+		@push $1000000;
+		@numtof sp val;
+		print "numtof $1000000="; check_hex(val, $4B800000); print ", ";
+		@push -$1000000;
+		noop();
+		@numtof sp val;
+		print "numtof -$1000000="; check_hex(val, $CB800000); print ", ";
+		@push $1000001;
+		@numtof sp val;
+		print "numtof $1000001="; check_hex(val, $4B800000); print ", ";
+		@push -$1000001;
+		noop();
+		@numtof sp val;
+		print "numtof -$1000001="; check_hex(val, $CB800000); print ", ";
+		@push $1234CDEF;
+		@numtof sp val;
+		print "numtof $1234CDEF="; check_hex(val, $4D91A66F); print ", ";
+		@push -$1234CDEF;
+		noop();
+		@numtof sp val;
+		print "numtof -$1234CDEF="; check_hex(val, $CD91A66F); print ", ";
+		@push $7FFFFFFF;
+		noop();
+		@numtof sp val;
+		print "numtof $7FFFFFFF="; check_hex(val, $4F000000); print ", ";
+		@push -$7FFFFFFF;
+		noop();
+		@numtof sp val;
+		print "numtof -$7FFFFFFF="; check_hex(val, $CF000000); print ", ";
+		@push $80000000;
+		noop();
+		@numtof sp sp;
+		@copy sp val;
+		print "numtof $80000000="; check_hex(val, $CF000000); print "^";
+		
+		@ftonumz M_0 val; ! 0.0
+		print "ftonumz 0.0="; check_hex(val, 0); print ", ";
+		@ftonumz M_N0 val; ! -0.0
+		print "ftonumz -0.0="; check_hex(val, 0); print ", ";
+		@ftonumz $3F666666 val; ! 0.9
+		print "ftonumz 0.9="; check_hex(val, 0); print ", ";
+		@ftonumz $BF666666 val; ! -0.9
+		print "ftonumz -0.9="; check_hex(val, 0); print ", ";
+		@ftonumz $3F800000 val; ! 1.0
+		print "ftonumz 1.0="; check_hex(val, 1); print ", ";
+		@ftonumz $BF800000 val; ! -1.0
+		print "ftonumz -1.0="; check_hex(val, -1); print ", ";
+		@ftonumz $3FE00000 val; ! 1.75
+		print "ftonumz 1.75="; check_hex(val, 1); print ", ";
+		@ftonumz $BFE00000 val; ! -1.75
+		print "ftonumz -1.75="; check_hex(val, -1); print ", ";
+		@ftonumz $40000000 val; ! 2.0
+		print "ftonumz 2.0="; check_hex(val, 2); print ", ";
+		@ftonumz $C0000000 val; ! -2.0
+		print "ftonumz -2.0="; check_hex(val, -2); print ", ";
+		@ftonumz $4121999A val; ! 10.1
+		print "ftonumz 10.1="; check_hex(val, 10); print ", ";
+		@ftonumz $C121999A val; ! -10.1
+		print "ftonumz -10.1="; check_hex(val, -10); print ", ";
+		@ftonumz $4479FFFF val; ! 999.99995
+		print "ftonumz 999.99995="; check_hex(val, 999); print ", ";
+		@ftonumz $C479FFFF val; ! -999.99995
+		print "ftonumz -999.99995="; check_hex(val, -999); print ", ";
+		@ftonumz $4B800000 val; ! $1000000
+		print "ftonumz $1000000="; check_hex(val, $1000000); print ", ";
+		@ftonumz $CB800000 val; ! -$1000000
+		print "ftonumz -$1000000="; check_hex(val, -$1000000); print ", ";
+		@ftonumz $4EFFFFFE val; ! $7FFFFF00
+		print "ftonumz $7FFFFF00="; check_hex(val, $7FFFFF00); print ", ";
+		@ftonumz $CEFFFFFE val; ! -$7FFFFF00
+		print "ftonumz -$7FFFFF00="; check_hex(val, -$7FFFFF00); print ", ";
+		@ftonumz $4F000000 val; ! $80000000
+		print "ftonumz $80000000="; check_hex(val, $7FFFFFFF); print ", ";
+		@ftonumz $CF000000 val; ! -$80000000
+		print "ftonumz -$80000000="; check_hex(val, $80000000); print ", ";
+		@ftonumz M_INF val;
+		print "ftonumz +Inf="; check_hex(val, $7FFFFFFF); print ", ";
+		@ftonumz M_NINF val;
+		print "ftonumz -Inf="; check_hex(val, $80000000); print ", ";
+		@ftonumz M_NAN val;
+		print "ftonumz +NaN="; check_hex(val, $7FFFFFFF); print ", ";
+		@ftonumz M_NNAN val;
+		print "ftonumz -NaN="; check_hex(val, $80000000); print "^";
+		
+		testglobal = M_0; @ftonumz testglobal val; ! 0.0
+		print "ftonumz 0.0="; check_hex(val, 0); print ", ";
+		testglobal = M_N0; @ftonumz testglobal val; ! -0.0
+		print "ftonumz -0.0="; check_hex(val, 0); print ", ";
+		testglobal = $3F666666; @ftonumz testglobal val; ! 0.9
+		print "ftonumz 0.9="; check_hex(val, 0); print ", ";
+		testglobal = $BF666666; @ftonumz testglobal val; ! -0.9
+		print "ftonumz -0.9="; check_hex(val, 0); print ", ";
+		testglobal = $3F800000; @ftonumz testglobal val; ! 1.0
+		print "ftonumz 1.0="; check_hex(val, 1); print ", ";
+		testglobal = $BF800000; @ftonumz testglobal val; ! -1.0
+		print "ftonumz -1.0="; check_hex(val, -1); print ", ";
+		testglobal = $3FE00000; @ftonumz testglobal val; ! 1.75
+		print "ftonumz 1.75="; check_hex(val, 1); print ", ";
+		testglobal = $BFE00000; @ftonumz testglobal val; ! -1.75
+		print "ftonumz -1.75="; check_hex(val, -1); print ", ";
+		testglobal = $40000000; @ftonumz testglobal val; ! 2.0
+		print "ftonumz 2.0="; check_hex(val, 2); print ", ";
+		testglobal = $C0000000; @ftonumz testglobal val; ! -2.0
+		print "ftonumz -2.0="; check_hex(val, -2); print ", ";
+		testglobal = $4121999A; @ftonumz testglobal val; ! 10.1
+		print "ftonumz 10.1="; check_hex(val, 10); print ", ";
+		testglobal = $C121999A; @ftonumz testglobal val; ! -10.1
+		print "ftonumz -10.1="; check_hex(val, -10); print ", ";
+		testglobal = $4479FFFF; @ftonumz testglobal val; ! 999.99995
+		print "ftonumz 999.99995="; check_hex(val, 999); print ", ";
+		testglobal = $C479FFFF; @ftonumz testglobal val; ! -999.99995
+		print "ftonumz -999.99995="; check_hex(val, -999); print ", ";
+		testglobal = $4B800000; @ftonumz testglobal val; ! $1000000
+		print "ftonumz $1000000="; check_hex(val, $1000000); print ", ";
+		testglobal = $CB800000; @ftonumz testglobal val; ! -$1000000
+		print "ftonumz -$1000000="; check_hex(val, -$1000000); print ", ";
+		testglobal = $4EFFFFFE; @ftonumz testglobal val; ! $7FFFFF00
+		print "ftonumz $7FFFFF00="; check_hex(val, $7FFFFF00); print ", ";
+		testglobal = $CEFFFFFE; @ftonumz testglobal val; ! -$7FFFFF00
+		print "ftonumz -$7FFFFF00="; check_hex(val, -$7FFFFF00); print ", ";
+		testglobal = $4F000000; @ftonumz testglobal val; ! $80000000
+		print "ftonumz $80000000="; check_hex(val, $7FFFFFFF); print ", ";
+		testglobal = $CF000000; @ftonumz testglobal val; ! -$80000000
+		print "ftonumz -$80000000="; check_hex(val, $80000000); print ", ";
+		testglobal = M_INF; @ftonumz testglobal val;
+		print "ftonumz +Inf="; check_hex(val, $7FFFFFFF); print ", ";
+		testglobal = M_NINF; @ftonumz testglobal val;
+		print "ftonumz -Inf="; check_hex(val, $80000000); print ", ";
+		testglobal = M_NAN; @ftonumz testglobal val;
+		print "ftonumz +NaN="; check_hex(val, $7FFFFFFF); print ", ";
+		testglobal = M_NNAN; @ftonumz testglobal val;
+		print "ftonumz -NaN="; check_hex(val, $80000000); print "^";
+		
+		@push M_0; noop(); @ftonumz sp val; ! 0.0
+		print "ftonumz 0.0="; check_hex(val, 0); print ", ";
+		@push M_N0; noop(); @ftonumz sp val; ! -0.0
+		print "ftonumz -0.0="; check_hex(val, 0); print ", ";
+		@push $3F666666; @ftonumz sp val; ! 0.9
+		print "ftonumz 0.9="; check_hex(val, 0); print ", ";
+		@push $BF666666; @ftonumz sp val; ! -0.9
+		print "ftonumz -0.9="; check_hex(val, 0); print ", ";
+		@push $3F800000; noop(); @ftonumz sp val; ! 1.0
+		print "ftonumz 1.0="; check_hex(val, 1); print ", ";
+		@push $BF800000; noop(); @ftonumz sp val; ! -1.0
+		print "ftonumz -1.0="; check_hex(val, -1); print ", ";
+		@push $3FE00000; @ftonumz sp val; ! 1.75
+		print "ftonumz 1.75="; check_hex(val, 1); print ", ";
+		@push $BFE00000; @ftonumz sp val; ! -1.75
+		print "ftonumz -1.75="; check_hex(val, -1); print ", ";
+		@push $40000000; noop(); @ftonumz sp val; ! 2.0
+		print "ftonumz 2.0="; check_hex(val, 2); print ", ";
+		@push $C0000000; noop(); @ftonumz sp val; ! -2.0
+		print "ftonumz -2.0="; check_hex(val, -2); print ", ";
+		@push $4121999A; @ftonumz sp val; ! 10.1
+		print "ftonumz 10.1="; check_hex(val, 10); print ", ";
+		@push $C121999A; @ftonumz sp val; ! -10.1
+		print "ftonumz -10.1="; check_hex(val, -10); print ", ";
+		@push $4479FFFF; noop(); @ftonumz sp val; ! 999.99995
+		print "ftonumz 999.99995="; check_hex(val, 999); print ", ";
+		@push $C479FFFF; noop(); @ftonumz sp val; ! -999.99995
+		print "ftonumz -999.99995="; check_hex(val, -999); print ", ";
+		@push $4B800000; @ftonumz sp val; ! $1000000
+		print "ftonumz $1000000="; check_hex(val, $1000000); print ", ";
+		@push $CB800000; @ftonumz sp val; ! -$1000000
+		print "ftonumz -$1000000="; check_hex(val, -$1000000); print ", ";
+		@push $4EFFFFFE; noop(); @ftonumz sp val; ! $7FFFFF00
+		print "ftonumz $7FFFFF00="; check_hex(val, $7FFFFF00); print ", ";
+		@push $CEFFFFFE; noop(); @ftonumz sp val; ! -$7FFFFF00
+		print "ftonumz -$7FFFFF00="; check_hex(val, -$7FFFFF00); print ", ";
+		@push $4F000000; @ftonumz sp val; ! $80000000
+		print "ftonumz $80000000="; check_hex(val, $7FFFFFFF); print ", ";
+		@push $CF000000; @ftonumz sp val; ! -$80000000
+		print "ftonumz -$80000000="; check_hex(val, $80000000); print ", ";
+		@push M_INF; noop(); @ftonumz sp val;
+		print "ftonumz +Inf="; check_hex(val, $7FFFFFFF); print ", ";
+		@push M_NINF; noop(); @ftonumz sp val;
+		print "ftonumz -Inf="; check_hex(val, $80000000); print ", ";
+		@push M_NAN; @ftonumz sp val;
+		print "ftonumz +NaN="; check_hex(val, $7FFFFFFF); print ", ";
+		@push M_NNAN; @ftonumz sp val;
+		print "ftonumz -NaN="; check_hex(val, $80000000); print "^";
 		
 		count_failures();
 	];
+
+#endif; ! FLOAT_OPCODES_AVAILABLE
 
 TestClass Safari5Test
 	with name 'safari5',
