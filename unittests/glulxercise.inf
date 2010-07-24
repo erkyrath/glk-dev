@@ -6322,9 +6322,11 @@ TestClass AccelTest
 
 Constant M_0    = $0;
 Constant M_1    = $3F800000;
+Constant M_N1   = $BF800000;
 Constant M_PI   = $40490FDB;
-Constant M_2PI  = $40C90FDB;
+Constant M_2PI  = $40C90FDB; ! 2*pi
 Constant M_E    = $402DF854;
+Constant M_E2   = $40EC7326; ! e^2
 Constant M_N0   = $80000000; ! negative zero
 Constant M_INF  = $7F800000; ! infinity
 Constant M_NINF = $FF800000; ! negative infinity
@@ -6382,7 +6384,8 @@ Constant M_NNAN = $FF800001; ! another, with a sign bit
 		rtrue;
 	}
 	failures++;
-	print (Float) val, " (should be ", (Float) wanted, " FAIL)";
+	print (Float) val, " or ", (Hex) val;
+	print " (should be ", (Float) wanted, " FAIL)";
 	rfalse;
 ];
 
@@ -6394,7 +6397,8 @@ Constant M_NNAN = $FF800001; ! another, with a sign bit
 		rtrue;
 	}
 	failures++;
-	print (Hex) val, " (should be a NaN, FAIL)";
+	print (Float) val, " or ", (Hex) val;
+	print " (should be a NaN, FAIL)";
 	rfalse;
 ];
 
@@ -7082,7 +7086,199 @@ TestClass FloatRoundTest
 		count_failures();
 	];
 
+TestClass FloatExpTest
+	with name 'floatexp' 'floatsqrt' 'floatpow' 'floatlog',
+	testfunc [ val;
+		print "Floating-point exponent functions:^^";
 
+		@gestalt 11 0 val; ! Float
+		if (~~val) {
+			print "Interpreter claims to not support floating-point. Skipping test.^^";
+			count_failures();
+			return;
+		}
+
+		@sqrt $40100000 val; ! 2.25
+		print "sqrt 2.25="; check_float(val, $3FC00000); print ", ";
+		@sqrt $C0100000 val; ! -2.25
+		print "sqrt -2.25="; check_isnan(val); print ", ";
+		testglobal = $40100000; ! 2.25
+		@sqrt testglobal testglobal2;
+		print "sqrt 2.25="; check_float(testglobal2, $3FC00000); print ", ";
+		testglobal = $C0100000; ! -2.25
+		@sqrt testglobal testglobal2;
+		print "sqrt -2.25="; check_isnan(testglobal2); print ", ";
+		val = 0;
+		@push $40100000; ! 2.25
+		@sqrt sp sp;
+		@pull val;
+		print "sqrt 2.25="; check_float(val, $3FC00000); print ", ";
+		@push $C0100000; ! -2.25
+		@sqrt sp val;
+		print "sqrt -2.25="; check_isnan(val); print ", ";
+		val = 0;
+		@push $40100000; ! 2.25
+		noop();
+		@sqrt sp sp;
+		@pull val;
+		print "sqrt 2.25="; check_float(val, $3FC00000); print ", ";
+		@push $C0100000; ! -2.25
+		noop();
+		@sqrt sp val;
+		print "sqrt -2.25="; check_isnan(val); print "^";
+
+		new_line;
+		
+		@log M_E2 val; ! e^2
+		print "log e",(char)'^',"2="; check_float(val, $40000000); print ", ";
+		@log $BF800000 val; ! -1.0
+		print "log -1.0="; check_isnan(val); print ", ";
+		testglobal = M_E2; ! e^2
+		@log testglobal testglobal2;
+		print "log e",(char)'^',"2="; check_float(testglobal2, $40000000); print ", ";
+		testglobal = $BF800000; ! -1.0
+		@log testglobal testglobal2;
+		print "log -1.0="; check_isnan(testglobal2); print ", ";
+		val = 0;
+		@push M_E2; ! e^2
+		@log sp sp;
+		@pull val;
+		print "log e",(char)'^',"2="; check_float(val, $40000000); print ", ";
+		@push $BF800000; ! -1.0
+		@log sp val;
+		print "log -1.0="; check_isnan(val); print ", ";
+		val = 0;
+		@push M_E2; ! e^2
+		noop();
+		@log sp sp;
+		@pull val;
+		print "log e",(char)'^',"2="; check_float(val, $40000000); print ", ";
+		@push $BF800000; ! -1.0
+		noop();
+		@log sp val;
+		print "log -1.0="; check_isnan(val); print "^";
+
+		new_line;
+		
+		@exp $40000000 val; ! 2.0
+		print "exp 2.0="; check_float(val, M_E2); print ", ";
+		@exp $C0000000 val; ! -2.0
+		print "exp -2.0="; check_float(val, $3E0A9555); print ", ";
+		testglobal = $40000000; ! 2.0
+		@exp testglobal testglobal2;
+		print "exp 2.0="; check_float(testglobal2, M_E2); print ", ";
+		testglobal = $C0000000; ! -2.0
+		@exp testglobal testglobal2;
+		print "exp -2.0="; check_float(testglobal2, $3E0A9555); print ", ";
+		val = 0;
+		@push $40000000; ! 2.0
+		@exp sp sp;
+		@pull val;
+		print "exp 2.0="; check_float(val, M_E2); print ", ";
+		@push $C0000000; ! -2.0
+		@exp sp val;
+		print "exp -2.0="; check_float(val, $3E0A9555); print ", ";
+		val = 0;
+		@push $40000000; ! 2.0
+		noop();
+		@exp sp sp;
+		@pull val;
+		print "exp 2.0="; check_float(val, M_E2); print ", ";
+		@push $C0000000; ! -2.0
+		noop();
+		@exp sp val;
+		print "exp -2.0="; check_float(val, $3E0A9555); print "^";
+
+		new_line;
+		
+		@sqrt M_0 val;
+		print "sqrt 0="; check_float(val, M_0); print ", ";
+		@sqrt M_N0 val;
+		print "sqrt -0="; check_float(val, M_N0); print ", ";
+		@sqrt M_1 val;
+		print "sqrt 1="; check_float(val, M_1); print ", ";
+		@sqrt M_N1 val;
+		print "sqrt -1="; check_isnan(val); print ", ";
+		@sqrt $3F19999A val;
+		print "sqrt 0.6="; check_float(val, $3F464BF8); print ", ";
+		@sqrt $42C80001 val;
+		print "sqrt 100.0000076="; check_float(val, $41200000); print ", ";
+		@sqrt $4CEB79A3 val;
+		print "sqrt 123456789.0="; check_float(val, $462D9C72); print ", ";
+		@sqrt $7B3E36E8 val;
+		print "sqrt 9.8765e+35="; check_float(val, $5D5CAB52); print ", ";
+		@sqrt M_INF val;
+		print "sqrt Inf="; check_float(val, M_INF); print ", ";
+		@sqrt M_NINF val;
+		print "sqrt -Inf="; check_isnan(val); print ", ";
+		@sqrt M_NAN val;
+		print "sqrt +NaN="; check_isnan(val); print ", ";
+		@sqrt M_NNAN val;
+		print "sqrt -NaN="; check_isnan(val); print "^";
+
+		new_line;
+		
+		@exp M_0 val;
+		print "exp 0="; check_float(val, M_1); print ", ";
+		@exp M_N0 val;
+		print "exp -0="; check_float(val, M_1); print ", ";
+		@exp M_1 val;
+		print "exp 1="; check_float(val, M_E); print ", ";
+		@exp M_N1 val;
+		print "exp -1="; check_float(val, $3EBC5AB2); print ", ";
+		@exp $3F19999A val;
+		print "exp 0.6="; check_float(val, $3FE93B31); print ", ";
+		@exp $BF19999A val;
+		print "exp -0.6="; check_float(val, $3F0C7EEB); print ", ";
+		@exp $42B00000 val;
+		print "exp 88.0="; check_float(val, $7EF882B7); print ", ";
+		@exp $42C80000 val;
+		print "exp 100.0="; check_float(val, M_INF); print ", ";
+		@exp $C2C80000 val;
+		print "exp -100.0="; check_float(val, $0000001B); print ", ";
+		@exp $C2D00000 val;
+		print "exp -104.0="; check_float(val, M_0); print ", ";
+		@exp M_INF val;
+		print "exp Inf="; check_float(val, M_INF); print ", ";
+		@exp M_NINF val;
+		print "exp -Inf="; check_float(val, M_0); print ", ";
+		@exp M_NAN val;
+		print "exp +NaN="; check_isnan(val); print ", ";
+		@exp M_NNAN val;
+		print "exp -NaN="; check_isnan(val); print "^";
+
+		new_line;
+		
+		@log M_0 val;
+		print "log 0="; check_float(val, M_NINF); print ", ";
+		@log M_N0 val;
+		print "log -0="; check_float(val, M_NINF); print ", ";
+		@log M_1 val;
+		print "log 1="; check_float(val, M_0); print ", ";
+		@log M_N1 val;
+		print "log -1="; check_isnan(val); print ", ";
+		@log M_E val;
+		print "log e="; check_float(val, $3F7FFFFF); print ", ";
+		@log $3F19999A val;
+		print "log 0.6="; check_float(val, $BF02C577); print ", ";
+		@log $47800000 val;
+		print "log 65536="; check_float(val, $41317218); print ", ";
+		@log $4CEB79A3 val;
+		print "log 123456789.0="; check_float(val, $41950D1C); print ", ";
+		@log $7E949AE5 val;
+		print "log 9.8765e+37="; check_float(val, $42AEF8BC); print ", ";
+		@log M_INF val;
+		print "log Inf="; check_float(val, M_INF); print ", ";
+		@log M_NINF val;
+		print "log -Inf="; check_isnan(val); print ", ";
+		@log M_NAN val;
+		print "log +NaN="; check_isnan(val); print ", ";
+		@log M_NNAN val;
+		print "log -NaN="; check_isnan(val); print "^";
+		
+		count_failures();
+	];
+	
 #endif; ! FLOAT_OPCODES_AVAILABLE
 
 TestClass Safari5Test
