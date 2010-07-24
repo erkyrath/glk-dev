@@ -6330,11 +6330,78 @@ Constant M_INF  = $7F800000; ! infinity
 Constant M_NINF = $FF800000; ! negative infinity
 Constant M_NAN  = $7F800001; ! one of many NaN values
 Constant M_NNAN = $FF800001; ! another, with a sign bit
+
+[ Float val   exp mant byte;
+	if (val & $80000000) {
+		print "-";
+		val = val & $7FFFFFFF;
+	}
+	else {
+		print "+";
+	}
 	
+	if (val == M_INF) {
+		print "Inf";
+		return;
+	}
+	if (val == M_0) {
+		print "0";
+		return;
+	}
+	if ((val & $7F800000 == $7F800000) && (val & $7FFFFF ~= 0)) {
+		print "NaN";
+		return;
+	}
+
+	@ushiftr val 23 exp;
+	exp = exp & $FF;
+	mant = (val & $7FFFFF);
+
+	if (exp) {
+		print "2@@94", (exp-127), "*1.";
+	}
+	else {
+		print "2@@94-126*0.";
+	}
+	
+	while (mant) {
+		byte = mant & $780000;
+		@shiftl mant 4 mant;
+		mant = (mant & $7FFFFF);
+		@ushiftr byte 19 byte;
+		if (byte <= 9)
+			print (char) (byte+'0');
+		else
+			print (char) (byte-10+'A');
+	}
+];
+
+[ check_float val wanted;
+	if (val == wanted) {
+		print (Float) val;
+		rtrue;
+	}
+	failures++;
+	print (Float) val, " (should be ", (Float) wanted, " FAIL)";
+	rfalse;
+];
+
+[ check_isnan val;
+	if ((val & $7F800000 == $7F800000) && (val & $7FFFFF ~= 0)) {
+		if (val & $80000000)
+			print "-";
+		print "NaN";
+		rtrue;
+	}
+	failures++;
+	print (Hex) val, " (should be a NaN, FAIL)";
+	rfalse;
+];
+
 TestClass FloatConvTest
 	with name 'floatconv',
 	testfunc [ val;
-		print "Floating-point conversion:^";
+		print "Floating-point conversion:^^";
 
 		@gestalt 11 0 val; ! Float
 		if (~~val) {
@@ -6836,6 +6903,185 @@ TestClass FloatConvTest
 		
 		count_failures();
 	];
+	
+TestClass FloatRoundTest
+	with name 'floatround',
+	short_name "floatround",
+	testfunc [ val;
+		print "Floating-point rounding:^^";
+
+		@gestalt 11 0 val; ! Float
+		if (~~val) {
+			print "Interpreter claims to not support floating-point. Skipping test.^^";
+			count_failures();
+			return;
+		}
+
+		@floor $40600000 val; ! 3.5
+		print "floor 3.5="; check_float(val, $40400000); print ", ";
+		@floor $C0600000 val; ! -3.5
+		print "floor -3.5="; check_float(val, $C0800000); print ", ";
+		testglobal = $40600000; ! 3.5
+		@floor testglobal testglobal2;
+		print "floor 3.5="; check_float(testglobal2, $40400000); print ", ";
+		testglobal = $C0600000; ! -3.5
+		@floor testglobal testglobal2;
+		print "floor -3.5="; check_float(testglobal2, $C0800000); print ", ";
+		val = 0;
+		@push $40600000; ! 3.5
+		@floor sp sp;
+		@pull val;
+		print "floor 3.5="; check_float(val, $40400000); print ", ";
+		@push $C0600000; ! -3.5
+		@floor sp val;
+		print "floor -3.5="; check_float(val, $C0800000); print ", ";
+		val = 0;
+		@push $40600000; ! 3.5
+		noop();
+		@floor sp sp;
+		@pull val;
+		print "floor 3.5="; check_float(val, $40400000); print ", ";
+		@push $C0600000; ! -3.5
+		noop();
+		@floor sp val;
+		print "floor -3.5="; check_float(val, $C0800000); print "^";
+
+		new_line;
+
+		@ceil $40600000 val; ! 3.5
+		print "ceil 3.5="; check_float(val, $40800000); print ", ";
+		@ceil $C0600000 val; ! -3.5
+		print "ceil -3.5="; check_float(val, $C0400000); print ", ";
+		testglobal = $40600000; ! 3.5
+		@ceil testglobal testglobal2;
+		print "ceil 3.5="; check_float(testglobal2, $40800000); print ", ";
+		testglobal = $C0600000; ! -3.5
+		@ceil testglobal testglobal2;
+		print "ceil -3.5="; check_float(testglobal2, $C0400000); print ", ";
+		val = 0;
+		@push $40600000; ! 3.5
+		@ceil sp sp;
+		@pull val;
+		print "ceil 3.5="; check_float(val, $40800000); print ", ";
+		@push $C0600000; ! -3.5
+		@ceil sp val;
+		print "ceil -3.5="; check_float(val, $C0400000); print ", ";
+		val = 0;
+		@push $40600000; ! 3.5
+		noop();
+		@ceil sp sp;
+		@pull val;
+		print "ceil 3.5="; check_float(val, $40800000); print ", ";
+		@push $C0600000; ! -3.5
+		noop();
+		@ceil sp val;
+		print "ceil -3.5="; check_float(val, $C0400000); print "^";
+
+		new_line;
+		
+		@floor M_0 val; ! 0.0
+		print "floor 0.0="; check_float(val, M_0); print ", ";
+		@floor M_N0 val; ! -0.0
+		print "floor -0.0="; check_float(val, M_N0); print ", ";
+		@floor $3F666666 val; ! 0.9
+		print "floor 0.9="; check_float(val, M_0); print ", ";
+		@floor $BF666666 val; ! -0.9
+		print "floor -0.9="; check_float(val, $BF800000); print ", ";
+		@floor $3F800000 val; ! 1.0
+		print "floor 1.0="; check_float(val, $3F800000); print ", ";
+		@floor $BF800000 val; ! -1.0
+		print "floor -1.0="; check_float(val, $BF800000); print ", ";
+		@floor $3FE00000 val; ! 1.75
+		print "floor 1.75="; check_float(val, $3F800000); print ", ";
+		@floor $BFE00000 val; ! -1.75
+		print "floor -1.75="; check_float(val, $C0000000); print ", ";
+		@floor $40000000 val; ! 2.0
+		print "floor 2.0="; check_float(val, $40000000); print ", ";
+		@floor $C0000000 val; ! -2.0
+		print "floor -2.0="; check_float(val, $C0000000); print ", ";
+		@floor $4121999A val; ! 10.1
+		print "floor 10.1="; check_float(val, $41200000); print ", ";
+		@floor $C121999A val; ! -10.1
+		print "floor -10.1="; check_float(val, $C1300000); print ", ";
+		@floor $4479FFFF val; ! 999.99995
+		print "floor 999.99995="; check_float(val, $4479C000); print ", ";
+		@floor $C479FFFF val; ! -999.99995
+		print "floor -999.99995="; check_float(val, $C47A0000); print ", ";
+		@floor $4B800000 val; ! $1000000
+		print "floor $1000000="; check_float(val, $4B800000); print ", ";
+		@floor $CB800000 val; ! -$1000000
+		print "floor -$1000000="; check_float(val, $CB800000); print ", ";
+		@floor $4EFFFFFE val; ! $7FFFFF00
+		print "floor $7FFFFF00="; check_float(val, $4EFFFFFE); print ", ";
+		@floor $CEFFFFFE val; ! -$7FFFFF00
+		print "floor -$7FFFFF00="; check_float(val, $CEFFFFFE); print ", ";
+		@floor $4F000000 val; ! $80000000
+		print "floor $80000000="; check_float(val, $4F000000); print ", ";
+		@floor $CF000000 val; ! -$80000000
+		print "floor -$80000000="; check_float(val, $CF000000); print ", ";
+		@floor M_INF val;
+		print "floor +Inf="; check_float(val, M_INF); print ", ";
+		@floor M_NINF val;
+		print "floor -Inf="; check_float(val, M_NINF); print ", ";
+		@floor M_NAN val;
+		print "floor +NaN="; check_isnan(val); print ", ";
+		@floor M_NNAN val;
+		print "floor -NaN="; check_isnan(val); print "^";
+
+		new_line;
+		
+		@ceil M_0 val; ! 0.0
+		print "ceil 0.0="; check_float(val, M_0); print ", ";
+		@ceil M_N0 val; ! -0.0
+		print "ceil -0.0="; check_float(val, M_N0); print ", ";
+		@ceil $3F666666 val; ! 0.9
+		print "ceil 0.9="; check_float(val, $3F800000); print ", ";
+		@ceil $BF666666 val; ! -0.9
+		print "ceil -0.9="; check_float(val, M_N0); print ", ";
+		@ceil $3F800000 val; ! 1.0
+		print "ceil 1.0="; check_float(val, $3F800000); print ", ";
+		@ceil $BF800000 val; ! -1.0
+		print "ceil -1.0="; check_float(val, $BF800000); print ", ";
+		@ceil $3FE00000 val; ! 1.75
+		print "ceil 1.75="; check_float(val, $40000000); print ", ";
+		@ceil $BFE00000 val; ! -1.75
+		print "ceil -1.75="; check_float(val, $BF800000); print ", ";
+		@ceil $40000000 val; ! 2.0
+		print "ceil 2.0="; check_float(val, $40000000); print ", ";
+		@ceil $C0000000 val; ! -2.0
+		print "ceil -2.0="; check_float(val, $C0000000); print ", ";
+		@ceil $4121999A val; ! 10.1
+		print "ceil 10.1="; check_float(val, $41300000); print ", ";
+		@ceil $C121999A val; ! -10.1
+		print "ceil -10.1="; check_float(val, $C1200000); print ", ";
+		@ceil $4479FFFF val; ! 999.99995
+		print "ceil 999.99995="; check_float(val, $447A0000); print ", ";
+		@ceil $C479FFFF val; ! -999.99995
+		print "ceil -999.99995="; check_float(val, $C479C000); print ", ";
+		@ceil $4B800000 val; ! $1000000
+		print "ceil $1000000="; check_float(val, $4B800000); print ", ";
+		@ceil $CB800000 val; ! -$1000000
+		print "ceil -$1000000="; check_float(val, $CB800000); print ", ";
+		@ceil $4EFFFFFE val; ! $7FFFFF00
+		print "ceil $7FFFFF00="; check_float(val, $4EFFFFFE); print ", ";
+		@ceil $CEFFFFFE val; ! -$7FFFFF00
+		print "ceil -$7FFFFF00="; check_float(val, $CEFFFFFE); print ", ";
+		@ceil $4F000000 val; ! $80000000
+		print "ceil $80000000="; check_float(val, $4F000000); print ", ";
+		@ceil $CF000000 val; ! -$80000000
+		print "ceil -$80000000="; check_float(val, $CF000000); print ", ";
+		@ceil M_INF val;
+		print "ceil +Inf="; check_float(val, M_INF); print ", ";
+		@ceil M_NINF val;
+		print "ceil -Inf="; check_float(val, M_NINF); print ", ";
+		@ceil M_NAN val;
+		print "ceil +NaN="; check_isnan(val); print ", ";
+		@ceil M_NNAN val;
+		print "ceil -NaN="; check_isnan(val); print "^";
+		
+		count_failures();
+	];
+
 
 #endif; ! FLOAT_OPCODES_AVAILABLE
 
