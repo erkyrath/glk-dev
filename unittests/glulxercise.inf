@@ -6322,7 +6322,7 @@ TestClass AccelTest
 
 Constant M_0    = $0;
 Constant M_1    = $3F800000;
-Constant M_N1   = $BF800000;
+Constant M_N1   = $BF800000; ! -1
 Constant M_PI   = $40490FDB;
 Constant M_2PI  = $40C90FDB; ! 2*pi
 Constant M_E    = $402DF854;
@@ -7088,7 +7088,7 @@ TestClass FloatRoundTest
 
 TestClass FloatExpTest
 	with name 'floatexp' 'floatsqrt' 'floatpow' 'floatlog',
-	testfunc [ val;
+	testfunc [ val val1 val2;
 		print "Floating-point exponent functions:^^";
 
 		@gestalt 11 0 val; ! Float
@@ -7190,6 +7190,37 @@ TestClass FloatExpTest
 		print "exp -2.0="; check_float(val, $3E0A9555); print "^";
 
 		new_line;
+
+		@pow $3FE00000 $3FC00000 val; ! 1.75, 1.5
+		print "pow(1.75,1.5)="; check_float(val, $4014297E); print ", ";
+		val1 = $BFC00000;
+		@pow $3FE00000 val1 val; ! 1.75, -1.5
+		print "pow(1.75,-1.5)="; check_float(val, $3EDD29C8); print ", ";
+		val1 = $BFE00000;
+		@pow val1 $40000000 val; ! -1.75, 2
+		print "pow(-1.75,2)="; check_float(val, $40440000); print ", ";
+		val2 = $3FC00000;
+		@pow val1 val2 val; ! -1.75, 1.5
+		print "pow(-1.75,1.5)="; check_isnan(val); print "^";
+		
+		@pow $40100000 $40000000 testglobal; ! 2.25, 2.0
+		print "pow(2.25,2.0)="; check_float(testglobal, $40A20000); print ", ";
+		testglobal = $40100000; ! 2.25
+		testglobal2 = $C0000000; ! -2.0
+		@pow testglobal testglobal2 val;
+		print "pow(2.25,-2.0)="; check_float(val, $3E4A4588); print ", ";
+		val1 = $C0100000; ! -2.25
+		val2 = $40400000; ! 3.0
+		@pow val1 val2 val;
+		print "pow(-2.25,3.0)="; check_float(val, $C1364000); print ", ";
+		@push $C0400000; ! -3.0
+		@push $C0100000; ! -2.25
+		noop();
+		@pow sp sp sp;
+		@pull val;
+		print "pow(-2.25,-3.0)="; check_float(val, $BDB3CC07); print "^";
+
+		new_line;
 		
 		@sqrt M_0 val;
 		print "sqrt 0="; check_float(val, M_0); print ", ";
@@ -7275,6 +7306,134 @@ TestClass FloatExpTest
 		print "log +NaN="; check_isnan(val); print ", ";
 		@log M_NNAN val;
 		print "log -NaN="; check_isnan(val); print "^";
+
+		new_line;
+
+		@pow M_N1 M_1 val;
+		print "pow(-1,1)="; check_float(val, M_N1); print ", ";
+		@pow M_N1 M_N1 val;
+		print "pow(-1,-1)="; check_float(val, M_N1); print ", ";
+		@pow M_N1 $3FC00000 val;
+		print "pow(-1,1.5)="; check_isnan(val); print ", ";
+		@pow M_0 M_1 val;
+		print "pow(0,1)="; check_float(val, M_0); print ", ";
+		@pow M_N0 M_1 val;
+		print "pow(-0,1)="; check_float(val, M_N0); print ", ";
+		@pow $40000000 $42FE0000 val;
+		print "pow(2,127)="; check_float(val, $7F000000); print ", ";
+		@pow $40000000 $43000000 val;
+		print "pow(2,128)="; check_float(val, M_INF); print ", ";
+		@pow $40000000 $C3150000 val;
+		print "pow(2,-149)="; check_float(val, $00000001); print ", ";
+		@pow $40000000 $C3160000 val;
+		print "pow(2,-150)="; check_float(val, M_0); print ", ";
+		@pow $40000000 M_NAN val;
+		print "pow(2,NaN)="; check_isnan(val); print ", ";
+		@pow M_NAN $40000000 val;
+		print "pow(NaN,2)="; check_isnan(val); print ", ";
+		@pow M_NAN M_NAN val;
+		print "pow(NaN,NaN)="; check_isnan(val); print "^";
+		
+		@pow M_0 M_N1 val;
+		print "pow(0,-1)="; check_float(val, M_INF); print ", ";
+		@pow M_N0 M_N1 val;
+		print "pow(-0,-1)="; check_float(val, M_NINF); print ", ";
+		@pow M_0 $C0000000 val;
+		print "pow(0,-2)="; check_float(val, M_INF); print ", ";
+		@pow M_N0 $C0000000 val;
+		print "pow(-0,-2)="; check_float(val, M_INF); print ", ";
+		@pow M_0 $BFC00000 val;
+		print "pow(0,-1.5)="; check_float(val, M_INF); print ", ";
+		@pow M_N0 $BFC00000 val;
+		print "pow(-0,-1.5)="; check_float(val, M_INF); print ", ";
+		@pow M_0 M_1 val;
+		print "pow(0,1)="; check_float(val, M_0); print ", ";
+		@pow M_N0 M_1 val;
+		print "pow(-0,1)="; check_float(val, M_N0); print ", ";
+		@pow M_0 $40000000 val;
+		print "pow(0,2)="; check_float(val, M_0); print ", ";
+		@pow M_N0 $40000000 val;
+		print "pow(-0,2)="; check_float(val, M_0); print ", ";
+		@pow M_0 $3FC00000 val;
+		print "pow(0,1.5)="; check_float(val, M_0); print ", ";
+		@pow M_N0 $3FC00000 val;
+		print "pow(-0,1.5)="; check_float(val, M_0); print "^";
+		
+		@pow M_N1 M_INF val;
+		print "pow(-1,Inf)="; check_float(val, M_1); print ", ";
+		@pow M_N1 M_NINF val;
+		print "pow(-1,-Inf)="; check_float(val, M_1); print ", ";
+		@pow M_1 M_1 val;
+		print "pow(1,1)="; check_float(val, M_1); print ", ";
+		@pow M_1 M_N1 val;
+		print "pow(1,-1)="; check_float(val, M_1); print ", ";
+		@pow M_1 M_0 val;
+		print "pow(1,0)="; check_float(val, M_1); print ", ";
+		@pow M_1 M_INF val;
+		print "pow(1,Inf)="; check_float(val, M_1); print ", ";
+		@pow M_1 M_NINF val;
+		print "pow(1,-Inf)="; check_float(val, M_1); print ", ";
+		@pow M_1 M_NAN val;
+		print "pow(1,NaN)="; check_float(val, M_1); print ", ";
+		@pow M_1 M_NNAN val;
+		print "pow(1,-NaN)="; check_float(val, M_1); print "^";
+		
+		@pow $40800000 M_0 val;
+		print "pow(4,0)="; check_float(val, M_1); print ", ";
+		@pow $C0800000 M_0 val;
+		print "pow(-4,0)="; check_float(val, M_1); print ", ";
+		@pow M_0 M_0 val;
+		print "pow(0,0)="; check_float(val, M_1); print ", ";
+		@pow M_N0 M_0 val;
+		print "pow(-0,0)="; check_float(val, M_1); print ", ";
+		@pow M_INF M_0 val;
+		print "pow(Inf,0)="; check_float(val, M_1); print ", ";
+		@pow M_NINF M_0 val;
+		print "pow(-Inf,0)="; check_float(val, M_1); print ", ";
+		@pow M_NAN M_0 val;
+		print "pow(NaN,0)="; check_float(val, M_1); print ", ";
+		@pow M_NNAN M_0 val;
+		print "pow(-NaN,0)="; check_float(val, M_1); print "^";
+
+		@pow M_N1 $BFC00000 val;
+		print "pow(-1,1.5)="; check_isnan(val); print ", ";
+		@pow $3F000000 M_NINF val;
+		print "pow(0.5,-Inf)="; check_float(val, M_INF); print ", ";
+		@pow $BF000000 M_NINF val;
+		print "pow(-0.5,-Inf)="; check_float(val, M_INF); print ", ";
+		@pow $3FC00000 M_NINF val;
+		print "pow(1.5,-Inf)="; check_float(val, M_0); print ", ";
+		@pow $BFC00000 M_NINF val;
+		print "pow(-1.5,-Inf)="; check_float(val, M_0); print ", ";
+		@pow $3F000000 M_INF val;
+		print "pow(0.5,Inf)="; check_float(val, M_0); print ", ";
+		@pow $BF000000 M_INF val;
+		print "pow(-0.5,Inf)="; check_float(val, M_0); print ", ";
+		@pow $3FC00000 M_INF val;
+		print "pow(1.5,Inf)="; check_float(val, M_INF); print ", ";
+		@pow $BFC00000 M_INF val;
+		print "pow(-1.5,Inf)="; check_float(val, M_INF); print ", ";
+
+		@pow M_NINF M_N1 val;
+		print "pow(-Inf,-1)="; check_float(val, M_N0); print ", ";
+		@pow M_NINF $C0000000 val;
+		print "pow(-Inf,-2)="; check_float(val, M_0); print ", ";
+		@pow M_NINF $BFC00000 val;
+		print "pow(-Inf,-1.5)="; check_float(val, M_0); print ", ";
+		@pow M_NINF M_1 val;
+		print "pow(-Inf,1)="; check_float(val, M_NINF); print ", ";
+		@pow M_NINF $40000000 val;
+		print "pow(-Inf,2)="; check_float(val, M_INF); print ", ";
+		@pow M_NINF $3FC00000 val;
+		print "pow(-Inf,1.5)="; check_float(val, M_INF); print ", ";
+		@pow M_INF $40000000 val;
+		print "pow(Inf,2)="; check_float(val, M_INF); print ", ";
+		@pow M_INF $3FC00000 val;
+		print "pow(Inf,1.5)="; check_float(val, M_INF); print ", ";
+		@pow M_INF $C0000000 val;
+		print "pow(Inf,-2)="; check_float(val, M_0); print ", ";
+		@pow M_INF $BFC00000 val;
+		print "pow(Inf,-1.5)="; check_float(val, M_0); print "^";
 		
 		count_failures();
 	];
