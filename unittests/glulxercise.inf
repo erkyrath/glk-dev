@@ -308,6 +308,9 @@ Class TestClass
 	testfunc TestNothing,
 	fail_count;
 
+Class TestFloatClass
+  class TestClass;
+
 [ PrintShortName obj;
 	if (obj provides short_name && obj.short_name) {
 		print (string) obj.short_name;
@@ -529,6 +532,37 @@ Class TestClass
 	}
 ];
 
+[ run_all_tests cla    obj startfail res ix;
+	startfail = total_failures;
+	objectloop (obj ofclass cla) {
+		if (obj has meta) 
+			continue;
+
+		res = total_failures;
+		print "^";
+		allstackdepth = 148;
+		obj.testfunc();
+		obj.fail_count = total_failures - res;
+	}
+	res = total_failures - startfail;
+	if (res == 0) {
+		"^All tests passed.";
+	}
+	else {
+		print "^", res, " tests failed overall: ";
+		ix = 0;
+		objectloop (obj ofclass cla) {
+			if (obj.fail_count) {
+				if (ix)
+					print ", ";
+				print (name) obj, " (", obj.fail_count, ")";
+				ix++;
+			}
+		}
+		".";
+	}
+];
+
 TestClass LookAction
 	with name 'look' 'l//' 'help' '?//',
 	testfunc LookSub,
@@ -559,36 +593,17 @@ TestClass GlkQuitAction
 	
 TestClass AllAction
 	with name 'all',
-	testfunc [ obj startfail res ix;
+	testfunc [;
 		print "All tests:^";
-		startfail = total_failures;
-		objectloop (obj ofclass TestClass) {
-			if (obj has meta) 
-				continue;
-
-			res = total_failures;
-			print "^";
-			allstackdepth = 116;
-			obj.testfunc();
-			obj.fail_count = total_failures - res;
-		}
-		res = total_failures - startfail;
-		if (res == 0) {
-			"^All tests passed.";
-		}
-		else {
-			print "^", res, " tests failed overall: ";
-			ix = 0;
-			objectloop (obj ofclass TestClass) {
-				if (obj.fail_count) {
-					if (ix)
-						print ", ";
-					print (name) obj, " (", obj.fail_count, ")";
-					ix++;
-				}
-			}
-			".";
-		}
+		run_all_tests(TestClass);
+	],
+	has meta;
+	
+TestClass AllFloatAction
+	with name 'allfloat' 'floatall',
+	testfunc [;
+		print "All floating-point tests:^";
+		run_all_tests(TestFloatClass);
 	],
 	has meta;
 	
@@ -6402,7 +6417,7 @@ Constant M_NNAN = $FF800001; ! another, with a sign bit
 	rfalse;
 ];
 
-TestClass FloatConvTest
+TestFloatClass FloatConvTest
 	with name 'floatconv',
 	testfunc [ val val2;
 		print "Floating-point conversion:^^";
@@ -7073,7 +7088,25 @@ TestClass FloatConvTest
 		count_failures();
 	];
 	
-TestClass FloatRoundTest
+TestFloatClass FloatArithTest
+	with name 'floatarith',
+	short_name "floatarith",
+	testfunc [ val val2;
+		print "Floating-point arithmetic:^^";
+
+		@gestalt 11 0 val; ! Float
+		if (~~val) {
+			print "Interpreter claims to not support floating-point. Skipping test.^^";
+			count_failures();
+			return;
+		}
+
+		!###
+		
+		count_failures();
+	];
+
+TestFloatClass FloatRoundTest
 	with name 'floatround',
 	short_name "floatround",
 	testfunc [ val val2;
@@ -7263,7 +7296,7 @@ TestClass FloatRoundTest
 		count_failures();
 	];
 
-TestClass FloatExpTest
+TestFloatClass FloatExpTest
 	with name 'floatexp' 'floatsqrt' 'floatpow' 'floatlog',
 	testfunc [ val val1 val2;
 		print "Floating-point exponent functions:^^";
