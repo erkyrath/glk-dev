@@ -7091,7 +7091,7 @@ TestFloatClass FloatConvTest
 TestFloatClass FloatArithTest
 	with name 'floatarith',
 	short_name "floatarith",
-	testfunc [ val val2;
+	testfunc [ val val1 val2;
 		print "Floating-point arithmetic:^^";
 
 		@gestalt 11 0 val; ! Float
@@ -7101,8 +7101,84 @@ TestFloatClass FloatArithTest
 			return;
 		}
 
-		!###
+		@fadd M_1 $3FC00000 val;
+		print "add(1,1.5)="; check_float(val, $40200000); print ", ";
+		@fadd $3F000000 $BFC00000 val;
+		print "add(0.5,-1.5)="; check_float(val, $BF800000); print ", ";
+		val1 = $BF000000;
+		val2 = $BFC00000;
+		@fadd val1 val2 val;
+		print "add(-0.5,-1.5)="; check_float(val, $C0000000); print ", ";
+		testglobal = $BF000000;
+		testglobal2 = $3FC00000;
+		@fadd testglobal testglobal2 val;
+		print "add(-0.5,1.5)="; check_float(val, $3F800000); print ", ";
+		@push $40200000;
+		@push $0;
+		noop();
+		@fadd sp sp sp;
+		@pull val;
+		print "add(0,2.5)="; check_float(val, $40200000); print "^";
+
+		@fsub M_1 $3FC00000 val;
+		print "sub(1,1.5)="; check_float(val, $BF000000); print ", ";
+		@fsub $3F000000 $BFC00000 val;
+		print "sub(0.5,-1.5)="; check_float(val, $40000000); print ", ";
+		val1 = $BF000000;
+		val2 = $BFC00000;
+		@fsub val1 val2 val;
+		print "sub(-0.5,-1.5)="; check_float(val, $3F800000); print ", ";
+		testglobal = $BF000000;
+		testglobal2 = $3FC00000;
+		@fsub testglobal testglobal2 val;
+		print "sub(-0.5,1.5)="; check_float(val, $C0000000); print ", ";
+		@push $40200000;
+		@push $0;
+		noop();
+		@fsub sp sp sp;
+		@pull val;
+		print "sub(0,2.5)="; check_float(val, $C0200000); print "^";
 		
+		@fmul $3FA00000 $3FC00000 val;
+		print "mul(1.25,1.5)="; check_float(val, $3FF00000); print ", ";
+		@fmul $3F000000 $BFC00000 val;
+		print "mul(0.5,-1.5)="; check_float(val, $BF400000); print ", ";
+		val1 = $BF400000;
+		val2 = $BFC00000;
+		@fmul val1 val2 val;
+		print "mul(-0.75,-1.5)="; check_float(val, $3F900000); print ", ";
+		testglobal = $BF000000;
+		testglobal2 = $40000000;
+		@fmul testglobal testglobal2 val;
+		print "mul(-0.5,2)="; check_float(val, $BF800000); print ", ";
+		@push $40200000;
+		@push $40800000;
+		noop();
+		@fmul sp sp sp;
+		@pull val;
+		print "mul(4,2.5)="; check_float(val, $41200000); print "^";
+
+		@fdiv $3FA00000 $3FC00000 val;
+		print "div(1.25,1.5)="; check_float(val, $3F555555); print ", ";
+		@fdiv $3F000000 $BFC00000 val;
+		print "div(0.5,-1.5)="; check_float(val, $BEAAAAAB); print ", ";
+		val1 = $BF400000;
+		val2 = $BFC00000;
+		@fdiv val1 val2 val;
+		print "div(-0.75,-1.5)="; check_float(val, $3F000000); print ", ";
+		testglobal = $BF000000;
+		testglobal2 = $40000000;
+		@fdiv testglobal testglobal2 val;
+		print "div(-0.5,2)="; check_float(val, $BE800000); print ", ";
+		@push $40200000;
+		@push $40800000;
+		noop();
+		@fdiv sp sp sp;
+		@pull val;
+		print "div(4,2.5)="; check_float(val, $3FCCCCCD); print "^";
+
+		!### cases
+
 		count_failures();
 	];
 
