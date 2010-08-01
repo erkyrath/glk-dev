@@ -7392,6 +7392,52 @@ TestFloatClass FloatArithTest
 		count_failures();
 	];
 
+TestFloatClass FloatModTest
+	with name 'floatmod',
+	testfunc [ val rem quo val1 val2;
+		print "Floating-point modulo:^^";
+
+		@gestalt 11 0 val; ! Float
+		if (~~val) {
+			print "Interpreter claims to not support floating-point. Skipping test.^^";
+			count_failures();
+			return;
+		}
+
+		@fmod $40840000 $40000000 rem quo;
+		print "mod(4.125,2)=rem "; check_float(rem, $3E000000);
+		print " quo "; check_float(quo, $40000000); print ", ";
+		val1 = $40A00000;
+		val2 = $3FC00000;
+		@fmod val1 val2 rem quo;
+		print "mod(5,1.5)=rem "; check_float(rem, $3F000000);
+		print " quo "; check_float(quo, $40400000); print ", ";
+		testglobal = $40E40000;
+		testglobal2 = $3F800000;
+		@fmod testglobal testglobal2 rem quo;
+		print "mod(7.125,1)=rem "; check_float(rem, $3E000000);
+		print " quo "; check_float(quo, $40E00000); print ", ";
+		@push $3FE00000;
+		@push $40C00000;
+		@fmod sp sp sp sp;
+		@pull quo;
+		@pull rem;
+		print "mod(6,1.75)=rem "; check_float(rem, $3F400000);
+		print " quo "; check_float(quo, $40400000); print ", ";
+		val1 = $40A40000;
+		@fmod val1 $3F000000 testglobal sp;
+		@pull quo;
+		print "mod(5.125,0.5)=rem "; check_float(testglobal, $3E000000);
+		print " quo "; check_float(quo, $41200000); print ", ";
+		@push $40800000;
+		testglobal = $3F400000;
+		@fmod sp testglobal rem testglobal2;
+		print "mod(4,0.75)=rem "; check_float(rem, $3E800000);
+		print " quo "; check_float(testglobal2, $40A00000); print "^";
+
+		count_failures();
+	];
+
 TestFloatClass FloatRoundTest
 	with name 'floatround',
 	short_name "floatround",
