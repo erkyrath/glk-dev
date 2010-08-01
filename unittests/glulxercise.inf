@@ -6404,6 +6404,19 @@ Constant M_NNAN = $FF800001; ! another, with a sign bit
 	rfalse;
 ];
 
+[ check_float_e val wanted eps;
+	@jfne val wanted eps ?Bad;
+	if (1) { ! if (abs(val-wanted) <= eps)...
+		print (char) '~', (Float) val;
+		rtrue;
+	}
+	.Bad;
+	failures++;
+	print (Float) val, " or ", (Hex) val;
+	print " (should be near ", (Float) wanted, " FAIL)";
+	rfalse;
+];
+
 [ check_isnan val;
 	if ((val & $7F800000 == $7F800000) && (val & $7FFFFF ~= 0)) {
 		if (val & $80000000)
@@ -7419,18 +7432,21 @@ TestFloatClass FloatModTest
 		print " quo "; check_float(quo, $40E00000); print ", ";
 		@push $3FE00000;
 		@push $40C00000;
+		noop();
 		@fmod sp sp sp sp;
 		@pull quo;
 		@pull rem;
 		print "mod(6,1.75)=rem "; check_float(rem, $3F400000);
 		print " quo "; check_float(quo, $40400000); print ", ";
 		val1 = $40A40000;
+		noop();
 		@fmod val1 $3F000000 testglobal sp;
 		@pull quo;
 		print "mod(5.125,0.5)=rem "; check_float(testglobal, $3E000000);
 		print " quo "; check_float(quo, $41200000); print ", ";
 		@push $40800000;
 		testglobal = $3F400000;
+		noop();
 		@fmod sp testglobal rem testglobal2;
 		print "mod(4,0.75)=rem "; check_float(rem, $3E800000);
 		print " quo "; check_float(testglobal2, $40A00000); print "^";
@@ -8087,6 +8103,193 @@ TestFloatClass FloatExpTest
 		@pow M_INF $BFC00000 val;
 		print "pow(Inf,-1.5)="; check_float(val, M_0); print "^";
 		
+		count_failures();
+	];
+
+TestFloatClass FloatTrigTest
+	with name 'floattrig' 'trig',
+	testfunc [ val val1;
+		print "Floating-point trig functions:^^";
+
+		@gestalt 11 0 val; ! Float
+		if (~~val) {
+			print "Interpreter claims to not support floating-point. Skipping test.^^";
+			count_failures();
+			return;
+		}
+
+		val1 = $3F060A92;
+		@sin val1 val;
+		print "sin(pi/6)="; check_float(val, $3F000000); print ", ";
+		testglobal = $BF860A92;
+		@sin testglobal testglobal2;
+		print "sin(-pi/3)="; check_float(testglobal2, $BF5DB3D8); print ", ";
+		@push $3F490FDB;
+		noop();
+		@sin sp sp;
+		@pull val;
+		print "sin(pi/4)="; check_float(val, $3F3504F3); print "^";
+
+		val1 = $3F060A92;
+		@cos val1 val;
+		print "cos(pi/6)="; check_float(val, $3F5DB3D7); print ", ";
+		testglobal = $BF860A92;
+		@cos testglobal testglobal2;
+		print "cos(-pi/3)="; check_float(testglobal2, $3EFFFFFF); print ", ";
+		@push $3F490FDB;
+		noop();
+		@cos sp sp;
+		@pull val;
+		print "cos(pi/4)="; check_float(val, $3F3504F3); print "^";
+
+		val1 = $3F060A92;
+		@tan val1 val;
+		print "tan(pi/6)="; check_float(val, $3F13CD3A); print ", ";
+		testglobal = $BF860A92;
+		@tan testglobal testglobal2;
+		print "tan(-pi/3)="; check_float(testglobal2, $BFDDB3D8); print ", ";
+		@push $3F490FDB;
+		noop();
+		@tan sp sp;
+		@pull val;
+		print "tan(pi/4)="; check_float(val, M_1); print "^";
+		
+		val1 = $3F000000;
+		@asin val1 val;
+		print "asin(1/2)="; check_float(val, $3F060A92); print ", ";
+		testglobal = $BF5DB3D8;
+		@asin testglobal testglobal2;
+		print "asin(-sqrt(3)/2)="; check_float(testglobal2, $BF860A92); print ", ";
+		@push $3F3504F3;
+		noop();
+		@asin sp sp;
+		@pull val;
+		print "asin(sqrt(2)/2)="; check_float(val, $3F490FDA); print "^";
+
+		val1 = $3F5DB3D7;
+		@acos val1 val;
+		print "acos(sqrt(3)/2)="; check_float(val, $3F060A92); print ", ";
+		testglobal = $BEFFFFFF;
+		@acos testglobal testglobal2;
+		print "acos(-0.5)="; check_float(testglobal2, $40060A92); print ", ";
+		@push $3F3504F3;
+		noop();
+		@acos sp sp;
+		@pull val;
+		print "acos(sqrt(2)/2)="; check_float(val, $3F490FDB); print "^";
+
+		val1 = $3F13CD3A;
+		@atan val1 val;
+		print "atan(sqrt(3)/3)="; check_float(val, $3F060A92); print ", ";
+		testglobal = $BFDDB3D8;
+		@atan testglobal testglobal2;
+		print "atan(-sqrt(3))="; check_float(testglobal2, $BF860A92); print ", ";
+		@push M_1;
+		noop();
+		@atan sp sp;
+		@pull val;
+		print "atan(1)="; check_float(val, $3F490FDB); print "^";
+
+		new_line;
+
+		@sin M_0 val;
+		print "sin(0)="; check_float(val, M_0); print ", ";
+		@sin M_N0 val;
+		print "sin(-0)="; check_float(val, M_N0); print ", ";
+		@sin M_PI val;
+		print "sin(pi)="; check_float_e(val, M_0, $35000000); print ", ";
+		@sin M_2PI val;
+		print "sin(2pi)="; check_float_e(val, M_0, $35000000); print ", ";
+		@sin M_INF val;
+		print "sin(Inf)="; check_isnan(val); print ", ";
+		@sin M_NINF val;
+		print "sin(-Inf)="; check_isnan(val); print ", ";
+		@sin M_NAN val;
+		print "sin(NaN)="; check_isnan(val); print "^";
+
+		@cos M_0 val;
+		print "cos(0)="; check_float(val, M_1); print ", ";
+		@cos M_N0 val;
+		print "cos(-0)="; check_float(val, M_1); print ", ";
+		@cos M_PI val;
+		print "cos(pi)="; check_float_e(val, M_N1, $35000000); print ", ";
+		@cos M_2PI val;
+		print "cos(2pi)="; check_float_e(val, M_1, $35000000); print ", ";
+		@cos M_INF val;
+		print "cos(Inf)="; check_isnan(val); print ", ";
+		@cos M_NINF val;
+		print "cos(-Inf)="; check_isnan(val); print ", ";
+		@cos M_NAN val;
+		print "cos(NaN)="; check_isnan(val); print "^";
+		
+		@tan M_0 val;
+		print "tan(0)="; check_float(val, M_0); print ", ";
+		@tan M_N0 val;
+		print "tan(-0)="; check_float(val, M_N0); print ", ";
+		@tan M_PI val;
+		print "tan(pi)="; check_float_e(val, M_0, $35000000); print ", ";
+		@tan M_2PI val;
+		print "tan(2pi)="; check_float_e(val, M_0, $35000000); print ", ";
+		@tan M_INF val;
+		print "tan(Inf)="; check_isnan(val); print ", ";
+		@tan M_NINF val;
+		print "tan(-Inf)="; check_isnan(val); print ", ";
+		@tan M_NAN val;
+		print "tan(NaN)="; check_isnan(val); print "^";
+
+		@asin M_0 val;
+		print "asin(0)="; check_float(val, M_0); print ", ";
+		@asin M_N0 val;
+		print "asin(-0)="; check_float(val, M_N0); print ", ";
+		@asin M_1 val;
+		print "asin(1)="; check_float_e(val, $3FC90FDB, $30000000); print ", ";
+		@asin M_N1 val;
+		print "asin(-1)="; check_float_e(val, $BFC90FDB, $30000000); print ", ";
+		@asin $40000000 val;
+		print "asin(2)="; check_isnan(val); print ", ";
+		@asin $C0000000 val;
+		print "asin(-2)="; check_isnan(val); print ", ";
+		@asin M_INF val;
+		print "asin(Inf)="; check_isnan(val); print ", ";
+		@asin M_NINF val;
+		print "asin(-Inf)="; check_isnan(val); print ", ";
+		@asin M_NAN val;
+		print "asin(NaN)="; check_isnan(val); print "^";
+
+		@acos M_1 val;
+		print "acos(1)="; check_float(val, M_0); print ", ";
+		@acos M_N1 val;
+		print "acos(-1)="; check_float_e(val, M_PI, $30000000); print ", ";
+		@acos M_0 val;
+		print "acos(0)="; check_float_e(val, $3FC90FDB, $30000000); print ", ";
+		@acos M_N0 val;
+		print "acos(-0)="; check_float_e(val, $3FC90FDB, $30000000); print ", ";
+		@acos $40000000 val;
+		print "acos(2)="; check_isnan(val); print ", ";
+		@acos $C0000000 val;
+		print "acos(-2)="; check_isnan(val); print ", ";
+		@acos M_INF val;
+		print "acos(Inf)="; check_isnan(val); print ", ";
+		@acos M_NINF val;
+		print "acos(-Inf)="; check_isnan(val); print ", ";
+		@acos M_NAN val;
+		print "acos(NaN)="; check_isnan(val); print "^";
+
+		@atan M_0 val;
+		print "atan(0)="; check_float(val, M_0); print ", ";
+		@atan M_N0 val;
+		print "atan(-0)="; check_float(val, M_N0); print ", ";
+		@atan M_1 val;
+		print "atan(1)="; check_float_e(val, $3F490FDB, $30000000); print ", ";
+		@atan M_N1 val;
+		print "atan(-1)="; check_float_e(val, $BF490FDB, $30000000); print ", ";
+		@atan M_INF val;
+		print "atan(Inf)="; check_float_e(val, $3FC90FDB, $30000000); print ", ";
+		@atan M_NINF val;
+		print "atan(-Inf)="; check_float_e(val, $BFC90FDB, $30000000); print ", ";
+		@atan M_NAN val;
+		print "atan(NaN)="; check_isnan(val); print "^";
+
 		count_failures();
 	];
 	
