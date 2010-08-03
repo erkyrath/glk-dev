@@ -4034,6 +4034,26 @@ TestClass IOSysTest
 		count_failures();
 	];
 
+TestClass IOSys2Test
+	with name 'iosys2',
+	testfunc [ val;
+		print "I/O mode with different store operands:^";
+		print "This tests for a bug in older Glulxe (version 0.4.5 and
+			earlier). Calling @@64getiosys with two different store
+			operands (e.g., a local variable and a global variable)
+			did the wrong thing in those releases.
+			Because the bug has been around for so long,
+			the spec recommends not doing what this test does.^^";
+
+		val = -1;
+		testglobal = -1;
+		@getiosys testglobal val;
+		print "current="; check(testglobal, 2); print ", ";
+		check(val, 0); print "^";
+		
+		count_failures();
+	];
+
 Array ccomma_str -> $E0 ',' ' ' 0;
 	
 [ iosys_tester   loc;
@@ -8289,6 +8309,8 @@ TestFloatClass FloatTrigTest
 		print "atan(-Inf)="; check_float_e(val, $BFC90FDB, $30000000); print ", ";
 		@atan M_NAN val;
 		print "atan(NaN)="; check_isnan(val); print "^";
+
+		!### atan2
 
 		count_failures();
 	];
