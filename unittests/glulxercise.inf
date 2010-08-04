@@ -8420,6 +8420,182 @@ TestFloatClass FloatAtan2Test
 		count_failures();
 	];
 
+TestFloatClass FloatJumpFormTest
+	with name 'fjumpform',
+	testfunc [ val;
+		print "Floating-point jump with various operand forms:^^";
+
+		@gestalt 11 0 val; ! Float
+		if (~~val) {
+			print "Interpreter claims to not support floating-point. Skipping test.^^";
+			count_failures();
+			return;
+		}
+
+		val = 33;
+		@jisinf M_INF ?A0;
+		val = 44;
+		.A0;
+		print "Test A0="; check(val, 33); print ", ";
+		val = 33;
+		@jisinf M_1 ?A1;
+		val = 44;
+		.A1;
+		print "Test A1="; check(val, 44); print ", ";
+		
+		testglobal = M_NINF;
+		val = 33;
+		@jisinf testglobal ?A2;
+		val = 44;
+		.A2;
+		print "Test A2="; check(val, 33); print ", ";
+		testglobal = M_N1;
+		val = 33;
+		@jisinf testglobal ?A3;
+		val = 44;
+		.A3;
+		print "Test A3="; check(val, 44); print ", ";
+
+		@push M_INF;
+		val = 33;
+		@jisinf sp ?A4;
+		val = 44;
+		.A4;
+		print "Test A4="; check(val, 33); print ", ";
+		@push M_0;
+		val = 33;
+		@jisinf sp ?A5;
+		val = 44;
+		.A5;
+		print "Test A5="; check(val, 44); print "^";
+		
+
+		val = 11;
+		@jflt $40000000 $40400000 ?B0;
+		val = 22;
+		.B0;
+		print "Test B0="; check(val, 11); print ", ";
+		val = 11;
+		@jflt $40400000 $40000000 ?B1;
+		val = 22;
+		.B1;
+		print "Test B1="; check(val, 22); print ", ";
+		
+		testglobal = $C0400000;
+		val = 11;
+		@jflt testglobal $C0000000 ?B2;
+		val = 22;
+		.B2;
+		print "Test B2="; check(val, 11); print ", ";
+		val = 11;
+		@jflt $C0000000 testglobal ?B3;
+		val = 22;
+		.B3;
+		print "Test B3="; check(val, 22); print ", ";
+
+		@push $40400000;
+		@push $40000000;
+		val = 11;
+		@jflt sp sp ?B4;
+		val = 22;
+		.B4;
+		print "Test B4="; check(val, 11); print ", ";
+		@push $40000000;
+		@push $40400000;
+		val = 11;
+		@jflt sp sp ?B5;
+		val = 22;
+		.B5;
+		print "Test B5="; check(val, 22); print "^";
+		
+
+		val = 55;
+		@jfeq M_0 M_0 M_0 ?C0;
+		val = 66;
+		.C0;
+		print "Test C0="; check(val, 55); print ", ";
+		val = 55;
+		@jfeq M_1 M_0 M_0 ?C1;
+		val = 66;
+		.C1;
+		print "Test C1="; check(val, 66); print ", ";
+		
+		testglobal = M_0;
+		val = 55;
+		@jfeq testglobal M_0 M_0 ?C2;
+		val = 66;
+		.C2;
+		print "Test C2="; check(val, 55); print ", ";
+		val = 55;
+		@jfeq testglobal M_1 M_0 ?C3;
+		val = 66;
+		.C3;
+		print "Test C3="; check(val, 66); print ", ";
+
+		@push M_0;
+		@push M_0;
+		@push M_0;
+		val = 55;
+		@jfeq sp sp sp ?C4;
+		val = 66;
+		.C4;
+		print "Test C4="; check(val, 55); print ", ";
+		@push M_0;
+		@push M_0;
+		@push M_1;
+		val = 55;
+		@jfeq sp sp sp ?C5;
+		val = 66;
+		.C5;
+		print "Test C5="; check(val, 66); print "^";
+		
+
+		val = test_jfeq0($C0000000, $C0000000, M_0);
+		print "Test E0="; check(val, 0); print ", ";
+		val = test_jfeq1($C0400000, $C0400000, M_0);
+		print "E1="; check(val, 1); print ", ";
+		val = test_jfeq1($C0400000, M_0);
+		print "E2="; check(val, 99); print "^";
+
+		val = test_push_computed_jfeq($40E00000, $40E00000, M_0, 2);
+		print "Test F0="; check(val, 2); print ", ";
+		val = test_push_computed_jfeq($40E00000, $40E00000, M_0, 5);
+		print "F1="; check(val, 3); print ", ";
+		val = test_push_computed_jfeq($40E00000, $40E00000, M_0, 8);
+		print "F2="; check(val, 9); print ", ";
+		val = test_push_computed_jfeq($40E00000, $40E00000, M_0, 10);
+		print "F3="; check(val, 5); print ", ";
+		val = test_push_computed_jfeq($40E00000, $40C00000, M_0, 10);
+		print "F4="; check(val, 2); print ", ";
+		val = test_push_computed_jfeq(M_N1, M_N1, M_0, 1);
+		print "F5="; check(val, 1); print ", ";
+		val = test_push_computed_jfeq(M_0, M_0, M_0, 0);
+		print "F6="; check(val, 0); print "^";
+
+		count_failures();
+	];
+
+[ test_jfeq0 val1 val2 val3;
+	@"4:448" val1 val2 val3 0;
+	return 99;
+];
+
+[ test_jfeq1 val1 val2 val3;
+	@"4:448" val1 val2 val3 1;
+	return 99;
+];
+
+[ test_push_computed_jfeq val1 val2 val3 loc;
+	@copy 9 sp;
+	@"4:448" val1 val2 val3 loc;
+	@"1:49" 2;
+	@"1:49" 3;
+	@"1:49" sp;
+	@"1:49" 5;
+	@"1:49" 6;
+];
+
+
 #endif; ! FLOAT_OPCODES_AVAILABLE
 
 TestClass Safari5Test
