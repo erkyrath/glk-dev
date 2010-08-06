@@ -6416,6 +6416,85 @@ Constant M_NNAN = $FF800001; ! another, with a sign bit
 	}
 ];
 
+Array PowersOfTen --> 1 10 100 1000 10000 100000 1000000 10000000 100000000 1000000000;
+
+! Print a float in exponential notation: "[-]N.NNNe[+-]NN".
+! The precision is the number of digits after the decimal point
+! (at least one, default six).
+[ FloatExp val prec   log10val expo fexpo idig ix pow10;
+	if (prec == 0)
+		prec = 6;
+	if (prec > 9)
+		prec = 9;
+	pow10 = PowersOfTen --> prec;
+	
+	if (val & $80000000) {
+		@streamchar '-';
+		val = val & $7FFFFFFF;
+	}
+	@jisnan val ?IsNan;
+	@jisinf val ?IsInf;
+
+	if (val == 0) {
+		expo = 0;
+		idig = 0;
+		jump DoPrint;
+	}
+
+	! Take as an example val=123.5, with precision=6.
+	@log val sp;
+	@fdiv sp $40135D8E log10val; ! $40135D8E is log(10)
+	@floor log10val fexpo;
+	@ftonumn fexpo expo;
+	! expo is now the exponent (as an integer). For our example, expo=2.
+
+	@fsub log10val fexpo sp;
+	@numtof prec sp;
+	@fadd sp sp sp;
+	@fmul sp $40135D8E sp;
+	@exp sp sp;
+	! The stack value is now exp((log10val - fexpo + prec) * log(10)).
+	! We've shifted the decimal point left by expo digits (so that
+	! it's after the first nonzero digit), and then right by prec
+	! digits. In our example, that would be 1235000.0.
+	@ftonumn sp idig;
+	! Round to an integer, and we have 1235000. Notice that this is
+	! exactly the digits we want to print (if we stick a decimal point
+	! after the first).
+
+	.DoPrint;
+	for (ix=0 : ix<=prec : ix++) {
+		@div idig pow10 sp;
+		@mod sp 10 sp;
+		@streamnum sp;
+		if (ix == 0)
+			@streamchar '.';
+		@div pow10 10 pow10;
+	}
+
+	! Print the exponent. Convention is to use at least two digits.
+	@streamchar 'e';
+	if (expo < 0) {
+		@streamchar '-';
+		@neg expo expo;
+	}
+	else {
+		@streamchar '+';
+	}
+	if (expo < 10)
+		@streamchar '0';
+	@streamnum expo;
+	rtrue;
+
+	.IsNan;
+	@streamstr "NaN";
+	rtrue;
+
+	.IsInf;
+	@streamstr "Inf";
+	rtrue;
+];
+
 [ check_float val wanted;
 	if (val == wanted) {
 		print (Float) val;
@@ -9218,6 +9297,25 @@ TestFloatClass FloatCompareTest
 	.Yes;
 	rtrue;
 ];
+
+	
+TestFloatClass FloatprintTest
+	with name 'fprint' 'floatprint',
+	testfunc [ val;
+		print "Print floating-point numbers:^^";
+
+		@gestalt 11 0 val; ! Float
+		if (~~val) {
+			print "Interpreter claims to not support floating-point. Skipping test.^^";
+			count_failures();
+			return;
+		}
+
+		print (FloatExp) ($42C7FFFD), "^";
+		!### for real, now
+		
+		count_failures();
+	];
 
 #endif; ! FLOAT_OPCODES_AVAILABLE
 
