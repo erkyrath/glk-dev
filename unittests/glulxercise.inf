@@ -8596,9 +8596,9 @@ TestFloatClass FloatJumpFormTest
 ];
 
 TestFloatClass FloatJumpTest
-	with name 'fjump' 'fcompare',
+	with name 'fjump',
 	testfunc [ val;
-		print "Floating-point comparisons:^^";
+		print "Floating-point equality comparisons:^^";
 
 		@gestalt 11 0 val; ! Float
 		if (~~val) {
@@ -8648,6 +8648,36 @@ TestFloatClass FloatJumpTest
 		print "jisinf(other NaN)="; check(val, 0); print ", ";
 		val = test_jisinf($FFFFFFFF);
 		print "jisinf(other -NaN)="; check(val, 0); print "^";
+		
+		val = test_jfeq(M_0, M_0, M_0);
+		print "jfeq(0,0,0)="; check(val, 1); print ", ";
+		val = test_jfeq(M_0, M_N0, M_0);
+		print "jfeq(0,-0,0)="; check(val, 1); print ", ";
+		val = test_jfeq(M_0, M_0, M_N0);
+		print "jfeq(0,0,-0)="; check(val, 1); print ", ";
+		val = test_jfeq(M_0, $00000001, M_0);
+		print "jfeq(0,1.4e-45,0)="; check(val, 0); print ", ";
+		val = test_jfeq(M_0, $80000001, M_0);
+		print "jfeq(0,-1.4e-45,0)="; check(val, 0); print ", ";
+		val = test_jfeq($7F7FFFFF, $7F7FFFFF, M_0);
+		print "jfeq(3.4e+38,3.4e+38,0)="; check(val, 1); print ", ";
+		val = test_jfeq($7F7FFFFF, $7F7FFFFE, M_0);
+		print "jfeq(3.4e+38,3.4e+38,0)="; check(val, 0); print ", ";
+		
+		count_failures();
+	];
+	
+TestFloatClass FloatCompareTest
+	with name 'fcompare',
+	testfunc [ val;
+		print "Floating-point inequality comparisons:^^";
+
+		@gestalt 11 0 val; ! Float
+		if (~~val) {
+			print "Interpreter claims to not support floating-point. Skipping test.^^";
+			count_failures();
+			return;
+		}
 
 		val = test_jflt(M_0, M_0);
 		print "jflt(0,0)="; check(val, 0); print ", ";
@@ -8941,6 +8971,20 @@ TestFloatClass FloatJumpTest
 
 [ test_jfge val1 val2;
 	@jfge val1 val2 ?Yes;
+	rfalse;
+	.Yes;
+	rtrue;
+];
+
+[ test_jfeq val1 val2 val3;
+	@jfeq val1 val2 val3 ?Yes;
+	rfalse;
+	.Yes;
+	rtrue;
+];
+
+[ test_jfne val1 val2 val3;
+	@jfeq val1 val2 val3 ?Yes;
 	rfalse;
 	.Yes;
 	rtrue;
