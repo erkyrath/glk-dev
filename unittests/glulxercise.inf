@@ -364,6 +364,30 @@ Class TestFloatClass
 	return len;
 ];
 
+[ func_to_array _vararg_count arr arrlen func    str oldstr len;
+	@copy sp arr;
+	@copy sp arrlen;
+	@copy sp func;
+	_vararg_count = _vararg_count-3;
+	
+	oldstr = glk($0048); ! stream_get_current
+	str = glk($0043, arr, arrlen, 1, 0); ! stream_open_memory
+	if (str == 0) return 0;
+
+	glk($0047, str); ! stream_set_current
+
+	@call func _vararg_count 0;
+
+	glk($0047, oldstr); ! stream_set_current
+	@copy $ffffffff sp;
+	@copy str sp;
+	@glk $0044 2 0; ! stream_close
+	@copy sp len;
+	@copy sp 0;
+
+	return len;
+];
+
 [ string_to_uniarray val arr arrlen    str oldstr len;
 	oldstr = glk($0048); ! stream_get_current
 	str = glk($0139, arr, arrlen, 1, 0); ! stream_open_memory_uni
@@ -9304,7 +9328,11 @@ TestFloatClass FloatCompareTest
 TestFloatClass FloatprintTest
 	with name 'fprint' 'floatprint',
 	testfunc [ val;
-		print "Print floating-point numbers:^^";
+		print "Print floating-point numbers:^";
+		print "Note: this does not test an opcode. It tests the
+			FloatExp function, which is included in this test suite.
+			You are welcome to use that function in your Glulx program
+			or library.^^";
 
 		@gestalt 11 0 val; ! Float
 		if (~~val) {
@@ -9313,8 +9341,38 @@ TestFloatClass FloatprintTest
 			return;
 		}
 
-		print (FloatExp) ($42C7FFFD), "^";
-		!### for real, now
+		val = func_to_array(bigbuffer, BIGBUFSIZE, FloatExp, M_0);
+		check_str("0.000000e+00", val); print ", ";
+		val = func_to_array(bigbuffer, BIGBUFSIZE, FloatExp, M_N0);
+		check_str("-0.000000e+00", val); print ", ";
+		val = func_to_array(bigbuffer, BIGBUFSIZE, FloatExp, M_1);
+		check_str("1.000000e+00", val); print ", ";
+		val = func_to_array(bigbuffer, BIGBUFSIZE, FloatExp, M_N1);
+		check_str("-1.000000e+00", val); print "^";
+		
+		val = func_to_array(bigbuffer, BIGBUFSIZE, FloatExp, $3DCCCCCD);
+		check_str("1.000000e-01", val); print ", ";
+		val = func_to_array(bigbuffer, BIGBUFSIZE, FloatExp, $3D088889);
+		check_str("3.333334e-02", val); print ", ";
+		val = func_to_array(bigbuffer, BIGBUFSIZE, FloatExp, $40000000);
+		check_str("2.000001e+00", val); print ", ";
+		val = func_to_array(bigbuffer, BIGBUFSIZE, FloatExp, $42C80000);
+		check_str("1.000000e+02", val); print ", ";
+		val = func_to_array(bigbuffer, BIGBUFSIZE, FloatExp, $42C7FFFE);
+		check_str("1.000000e+02", val); print ", ";
+		val = func_to_array(bigbuffer, BIGBUFSIZE, FloatExp, $42C7FFFD);
+		check_str("9.999997e+01", val); print ", ";
+		val = func_to_array(bigbuffer, BIGBUFSIZE, FloatExp, $42FA0000);
+		check_str("1.250000e+02", val); print "^";
+		
+		val = func_to_array(bigbuffer, BIGBUFSIZE, FloatExp, M_INF);
+		check_str("Inf", val); print ", ";
+		val = func_to_array(bigbuffer, BIGBUFSIZE, FloatExp, M_NINF);
+		check_str("-Inf", val); print ", ";
+		val = func_to_array(bigbuffer, BIGBUFSIZE, FloatExp, M_NAN);
+		check_str("NaN", val); print ", ";
+		val = func_to_array(bigbuffer, BIGBUFSIZE, FloatExp, $FFFFFFFF);
+		check_str("-NaN", val); print "^";
 		
 		count_failures();
 	];
