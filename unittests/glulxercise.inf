@@ -9541,8 +9541,14 @@ TestFloatClass FloatprintTest
 		val = func_to_array(bigbuffer, BIGBUFSIZE, FloatDec, $4B189680);
 		check_str("10000000.00000", val); print "^";
 		
+		val = func_to_array(bigbuffer, BIGBUFSIZE, FloatDec, $1E3CE508);
+		check_str("0.00000", val); print ", ";
+		val = func_to_array(bigbuffer, BIGBUFSIZE, FloatDec, $9E3CE508);
+		check_str("-0.00000", val); print ", ";
 		val = func_to_array(bigbuffer, BIGBUFSIZE, FloatDec, $4F800000);
-		check_str("4294967296.00000", val); print ", ";
+		check_str("4294965440.00000", val); print ", ";
+		val = func_to_array(bigbuffer, BIGBUFSIZE, FloatDec, $7149F2CA);
+		check_str("1000000240000000000000000000000.00000", val); print "^";
 		
 		val = func_to_array(bigbuffer, BIGBUFSIZE, FloatDec, M_1, 1);
 		check_str("1.0", val); print ", ";
