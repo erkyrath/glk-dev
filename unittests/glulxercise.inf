@@ -6446,7 +6446,9 @@ Array PowersOfTen --> 1 10 100 1000 10000 100000 1000000 10000000 100000000 1000
 
 ! Print a float in exponential notation: "[-]N.NNNe[+-]NN".
 ! The precision is the number of digits after the decimal point
-! (at least one, no more than eight, default is five).
+! (at least one, no more than eight). The default is five, because
+! beyond that rounding errors creep in, and even exactly-represented
+! float values are printed with trailing fudgy digits.
 [ FloatExp val prec   log10val expo fexpo idig ix pow10;
 	if (prec == 0)
 		prec = 5;
@@ -9375,6 +9377,28 @@ TestFloatClass FloatprintTest
 		check_str("9.99999e+01", val); print ", ";
 		val = func_to_array(bigbuffer, BIGBUFSIZE, FloatExp, $42FA0000);
 		check_str("1.25000e+02", val); print "^";
+		
+		val = func_to_array(bigbuffer, BIGBUFSIZE, FloatExp, $0E736390);
+		check_str("3.00000e-30", val); print ", ";
+		val = func_to_array(bigbuffer, BIGBUFSIZE, FloatExp, $72B0B471);
+		check_str("6.99998e+30", val); print ", ";
+		val = func_to_array(bigbuffer, BIGBUFSIZE, FloatExp, $00034447);
+		check_str("3.00002e-40", val); print ", ";
+		val = func_to_array(bigbuffer, BIGBUFSIZE, FloatExp, $7957B443);
+		check_str("6.99998e+34", val); print "^";
+		
+		val = func_to_array(bigbuffer, BIGBUFSIZE, FloatExp, M_1, 1);
+		check_str("1.0e+00", val); print ", ";
+		val = func_to_array(bigbuffer, BIGBUFSIZE, FloatExp, M_1, 4);
+		check_str("1.0000e+00", val); print ", ";
+		val = func_to_array(bigbuffer, BIGBUFSIZE, FloatExp, M_1, 8);
+		check_str("1.00000024e+00", val); print ", ";
+		val = func_to_array(bigbuffer, BIGBUFSIZE, FloatExp, $40D945F4, 1);
+		check_str("6.8e+00", val); print ", ";
+		val = func_to_array(bigbuffer, BIGBUFSIZE, FloatExp, $40D945F4, 4);
+		check_str("6.7898e+00", val); print ", ";
+		val = func_to_array(bigbuffer, BIGBUFSIZE, FloatExp, $40D945F4, 8);
+		check_str("6.78979520e+00", val); print "^";
 		
 		val = func_to_array(bigbuffer, BIGBUFSIZE, FloatExp, M_INF);
 		check_str("Inf", val); print ", ";
