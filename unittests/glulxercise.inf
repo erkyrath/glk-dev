@@ -6578,7 +6578,7 @@ Array PowersOfTen --> 1 10 100 1000 10000 100000 1000000 10000000 100000000 1000
 		@sub extra0 8 extra0;
 		! extra0 is the number of zeroes we'll be padding with.
 		@numtof extra0 sp;
-		@sub log10val sp sp;
+		@fsub log10val sp sp;
 		@fmul sp $40135D8E sp;
 		@exp sp sp;
 		! The stack value is now exp((log10val - extra0) * log(10)).
