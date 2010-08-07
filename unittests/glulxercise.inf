@@ -6455,21 +6455,25 @@ Array PowersOfTen --> 1 10 100 1000 10000 100000 1000000 10000000 100000000 1000
 	if (prec > 8)
 		prec = 8;
 	pow10 = PowersOfTen --> prec;
-	
+
+	! Knock off the sign bit first.
 	if (val & $80000000) {
 		@streamchar '-';
 		val = val & $7FFFFFFF;
 	}
+	
 	@jisnan val ?IsNan;
 	@jisinf val ?IsInf;
 
-	if (val == 0) {
+	if (val == $0) {
 		expo = 0;
 		idig = 0;
 		jump DoPrint;
 	}
 
-	! Take as an example val=123.5, with precision=6.
+	! Take as an example val=123.5, with precision=6. The desired
+	! result is "1.23000e+02".
+	
 	@log val sp;
 	@fdiv sp $40135D8E log10val; ! $40135D8E is log(10)
 	@floor log10val fexpo;
@@ -6521,6 +6525,106 @@ Array PowersOfTen --> 1 10 100 1000 10000 100000 1000000 10000000 100000000 1000
 	if (expo < 10)
 		@streamchar '0';
 	@streamnum expo;
+	rtrue;
+
+	.IsNan;
+	@streamstr "NaN";
+	rtrue;
+
+	.IsInf;
+	@streamstr "Inf";
+	rtrue;
+];
+
+! Print a float in decimal notation: "[-]NNN.NNNNN".
+! The precision is the number of digits after the decimal point
+! (at least one, no more than eight). The default is five, because
+! beyond that rounding errors creep in, and even exactly-represented
+! float values are printed with trailing fudgy digits.
+[ FloatDec val prec   log10val int fint extra0 frac idig ix pow10;
+	if (prec == 0)
+		prec = 5;
+	if (prec > 8)
+		prec = 8;
+	pow10 = PowersOfTen --> prec;
+	
+	! Knock off the sign bit first.
+	if (val & $80000000) {
+		@streamchar '-';
+		val = val & $7FFFFFFF;
+	}
+	
+	@jisnan val ?IsNan;
+	@jisinf val ?IsInf;
+
+	! Take as an example val=123.5, with precision=6. The desired result
+	! is "123.50000".
+	
+	extra0 = 0;
+	@fmod val $3F800000 frac fint; ! $3F800000 is 1.0.
+	@ftonumz fint int;
+	! This converts the integer part of the value to an integer value;
+	! in our example, 123.
+	
+	if (int == $7FFFFFFF) {
+		! Looks like the integer part of the value is bigger than
+		! we can store in an int variable. (It could be as large
+		! as 3e+38.) We're going to have to use a log function to
+		! reduce it by some number of factors of 10, and then pad
+		! with zeroes.
+		@log fint sp;
+		@fdiv sp $40135D8E log10val; ! $40135D8E is log(10)
+		@ftonumz log10val extra0;
+		@sub extra0 8 extra0;
+		! extra0 is the number of zeroes we'll be padding with.
+		@numtof extra0 sp;
+		@sub log10val sp sp;
+		@fmul sp $40135D8E sp;
+		@exp sp sp;
+		! The stack value is now exp((log10val - extra0) * log(10)).
+		! We've shifted the decimal point far enough left to leave
+		! about eight digits, which is all we can print as an integer.
+		@ftonumz sp int;
+	}
+
+	! Print the integer part.
+	@streamnum int;
+	for (ix=0 : ix<extra0 : ix++)
+		@streamchar '0';
+
+	@streamchar '.';
+
+	! Now we need to print the frac part, which is .5.
+	
+	@log frac sp;
+	@fdiv sp $40135D8E log10val; ! $40135D8E is log(10)
+	@numtof prec sp;
+	@fadd log10val sp sp;
+	@fmul sp $40135D8E sp;
+	@exp sp sp;
+	! The stack value is now exp((frac + prec) * log(10)).
+	! We've shifted the decimal point right by prec
+	! digits. In our example, that would be 50000.0.
+	@ftonumn sp idig;
+	! Round to an integer, and we have 50000. Notice that this is
+	! exactly the (post-decimal-point) digits we want to print.
+
+	.DoPrint;
+	
+	if (idig >= pow10) {
+		! Rounding errors have left us outside the decimal range of
+		! [0.0, 1.0) where we should be. I'm not sure this is possible,
+		! actually, but we'll just adjust downward.
+		idig = pow10 - 1;
+	}
+	
+	@div pow10 10 pow10;
+	for (ix=0 : ix<prec : ix++) {
+		@div idig pow10 sp;
+		@mod sp 10 sp;
+		@streamnum sp;
+		@div pow10 10 pow10;
+	}
 	rtrue;
 
 	.IsNan;
