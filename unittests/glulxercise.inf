@@ -9512,6 +9512,59 @@ TestFloatClass FloatprintTest
 		check_str("NaN", val); print ", ";
 		val = func_to_array(bigbuffer, BIGBUFSIZE, FloatExp, $FFFFFFFF);
 		check_str("-NaN", val); print "^";
+
+		new_line;
+		
+		val = func_to_array(bigbuffer, BIGBUFSIZE, FloatDec, M_0);
+		check_str("0.00000", val); print ", ";
+		val = func_to_array(bigbuffer, BIGBUFSIZE, FloatDec, M_N0);
+		check_str("-0.00000", val); print ", ";
+		val = func_to_array(bigbuffer, BIGBUFSIZE, FloatDec, M_1);
+		check_str("1.00000", val); print ", ";
+		val = func_to_array(bigbuffer, BIGBUFSIZE, FloatDec, M_N1);
+		check_str("-1.00000", val); print "^";
+
+		val = func_to_array(bigbuffer, BIGBUFSIZE, FloatDec, $3DCCCCCD);
+		check_str("0.10000", val); print ", ";
+		val = func_to_array(bigbuffer, BIGBUFSIZE, FloatDec, $3CA3D70A);
+		check_str("0.02000", val); print ", ";
+		val = func_to_array(bigbuffer, BIGBUFSIZE, FloatDec, $3D088889);
+		check_str("0.03333", val); print ", ";
+		val = func_to_array(bigbuffer, BIGBUFSIZE, FloatDec, $414587E7);
+		check_str("12.34568", val); print ", ";
+		val = func_to_array(bigbuffer, BIGBUFSIZE, FloatDec, $C2F0B0FD);
+		check_str("-120.34568", val); print ", ";
+		val = func_to_array(bigbuffer, BIGBUFSIZE, FloatDec, $47C3502C);
+		check_str("100000.34375", val); print ", ";
+		val = func_to_array(bigbuffer, BIGBUFSIZE, FloatDec, $49742406);
+		check_str("1000000.37500", val); print ", ";
+		val = func_to_array(bigbuffer, BIGBUFSIZE, FloatDec, $4B189680);
+		check_str("10000000.00000", val); print "^";
+		
+		val = func_to_array(bigbuffer, BIGBUFSIZE, FloatDec, $4F800000);
+		check_str("4294967296.00000", val); print ", ";
+		
+		val = func_to_array(bigbuffer, BIGBUFSIZE, FloatDec, M_1, 1);
+		check_str("1.0", val); print ", ";
+		val = func_to_array(bigbuffer, BIGBUFSIZE, FloatDec, M_1, 4);
+		check_str("1.0000", val); print ", ";
+		val = func_to_array(bigbuffer, BIGBUFSIZE, FloatDec, M_1, 8);
+		check_str("1.00000000", val); print ", ";
+		val = func_to_array(bigbuffer, BIGBUFSIZE, FloatDec, $40D945F4, 1);
+		check_str("6.8", val); print ", ";
+		val = func_to_array(bigbuffer, BIGBUFSIZE, FloatDec, $40D945F4, 4);
+		check_str("6.7898", val); print ", ";
+		val = func_to_array(bigbuffer, BIGBUFSIZE, FloatDec, $40D945F4, 8);
+		check_str("6.78978832", val); print "^";
+		
+		val = func_to_array(bigbuffer, BIGBUFSIZE, FloatDec, M_INF);
+		check_str("Inf", val); print ", ";
+		val = func_to_array(bigbuffer, BIGBUFSIZE, FloatDec, M_NINF);
+		check_str("-Inf", val); print ", ";
+		val = func_to_array(bigbuffer, BIGBUFSIZE, FloatDec, M_NAN);
+		check_str("NaN", val); print ", ";
+		val = func_to_array(bigbuffer, BIGBUFSIZE, FloatDec, $FFFFFFFF);
+		check_str("-NaN", val); print "^";
 		
 		count_failures();
 	];
