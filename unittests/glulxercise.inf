@@ -6446,12 +6446,12 @@ Array PowersOfTen --> 1 10 100 1000 10000 100000 1000000 10000000 100000000 1000
 
 ! Print a float in exponential notation: "[-]N.NNNe[+-]NN".
 ! The precision is the number of digits after the decimal point
-! (at least one, default six).
+! (at least one, no more than eight, default is five).
 [ FloatExp val prec   log10val expo fexpo idig ix pow10;
 	if (prec == 0)
-		prec = 6;
-	if (prec > 9)
-		prec = 9;
+		prec = 5;
+	if (prec > 8)
+		prec = 8;
 	pow10 = PowersOfTen --> prec;
 	
 	if (val & $80000000) {
@@ -6489,6 +6489,15 @@ Array PowersOfTen --> 1 10 100 1000 10000 100000 1000000 10000000 100000000 1000
 	! after the first).
 
 	.DoPrint;
+	
+	if (idig >= 10*pow10) {
+		! Rounding errors have left us outside the decimal range of
+		! [1.0, 10.0) where we should be. Adjust to the next higher
+		! exponent.
+		expo++;
+		@div idig 10 idig;
+	}
+	
 	for (ix=0 : ix<=prec : ix++) {
 		@div idig pow10 sp;
 		@mod sp 10 sp;
@@ -9342,28 +9351,30 @@ TestFloatClass FloatprintTest
 		}
 
 		val = func_to_array(bigbuffer, BIGBUFSIZE, FloatExp, M_0);
-		check_str("0.000000e+00", val); print ", ";
+		check_str("0.00000e+00", val); print ", ";
 		val = func_to_array(bigbuffer, BIGBUFSIZE, FloatExp, M_N0);
-		check_str("-0.000000e+00", val); print ", ";
+		check_str("-0.00000e+00", val); print ", ";
 		val = func_to_array(bigbuffer, BIGBUFSIZE, FloatExp, M_1);
-		check_str("1.000000e+00", val); print ", ";
+		check_str("1.00000e+00", val); print ", ";
 		val = func_to_array(bigbuffer, BIGBUFSIZE, FloatExp, M_N1);
-		check_str("-1.000000e+00", val); print "^";
+		check_str("-1.00000e+00", val); print "^";
 		
 		val = func_to_array(bigbuffer, BIGBUFSIZE, FloatExp, $3DCCCCCD);
-		check_str("1.000000e-01", val); print ", ";
+		check_str("1.00000e-01", val); print ", ";
 		val = func_to_array(bigbuffer, BIGBUFSIZE, FloatExp, $3D088889);
-		check_str("3.333334e-02", val); print ", ";
+		check_str("3.33333e-02", val); print ", ";
 		val = func_to_array(bigbuffer, BIGBUFSIZE, FloatExp, $40000000);
-		check_str("2.000001e+00", val); print ", ";
+		check_str("2.00000e+00", val); print ", ";
 		val = func_to_array(bigbuffer, BIGBUFSIZE, FloatExp, $42C80000);
-		check_str("1.000000e+02", val); print ", ";
+		check_str("1.00000e+02", val); print ", ";
 		val = func_to_array(bigbuffer, BIGBUFSIZE, FloatExp, $42C7FFFE);
-		check_str("1.000000e+02", val); print ", ";
+		check_str("1.00000e+02", val); print ", ";
 		val = func_to_array(bigbuffer, BIGBUFSIZE, FloatExp, $42C7FFFD);
-		check_str("9.999997e+01", val); print ", ";
+		check_str("1.00000e+02", val); print ", ";
+		val = func_to_array(bigbuffer, BIGBUFSIZE, FloatExp, $42C7FFF0);
+		check_str("9.99999e+01", val); print ", ";
 		val = func_to_array(bigbuffer, BIGBUFSIZE, FloatExp, $42FA0000);
-		check_str("1.250000e+02", val); print "^";
+		check_str("1.25000e+02", val); print "^";
 		
 		val = func_to_array(bigbuffer, BIGBUFSIZE, FloatExp, M_INF);
 		check_str("Inf", val); print ", ";
