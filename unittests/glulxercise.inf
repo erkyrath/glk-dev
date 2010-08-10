@@ -7822,6 +7822,49 @@ TestFloatClass FloatModTest
 
 		new_line;
 
+		val1 = $40200000;
+		val2 = M_1;
+		@fmod val1 val2 rem quo;
+		print "mod(2.5,1)=rem "; check_float(rem, $3F000000);
+		print " quo "; check_float(quo, $40000000); print ", ";
+		val1 = $40200000;
+		val2 = M_N1;
+		@fmod val1 val2 rem quo;
+		print "mod(2.5,-1)=rem "; check_float(rem, $3F000000);
+		print " quo "; check_float(quo, $40000000); print ", ";
+		val1 = $C0200000;
+		val2 = M_1;
+		@fmod val1 val2 rem quo;
+		print "mod(-2.5,1)=rem "; check_float(rem, $BF000000);
+		print " quo "; check_float(quo, $C0000000); print ", ";
+		val1 = $C0200000;
+		val2 = M_N1;
+		@fmod val1 val2 rem quo;
+		print "mod(-2.5,-1)=rem "; check_float(rem, $BF000000);
+		print " quo "; check_float(quo, $C0000000); print ", ";
+		val1 = M_0;
+		val2 = M_1;
+		@fmod val1 val2 rem quo;
+		print "mod(2.5,1)=rem "; check_float(rem, M_0);
+		print " quo "; check_float(quo, M_0); print ", ";
+		val1 = M_0;
+		val2 = M_N1;
+		@fmod val1 val2 rem quo;
+		print "mod(2.5,-1)=rem "; check_float(rem, M_0);
+		print " quo "; check_float(quo, M_0); print ", ";
+		val1 = M_N0;
+		val2 = M_1;
+		@fmod val1 val2 rem quo;
+		print "mod(-2.5,1)=rem "; check_float(rem, M_N0);
+		print " quo "; check_float(quo, M_N0); print ", ";
+		val1 = M_N0;
+		val2 = M_N1;
+		@fmod val1 val2 rem quo;
+		print "mod(-2.5,-1)=rem "; check_float(rem, M_N0);
+		print " quo "; check_float(quo, M_N0); print "^";
+
+		new_line;
+
 		@fmod $40A40000 $40000000 rem quo;
 		print "mod(5.125,2)=rem "; check_float(rem, $3F900000);
 		print " quo "; check_float(quo, $40000000); print ", ";
