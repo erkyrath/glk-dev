@@ -6685,6 +6685,42 @@ TestFloatClass FloatConvTest
 			return;
 		}
 
+		testglobal = M_0;
+		@fadd testglobal M_0 val;
+		print "0="; check_hex(val, M_0); print ", ";
+		testglobal = M_N0;
+		@fadd testglobal M_N0 val;
+		print "-0="; check_hex(val, M_N0); print ", ";
+		testglobal = M_1;
+		@fadd testglobal M_0 val;
+		print "1="; check_hex(val, M_1); print ", ";
+		testglobal = $00010000;
+		@fadd testglobal M_0 val;
+		print "9.2e-41="; check_hex(val, $00010000); print ", ";
+		testglobal = $00200001;
+		@fadd testglobal M_0 val;
+		print "2.9e-39="; check_hex(val, $00200001); print ", ";
+		testglobal = $007FFFFF;
+		@fadd testglobal M_0 val;
+		print "1.2e-38="; check_hex(val, $007FFFFF); print ", ";
+		testglobal = $00800000;
+		@fadd testglobal M_0 val;
+		print "1.2e-38="; check_hex(val, $00800000); print ", ";
+		testglobal = $08000000;
+		@fadd testglobal M_0 val;
+		print "3.8e-34="; check_hex(val, $08000000); print ", ";
+		testglobal = $7F7FFFFF;
+		@fadd testglobal M_0 val;
+		print "3.4e+38="; check_hex(val, $7F7FFFFF); print ", ";
+		testglobal = M_INF;
+		@fadd testglobal M_0 val;
+		print "Inf="; check_hex(val, M_INF); print ", ";
+		testglobal = M_NINF;
+		@fadd testglobal M_0 val;
+		print "-Inf="; check_hex(val, M_NINF); print "^";
+
+		new_line;
+
 		@numtof 0 val;
 		print "numtof 0="; check_hex(val, 0); print ", ";
 		@numtof 1 val;
@@ -7571,6 +7607,8 @@ TestFloatClass FloatArithTest
 		print "add(1,0)="; check_float(val, M_1); print ", ";
 		@fadd M_N0 M_1 val;
 		print "add(-0,1)="; check_float(val, M_1); print ", ";
+		@fadd M_N0 M_0 val;
+		print "add(-0,0)="; check_float(val, M_0); print ", ";
 		@fadd $42F60000 M_N0 val;
 		print "add(123,-0)="; check_float(val, $42F60000); print ", ";
 		@fadd M_0 $42F60000 val;
