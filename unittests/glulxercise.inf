@@ -6397,49 +6397,24 @@ Constant M_NINF = $FF800000; ! negative infinity
 Constant M_NAN  = $7F800001; ! one of many NaN values
 Constant M_NNAN = $FF800001; ! another, with a sign bit
 
-[ Float val   exp mant byte;
-	if (val & $80000000) {
-		print "-";
-		val = val & $7FFFFFFF;
-	}
-	else {
-		print "+";
-	}
-	
-	if (val == M_INF) {
-		print "Inf";
-		return;
-	}
-	if (val == M_0) {
-		print "0";
-		return;
-	}
-	if ((val & $7F800000 == $7F800000) && (val & $7FFFFF ~= 0)) {
-		print "NaN";
-		return;
-	}
+! Print a float. This uses exponential notation ("[-]N.NNNe[+-]NN") if
+! the exponent is not between 6 and -4. If it is (that is, if the
+! absolute value is near 1.0) then it uses decimal notation ("[-]NNN.NNNNN").
+! The precision is the number of digits after the decimal point
+! (at least one, no more than eight). The default is five, because
+! beyond that rounding errors creep in, and even exactly-represented
+! float values are printed with trailing fudgy digits.
+[ Float val prec   pval;
+	pval = val & $7FFFFFFF;
 
-	@ushiftr val 23 exp;
-	exp = exp & $FF;
-	mant = (val & $7FFFFF);
+	@jz pval ?UseFloatDec;
+	@jfge pval $49742400 ?UseFloatExp; ! 1000000.0
+	@jflt pval $38D1B717 ?UseFloatExp; ! 0.0001
 
-	if (exp) {
-		print "2@@94", (exp-127), "*1.";
-	}
-	else {
-		print "2@@94-126*0.";
-	}
-	
-	while (mant) {
-		byte = mant & $780000;
-		@shiftl mant 4 mant;
-		mant = (mant & $7FFFFF);
-		@ushiftr byte 19 byte;
-		if (byte <= 9)
-			print (char) (byte+'0');
-		else
-			print (char) (byte-10+'A');
-	}
+	.UseFloatDec;
+	return FloatDec(val, prec);
+	.UseFloatExp;
+	return FloatExp(val, prec);
 ];
 
 Array PowersOfTen --> 1 10 100 1000 10000 100000 1000000 10000000 100000000 1000000000;
@@ -9778,7 +9753,30 @@ TestFloatClass FloatprintTest
 		check_str("NaN", val); print ", ";
 		val = func_to_array(bigbuffer, BIGBUFSIZE, FloatDec, $FFFFFFFF);
 		check_str("-NaN", val); print "^";
-		
+
+		new_line;
+
+		val = func_to_array(bigbuffer, BIGBUFSIZE, Float, M_1, 2);
+		check_str("1.00", val); print ", ";
+		val = func_to_array(bigbuffer, BIGBUFSIZE, Float, M_1);
+		check_str("1.00000", val); print ", ";
+		val = func_to_array(bigbuffer, BIGBUFSIZE, Float, $497423F0);
+		check_str("999999.00000", val); print ", ";
+		val = func_to_array(bigbuffer, BIGBUFSIZE, Float, $C97423F0);
+		check_str("-999999.00000", val); print ", ";
+		val = func_to_array(bigbuffer, BIGBUFSIZE, Float, $497424A0);
+		check_str("1.00001e+06", val); print ", ";
+		val = func_to_array(bigbuffer, BIGBUFSIZE, Float, $C97424A0);
+		check_str("-1.00001e+06", val); print ", ";
+		val = func_to_array(bigbuffer, BIGBUFSIZE, Float, $38D1B717);
+		check_str("0.00010", val); print ", ";
+		val = func_to_array(bigbuffer, BIGBUFSIZE, Float, $B8D1B717);
+		check_str("-0.00010", val); print ", ";
+		val = func_to_array(bigbuffer, BIGBUFSIZE, Float, $38BCBE62, 4);
+		check_str("9.0000e-05", val); print ", ";
+		val = func_to_array(bigbuffer, BIGBUFSIZE, Float, $B8BCBE62, 4);
+		check_str("-9.0000e-05", val); print "^";
+
 		count_failures();
 	];
 
