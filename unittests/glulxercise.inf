@@ -9205,6 +9205,12 @@ TestFloatClass FloatJumpTest
 		print "jfeq(NaN,NaN,0)="; check(val, 0); print ", ";
 		val = test_jfeq(M_NAN, M_NAN, M_NAN);
 		print "jfeq(NaN,NaN,NaN)="; check(val, 0); print ", ";
+		val = test_jfeq(M_INF, M_INF, M_NAN);
+		print "jfeq(Inf,Inf,NaN)="; check(val, 0); print ", ";
+		val = test_jfeq(M_INF, M_NINF, M_NAN);
+		print "jfeq(Inf,-Inf,NaN)="; check(val, 0); print ", ";
+		val = test_jfeq(M_INF, M_0, M_NAN);
+		print "jfeq(Inf,0,NaN)="; check(val, 0); print ", ";
 		val = test_jfeq(M_0, M_NAN, M_INF);
 		print "jfeq(0,NaN,Inf)="; check(val, 0); print ", ";
 		val = test_jfeq(M_NAN, M_NAN, M_INF);
@@ -9327,6 +9333,12 @@ TestFloatClass FloatJumpTest
 		print "jfne(NaN,NaN,0)="; check(val, 1); print ", ";
 		val = test_jfne(M_NAN, M_NAN, M_NAN);
 		print "jfne(NaN,NaN,NaN)="; check(val, 1); print ", ";
+		val = test_jfne(M_INF, M_INF, M_NAN);
+		print "jfne(Inf,Inf,NaN)="; check(val, 1); print ", ";
+		val = test_jfne(M_INF, M_NINF, M_NAN);
+		print "jfne(Inf,-Inf,NaN)="; check(val, 1); print ", ";
+		val = test_jfne(M_INF, M_0, M_NAN);
+		print "jfne(Inf,0,NaN)="; check(val, 1); print ", ";
 		val = test_jfne(M_0, M_NAN, M_INF);
 		print "jfne(0,NaN,Inf)="; check(val, 1); print ", ";
 		val = test_jfne(M_NAN, M_NAN, M_INF);
