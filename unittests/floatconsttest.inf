@@ -1,0 +1,188 @@
+Constant Story "FloatConstTest";
+Constant Headline "Not a game.^";
+
+Release 1;
+
+Global gg_mainwin;
+
+Constant HDR_GLULXVERSION  $04;     ! long word
+Constant ROM_GAMERELEASE   $34;     ! short word
+Constant ROM_GAMESERIAL    $36;     ! six ASCII characters
+
+Global failures;
+
+[ Main loc;
+	@setiosys 2 0;
+	@push 201; @push 3; @push 0; @push 0; @push 0;
+	@glk $0023 5 gg_mainwin;
+
+	@push gg_mainwin;
+	@glk $002F 1 loc;
+
+	Banner();
+	new_line;
+	RunTest();
+];
+
+[ Banner  i ix;
+    if (Story ~= 0) {
+        glk($0086, 3); ! set header style
+        print (string) Story;
+        glk($0086, 0); ! set normal style
+    }
+    if (Headline ~= 0) print ": ", (string) Headline;
+    print "Release ";
+    @aloads ROM_GAMERELEASE 0 i;
+    print i;
+    print " / Serial number ";
+    for (i=0 : i<6 : i++) print (char) ROM_GAMESERIAL->i;
+    print " / Inform v"; inversion;
+    print ", compiler options ";
+    i = false;
+    #Ifdef STRICT_MODE;
+    print "S"; i++;
+    #Endif; ! STRICT_MODE
+    #Ifdef INFIX;
+    print "X"; i++;
+    #Ifnot;
+    #Ifdef DEBUG;
+    print "D"; i++;
+    #Endif; ! DEBUG
+    #Endif; ! INFIX
+    if (~~i) print "(none)";
+    new_line;
+
+    @gestalt 1 0 ix;
+    print "Interpreter version ", ix / $10000, ".", (ix & $FF00) / $100,
+    ".", ix & $FF, " / ";
+    @gestalt 0 0 ix;
+    print "VM ", ix / $10000, ".", (ix & $FF00) / $100, ".", ix & $FF, " / ";
+    ix = HDR_GLULXVERSION-->0;
+    print "game file format ", ix / $10000, ".", (ix & $FF00) / $100, ".", ix & $FF, "^";
+];
+
+[ Hex val   byte initial ix;
+	print "$";
+	initial = true;
+	for (ix=0 : ix<8 : ix++) {
+		@ushiftr val 28 byte;
+		@shiftl val 4 val;
+		byte = byte & $0F;
+		if (byte == 0 && initial && ix < 7)
+			continue;
+		initial = false;
+		if (byte <= 9)
+			print (char) (byte+'0');
+		else
+			print (char) (byte-10+'A');
+	}
+];
+
+[ check label val target;
+	if (val == target) {
+		print (string) label, ": ", (Hex) val, "^";
+		rtrue;
+	}
+	
+	failures++;
+	print (string) label, ": ", (Hex) val;
+	print " FAIL -- should be ", (Hex) target, "^";
+];
+
+[ RunTest;
+	failures = 0;
+	
+	check("+Inf", FLOAT_INFINITY, $7F800000);
+	check("-Inf", FLOAT_NINFINITY, $FF800000);
+	check("NaN", FLOAT_NAN, $7FC00000);
+
+	check("$+0", $+0, $00000000);
+	check("$+0.", $+0., $00000000);
+	check("$+.0", $+.0, $00000000);
+	check("$+0.0", $+0.0, $00000000);
+	check("$+0000000000000000000.000000000000000000e000000000000000000", $+0000000000000000000.000000000000000000e000000000000000000, $00000000);
+
+	check("$+0.0+1", $+0.0+1, 1);  ! parses as ($+0.0 + 1)
+	check("$+0.0-1", $+0.0-1, -1); ! parses as ($+0.0 - 1)
+	check("$+0.0e0+2", $+0.0e0+2, 2);  ! parses as ($+0.0e0 + 2)
+	
+	check("$+1", $+1, $3F800000);
+	check("$+1.", $+1., $3F800000);
+	check("$+1.0", $+1.0, $3F800000);
+	check("$+1e0", $+1e0, $3F800000);
+	check("$+1E0", $+1E0, $3F800000);
+	check("$+1.0e0", $+1.0e0, $3F800000);
+	check("$+1e+0", $+1e+0, $3F800000);
+	check("$+1.0e+0", $+1.0e+0, $3F800000);
+	check("$+1e-0", $+1e-0, $3F800000);
+	check("$+1.0e-0", $+1.0e-0, $3F800000);
+
+	check("$+10e-1", $+10e-1, $3F800000);
+	check("$+10.e-01", $+10.e-01, $3F800000);
+	check("$+.1e1", $+.1e1, $3F800000);
+	check("$+0.1e1", $+0.1e1, $3F800000);
+	check("$+.01e+2", $+.01e+2, $3F800000);
+
+	check("$-0", $-0, $80000000);
+	check("$-.0", $-.0, $80000000);
+	check("$-1", $-1, $BF800000);
+	check("$+2", $+2, $40000000);
+	check("$+10", $+10, $41200000);
+	check("$-123", $-123, $C2F60000);
+
+	check("$+.5", $+.5, $3F000000);
+	check("$+0.5", $+0.5, $3F000000);
+	check("$+00.50", $+00.50, $3F000000);
+	check("$-00.50000", $-00.50000, $BF000000);
+	check("$-5.5", $-5.5, $C0B00000);
+	check("$-0000000000005.5", $-0000000000005.5, $C0B00000);
+	check("$+5.50000000000000", $+5.50000000000000, $C0B00000);
+	check("$-3.33333333333333", $-3.33333333333333, $C0555555);
+	
+	check("$+123.456e-01", $+123.456e-01, $41458794);
+	check("$+123.456e+02", $+123.456e+02, $4640E666);
+	
+	check("$+000.00000000765e+10", $+000.00000000765e+10, $42990000);
+	check("$+1.00000000765e+10", $+1.00000000765e+10, $501502F9);
+	check("$+1.10000000765e+10", $+1.10000000765e+10, $5023E9AC);
+	check("$+1.0000001e+10", $+1.0000001e+10, $501502FA);
+	check("$+1.0000001e+11", $+1.0000001e+11, $51BA43B8);
+	
+	check("$+.9999999", $+.9999999, $3F7FFFFE);
+	check("$+.99999995", $+.99999995, $3F7FFFFF);
+	check("$+.99999999", $+.99999999, $3F800000);
+	check("$-9.999999e1", $-9.999999e1, $C2C7FFFF);
+	check("$-9.999999e0", $-9.999999e0, $C11FFFFF);
+	check("$-9.999999e-1", $-9.999999e-1, $BF7FFFFE);
+	check("$+9.9999999e1", $+9.9999999e1, $42C80000);
+	check("$-9.9999999e0", $-9.9999999e0, $C1200000);
+	check("$+9.9999999e-1", $+9.9999999e-1, $3F800000);
+	
+	check("$+10000000", $+10000000, $4B189680);
+	check("$+1000000000", $+1000000000, $4E6E6B28);
+	check("$+100000000000", $+100000000000, $51BA43B7);
+	check("$-2000000000000000", $-2000000000000000, $D8E35FA9);
+
+	check("$+3.4e38", $+3.4e38, $7F7FC99E);
+	check("$-3.4e38", $-3.4e38, $FF7FC99E);
+	check("$+3.5e38", $+3.5e38, $7F800000);
+	check("$-3.5e38", $-3.5e38, $FF800000);
+
+	check("$+1e-35", $+1e-35, $0554AD2E);
+	check("$+1e-40", $+1e-40, $000116C2);
+	check("$-0.5e-40", $-0.5e-40, $80008B61);
+	check("$+2.15e-45", $+2.15e-45, $00000002);
+	check("$+2e-45", $+2e-45, $00000001);
+	check("$+0.000000000000000000000000000000000000000000002", $+0.000000000000000000000000000000000000000000002, $00000001);
+	check("$+0.0000000000000000000000000000000000000000002e-2", $+0.0000000000000000000000000000000000000000002e-2, $00000001);
+	check("$+0.7e-45", $+0.7e-45, $00000000);
+	check("$-0.7e-45", $-0.7e-45, $80000000);
+	
+	new_line;
+	if (failures == 0) {
+		print "All tests passed.^";
+	}
+	else {
+		print failures, " tests failed!^";
+	}
+];
