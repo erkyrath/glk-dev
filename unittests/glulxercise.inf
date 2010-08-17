@@ -8769,37 +8769,37 @@ TestFloatClass FloatAtan2Test
 		}
 
 		@atan2 M_1 M_1 val; 
-		print "atan2(1,1)="; check_float_e(val, $3F490FDB, $20000000); print ", ";
+		print "atan2(1,1)="; check_float_e(val, $3F490FDB, $34000000); print ", ";
 		val1 = M_1;
 		@atan2 val1 M_N1 val; 
-		print "atan2(1,-1)="; check_float_e(val, $4016CBE4, $20000000); print ", ";
+		print "atan2(1,-1)="; check_float_e(val, $4016CBE4, $35000000); print ", ";
 		val2 = M_N1;
 		@atan2 M_N1 val2 val; 
-		print "atan2(-1,-1)="; check_float_e(val, $C016CBE4, $20000000); print ", ";
+		print "atan2(-1,-1)="; check_float_e(val, $C016CBE4, $35000000); print ", ";
 		val1 = M_N1;
 		val2 = M_1;
 		@atan2 val1 val2 val; 
-		print "atan2(-1,1)="; check_float_e(val, $BF490FDB, $20000000); print "^";
+		print "atan2(-1,1)="; check_float_e(val, $BF490FDB, $34000000); print "^";
 
 		new_line;
 		
 		@atan2 $3F800000 $40000000 testglobal;
-		print "atan2(1,2)="; check_float_e(testglobal, $3EED6338, $20000000); print ", ";
+		print "atan2(1,2)="; check_float_e(testglobal, $3EED6338, $33800000); print ", ";
 		testglobal = $40000000;
 		testglobal2 = $BF000000;
 		@atan2 testglobal testglobal2 val;
-		print "atan2(2,-0.5)="; check_float_e(val, $3FE86B51, $20000000); print ", ";
+		print "atan2(2,-0.5)="; check_float_e(val, $3FE86B51, $34800000); print ", ";
 		val1 = $BE000000;
 		val2 = $C1000000;
 		@atan2 val1 val2 sp;
 		@pull val;
-		print "atan2(-0.125,-8)="; check_float_e(val, $C0480FE0, $20000000); print ", ";
+		print "atan2(-0.125,-8)="; check_float_e(val, $C0480FE0, $35000000); print ", ";
 		@push $40400000;
 		@push $C0000000;
 		noop();
 		@atan2 sp sp sp;
 		@pull val;
-		print "atan2(-2,3)="; check_float_e(val, $BF168757, $20000000); print "^";
+		print "atan2(-2,3)="; check_float_e(val, $BF168757, $34000000); print "^";
 
 		new_line;
 
@@ -8841,9 +8841,9 @@ TestFloatClass FloatAtan2Test
 		@atan2 M_NINF M_INF val;
 		print "atan2(-Inf,Inf)="; check_float_e(val, $BF490FDB, $34000000); print ", ";
 		@atan2 M_INF M_NINF val;
-		print "atan2(Inf,-Inf)="; check_float_e(val, $4016CBE4, $34000000); print ", ";
+		print "atan2(Inf,-Inf)="; check_float_e(val, $4016CBE4, $35000000); print ", ";
 		@atan2 M_NINF M_NINF val;
-		print "atan2(-Inf,-Inf)="; check_float_e(val, $C016CBE4, $34000000); print "^";
+		print "atan2(-Inf,-Inf)="; check_float_e(val, $C016CBE4, $35000000); print "^";
 		
 		@atan2 M_1 M_NAN val;
 		print "atan2(1,NaN)="; check_isnan(val); print ", ";
