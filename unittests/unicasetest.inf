@@ -18,6 +18,8 @@ Constant ROM_GAMESERIAL    $36;     ! six ASCII characters
 
 Constant MAINWIN_ROCK 100;
 
+Global errorcount;
+
 [ Main;
   @setiosys 2 0; ! select Glk I/O system
   mainwin = glk($0023, 0, 0, 0, 3, MAINWIN_ROCK); ! glk_window_open
@@ -32,7 +34,7 @@ Constant MAINWIN_ROCK 100;
   mainloop();
 ];
 
-[ mainloop numwords wd addr;
+[ mainloop numwords wd addr totalerrors;
 
   while (true) {
     print "^>";
@@ -71,6 +73,34 @@ Constant MAINWIN_ROCK 100;
     else if (wd == 'title') {
       test_title();
     }
+    else if (wd == 'decompose' or 'decomp') {
+      test_decompose();
+    }
+    else if (wd == 'normalize' or 'norm') {
+      test_normalize();
+    }
+	else if (wd == 'all') {
+	  totalerrors = 0;
+      test_upper();
+	  totalerrors = totalerrors + errorcount;
+	  print "^";
+      test_lower();
+	  totalerrors = totalerrors + errorcount;
+	  print "^";
+      test_title();
+	  totalerrors = totalerrors + errorcount;
+	  print "^";
+      test_decompose();
+	  totalerrors = totalerrors + errorcount;
+	  print "^";
+      test_normalize();
+	  totalerrors = totalerrors + errorcount;
+	  print "^";
+	  if (totalerrors)
+	    print "FAILED: Total errors: ", totalerrors, ".^";
+	  else
+	    print "All tests okay.^";
+	}
     else {
       print "I didn't understand that.^";
     }
@@ -178,7 +208,9 @@ Constant MAINWIN_ROCK 100;
   print "A voice booooms out: Welcome to the test chamber.^^";
   print "Type ~help~ to repeat this message, ~quit~ to exit,
     ~upper~ to test uppercase, ~lower~ to test lowercase,
-    or ~title~ to test titlecase.^";
+    ~title~ to test titlecase,
+	~decompose~ to test canonical decomposition,
+	or ~normalize~ to test canonical normalization.^";
 ];
 
 Array testarray --> BUFLEN;
@@ -245,7 +277,7 @@ Array title_strings -->
   "Ffl@{fb01}xy"
   0;
 
-[ test_upper errorcount ix jx src target startlen targetlen newlen val;
+[ test_upper ix jx src target startlen targetlen newlen val;
     errorcount = 0;
 
     for (ix=0 : up_down_strings-->ix : ix=ix+3) {
@@ -318,8 +350,9 @@ Array title_strings -->
     }
 ];
 
-[ test_lower errorcount ix jx src target startlen targetlen newlen val;
+[ test_lower ix jx src target startlen targetlen newlen val;
     errorcount = 0;
+	
     for (ix=0 : up_down_strings-->ix : ix=ix+3) {
         src = up_down_strings-->ix;
         target = up_down_strings-->(ix+2);
@@ -390,9 +423,10 @@ Array title_strings -->
     }
 ];
 
-[ test_title errorcount lowerrest ix jx src target startlen targetlen newlen val;
+[ test_title lowerrest ix jx src target startlen targetlen newlen val;
     errorcount = 0;
     lowerrest = 0;
+	
     for (ix=0 : title_strings-->ix : ix=ix+2) {
         src = title_strings-->ix;
         target = title_strings-->(ix+1);
@@ -454,7 +488,7 @@ Array title_strings -->
         else {
             if (testarray-->0 ~= 'H') {
                 errorcount++;
-                print "  FAILED -- should be i^";
+                print "  FAILED -- should be H^";
             }
             if (testarray-->1 ~= '.') {
                 errorcount++;
@@ -467,3 +501,170 @@ Array title_strings -->
         print "^FAILED with ", errorcount, " errors.^";
     }
 ];
+
+Array decompose_strings -->
+  "Ordinary string."
+  "Ordinary string."
+  0;
+
+[ test_decompose ix jx src target startlen targetlen newlen val;
+    errorcount = 0;
+	
+	if (~~glk($0004, 16, 0)) { ! gestalt(gestalt_UnicodeNorm)
+		print "This Glk library does not support buffer_canon_decompose_uni().^";
+		return;
+	}
+	
+    for (ix=0 : decompose_strings-->ix : ix=ix+2) {
+        src = decompose_strings-->ix;
+        target = decompose_strings-->(ix+1);
+        startlen = uni_to_buffer(testarray, src);
+        targetlen = uni_to_buffer(targetarray, target);
+        
+        print "Test:      ";
+        print_buffer(testarray, startlen);
+        print "^";
+
+        newlen = glk($0123, testarray, BUFLEN, startlen); ! buffer_canon_decompose_uni
+        print "Decompose: ";
+        print_buffer(testarray, newlen);
+        print "^";
+
+        if (newlen ~= targetlen) {
+            errorcount++;
+            print "  FAILED -- wrong length^";
+        }
+        else {
+            for (jx=0 : jx<newlen : jx++) {
+                if (targetarray-->jx ~= testarray-->jx) {
+                    errorcount++;
+                    print "  FAILED -- different at char ", jx, ": ";
+                    val = testarray-->jx;
+                    @streamunichar val;
+                    print " should be ";
+                    val = targetarray-->jx;
+                    @streamunichar val;
+                    print "^";
+                    break;
+                }
+            }
+        }
+    }
+    
+    if (1) {
+        testarray-->0 = $1e96;
+        testarray-->1 = '.';
+        startlen = 1;
+        
+        print "Truncating test: ";
+        print_buffer(testarray, startlen);
+        print "^";
+
+        newlen = glk($0123, testarray, startlen, startlen); ! buffer_canon_decompose_uni
+        print "Decompose: ";
+        print_buffer(testarray, 1);
+        print "^";
+        if (newlen ~= 2) {
+            errorcount++;
+            print "  FAILED -- wrong length^";
+        }
+        else {
+            if (testarray-->0 ~= 'h') {
+                errorcount++;
+                print "  FAILED -- should be h^";
+            }
+            if (testarray-->1 ~= '.') {
+                errorcount++;
+                print "  FAILED -- array overflow^";
+            }
+        }
+    }
+
+    if (errorcount) {
+        print "^FAILED with ", errorcount, " errors.^";
+    }
+];
+
+Array normalize_strings -->
+  "Ordinary string."
+  "Ordinary string."
+  0;
+
+[ test_normalize ix jx src target startlen targetlen newlen val;
+    errorcount = 0;
+	
+	if (~~glk($0004, 16, 0)) { ! gestalt(gestalt_UnicodeNorm)
+		print "This Glk library does not support buffer_canon_normalize_uni().^";
+		return;
+	}
+	
+    for (ix=0 : normalize_strings-->ix : ix=ix+2) {
+        src = normalize_strings-->ix;
+        target = normalize_strings-->(ix+1);
+        startlen = uni_to_buffer(testarray, src);
+        targetlen = uni_to_buffer(targetarray, target);
+        
+        print "Test:      ";
+        print_buffer(testarray, startlen);
+        print "^";
+
+        newlen = glk($0124, testarray, BUFLEN, startlen); ! buffer_canon_normalize_uni
+        print "Normalize: ";
+        print_buffer(testarray, newlen);
+        print "^";
+
+        if (newlen ~= targetlen) {
+            errorcount++;
+            print "  FAILED -- wrong length^";
+        }
+        else {
+            for (jx=0 : jx<newlen : jx++) {
+                if (targetarray-->jx ~= testarray-->jx) {
+                    errorcount++;
+                    print "  FAILED -- different at char ", jx, ": ";
+                    val = testarray-->jx;
+                    @streamunichar val;
+                    print " should be ";
+                    val = targetarray-->jx;
+                    @streamunichar val;
+                    print "^";
+                    break;
+                }
+            }
+        }
+    }
+    
+    if (1) {
+        testarray-->0 = $1e96;
+        testarray-->1 = '.';
+        startlen = 1;
+        
+        print "Truncating test: ";
+        print_buffer(testarray, startlen);
+        print "^";
+
+        newlen = glk($0124, testarray, startlen, startlen); ! buffer_canon_normalize_uni
+        print "Normalize: ";
+        print_buffer(testarray, 1);
+        print "^";
+        if (newlen ~= 2) {
+            errorcount++;
+            print "  FAILED -- wrong length^";
+        }
+        else {
+            if (testarray-->0 ~= $1e96) {
+                errorcount++;
+                print "  FAILED -- should be @{1e96}^";
+            }
+            if (testarray-->1 ~= '.') {
+                errorcount++;
+                print "  FAILED -- array overflow^";
+            }
+        }
+    }
+
+    if (errorcount) {
+        print "^FAILED with ", errorcount, " errors.^";
+    }
+];
+
