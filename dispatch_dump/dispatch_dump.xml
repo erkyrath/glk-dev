@@ -7,7 +7,7 @@
     <class name="window" value="0" />
   </classes>
 
-  <constants count="114">
+  <constants count="115">
     <constant name="evtype_Arrange" value="5" />
     <constant name="evtype_CharInput" value="2" />
     <constant name="evtype_Hyperlink" value="8" />
@@ -46,6 +46,7 @@
     <constant name="gestalt_SoundVolume" value="9" />
     <constant name="gestalt_Timer" value="5" />
     <constant name="gestalt_Unicode" value="15" />
+    <constant name="gestalt_UnicodeNorm" value="16" />
     <constant name="gestalt_Version" value="0" />
     <constant name="imagealign_InlineCenter" value="3" />
     <constant name="imagealign_InlineDown" value="2" />
@@ -124,7 +125,7 @@
     <constant name="wintype_TextGrid" value="4" />
   </constants>
 
-  <functions count="102">
+  <functions count="104">
     <function id="1" name="exit" proto="0:" />
     <function id="2" name="set_interrupt_handler" proto="_" />
     <function id="3" name="tick" proto="0:" />
@@ -227,6 +228,8 @@
     <function id="313" name="stream_open_memory_uni" proto="4&amp;+#!IuIuIu:Qb" />
     <function id="320" name="request_char_event_uni" proto="1Qa:" />
     <function id="321" name="request_line_event_uni" proto="3Qa&amp;+#!IuIu:" />
+    <function id="291" name="buffer_canon_decompose_uni" proto="3&amp;+#IuIu:Iu" />
+    <function id="292" name="buffer_canon_normalize_uni" proto="3&amp;+#IuIu:Iu" />
   </functions>
 
 </glkapi>

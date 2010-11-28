@@ -1,1 +1,39 @@
-####
+dispatch_dump: A tool to process Glk constants and functions into various
+  machine-readable and source-code forms.
+Source repository: https://github.com/erkyrath/glk-dev/tree/HEAD/dispatch_dump
+Written by Andrew Plotkin. This tool is in the public domain.
+
+A Glk program written in C needs only the glk.h header file to compile.
+However, any other use -- such as a Glulx interpreter -- needs metadata
+about the Glk API. (In fact, a Glulx game needs this information at
+two levels. The game itself needs an an Inform-6 API; and the interpreter
+needs API information to dispatch the Glk calls.
+
+The definitive source of this metadata is the gi_dispa.c source file
+(included with all Glk libraries). However, parsing this information
+out of C source code is a headache. Thus, dispatch_dump -- a small C
+program which dumps the information out as text or XML.
+
+To run this program, you will need to build it, and link in a Glk
+library. (CheapGlk is easiest, although it generates an extra line of
+output -- thus the "tail" filter below.) You can then do:
+
+  make
+  dispatch_dump | tail -n +2 > dispatch_dump.txt
+  dispatch_dump --xml | tail -n +2 > dispatch_dump.xml
+
+However, you don't have to do this, because this directory already
+contains up-to-date dispatch_dump.txt and dispatch_dump.xml files.
+
+The parse_dispatch.py script takes the XML output and generates two
+further formats:
+
+  parse_dispatch.py --dispajs dispatch_dump.xml > proto_map.js
+  parse_dispatch.py --infglk  dispatch_dump.xml > infglk.h
+
+The proto_map.js file is a segment of gi_dispa.js (in the Quixe
+distribution). The infglk.h file is an Inform 6 header, and also
+appears in the Inform 7 distribution.
+
+Again, these two files are included in this directory, so you don't
+have to generate them.

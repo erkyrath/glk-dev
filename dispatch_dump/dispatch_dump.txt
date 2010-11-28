@@ -5,7 +5,7 @@ schannel 3
 stream 1
 window 0
 
-* constants 114
+* constants 115
 evtype_Arrange 5
 evtype_CharInput 2
 evtype_Hyperlink 8
@@ -44,6 +44,7 @@ gestalt_SoundNotify 10
 gestalt_SoundVolume 9
 gestalt_Timer 5
 gestalt_Unicode 15
+gestalt_UnicodeNorm 16
 gestalt_Version 0
 imagealign_InlineCenter 3
 imagealign_InlineDown 2
@@ -121,7 +122,7 @@ wintype_Pair 1
 wintype_TextBuffer 3
 wintype_TextGrid 4
 
-* functions 102
+* functions 104
 1 exit 0:
 2 set_interrupt_handler _
 3 tick 0:
@@ -224,4 +225,6 @@ wintype_TextGrid 4
 313 stream_open_memory_uni 4&+#!IuIuIu:Qb
 320 request_char_event_uni 1Qa:
 321 request_line_event_uni 3Qa&+#!IuIu:
+291 buffer_canon_decompose_uni 3&+#IuIu:Iu
+292 buffer_canon_normalize_uni 3&+#IuIu:Iu
 
