@@ -1,7 +1,7 @@
 Constant Story "UniCaseTest";
 Constant Headline "Not a game.^";
 
-Release 2;
+Release 3;
 
 Global mainwin = 0;
 Array gg_event --> 4;
