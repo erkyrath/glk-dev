@@ -76,7 +76,7 @@ Global errorcount;
     else if (wd == 'decompose' or 'decomp') {
       test_decompose();
     }
-    else if (wd == 'normalize' or 'norm') {
+    else if (wd == 'normalize' or 'normal' or 'norm') {
       test_normalize();
     }
     else if (wd == 'all') {
@@ -504,6 +504,8 @@ Array title_strings -->
 Array decompose_strings -->
   "Ordinary string."
   "Ordinary string."
+  ""
+  ""
   "-@{340}@{341}@{340} @{374}@{37E}@{374} @{1FBE}@{1FBF} @{2000}@{2001}."
   "-@{300}@{301}@{300} @{2B9};@{2B9} @{3B9}@{1FBF} @{2002}@{2003}."
   "@{C8}@{E8}@{1e96} @{1f82} @{fb04}@{fb01}."
@@ -621,8 +623,20 @@ Array decompose_strings -->
 ];
 
 Array normalize_strings -->
-  "Ordinary string."
-  "Ordinary string."
+  "Ordinary fiffi ss string."
+  "Ordinary fiffi ss string."
+  ""
+  ""
+  "Single @{C0}@{E0} @{2126} @{212F}"
+  "Single @{C0}@{E0} @{3A9} @{212F}"
+  "E@{300}e@{300}h@{331} @{3B1}@{313}@{300}@{345} @{fb04}@{fb01}."
+  "@{C8}@{E8}@{1e96} @{1f82} @{fb04}@{fb01}."
+  "@{300} +@{301}@{316} -@{304} a"
+  "@{300} +@{316}@{301} -@{304} a"
+  "@{1E09} @{107}@{327} @{E7}@{301} c@{327}@{301} c@{301}@{327}"
+  "@{1E09} @{1E09} @{1E09} @{1E09} @{1E09}"
+  "A@{301}@{336}A@{301}"
+  "A@{336}@{301}@{C1}"
   0;
 
 [ test_normalize ix jx src target startlen targetlen newlen val;
@@ -708,7 +722,7 @@ Array normalize_strings -->
         print "Normalize: ";
         print_buffer(testarray, 1);
         print "^";
-        if (newlen ~= 2) {
+        if (newlen ~= 1) {
             errorcount++;
             print "  FAILED -- wrong length^";
         }
