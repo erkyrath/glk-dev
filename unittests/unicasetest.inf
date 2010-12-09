@@ -738,6 +738,40 @@ Array normalize_strings -->
         }
     }
 
+    if (1) {
+        testarray-->0 = $1e96;
+        testarray-->1 = $336;
+        testarray-->2 = '.';
+        startlen = 2;
+        
+        print "Truncating test: ";
+        print_buffer(testarray, startlen);
+        print "^";
+
+        newlen = glk($0124, testarray, startlen, startlen); ! buffer_canon_normalize_uni
+        print "Normalize: ";
+        print_buffer(testarray, 2);
+        print "^";
+        if (newlen ~= 3) {
+            errorcount++;
+            print "  FAILED -- wrong length^";
+        }
+        else {
+            if (testarray-->0 ~= 'h') {
+                errorcount++;
+                print "  FAILED -- should be h^";
+            }
+            if (testarray-->1 ~= $336) {
+                errorcount++;
+                print "  FAILED -- should be @{336}^";
+            }
+            if (testarray-->2 ~= '.') {
+                errorcount++;
+                print "  FAILED -- array overflow^";
+            }
+        }
+    }
+
     if (errorcount) {
         print "^FAILED with ", errorcount, " errors.^";
     }
