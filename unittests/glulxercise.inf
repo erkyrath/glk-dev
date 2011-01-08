@@ -916,6 +916,65 @@ TestClass ArithTest
 		count_failures();
 	];
 
+TestClass CompoundVarTest
+	with name 'comvar' 'compvar',
+	testfunc [ loc1 loc2;
+		print "Compound variable juggling:^^";
+
+		@copy 5 loc1;
+		@copy loc1 loc2;
+		@copy 6 loc1;
+		print "6="; check(loc1, 6); print ", ";
+		print "5="; check(loc2, 5); print "^";
+
+		@copy 3 loc1;
+		@add loc1 loc1 loc1;
+		@add loc1 loc1 loc2;
+		print "12="; check(loc2, 12); print ", ";
+
+		@copy 2 loc1;
+		@mul loc1 loc1 loc1;
+		@mul loc1 loc1 loc2;
+		print "16="; check(loc2, 16); print ", ";
+
+		@copy 3 loc1;
+		@add loc1 loc1 loc1;
+		@mul loc1 loc1 loc2;
+		print "36="; check(loc2, 36); print ", ";
+
+		@copy 4 loc1;
+		@mul loc1 loc1 loc1;
+		@add loc1 loc1 loc2;
+		print "32="; check(loc2, 32); print "^";
+
+		@copy 7 sp;
+		@copy sp loc1;
+		@copy loc1 loc2;
+		print "7="; check(loc2, 7); print ", ";
+
+		@copy 5 testglobal;
+		@add testglobal 1 loc1;
+		@copy loc1 sp;
+		@copy sp loc2;
+		print "6="; check(loc1, 6); print ", ";
+		print "6="; check(loc2, 6); print "^";
+
+		@copy 8 sp;
+		@copy 6 testglobal;
+		@add testglobal 1 loc1;
+		@copy loc1 sp;
+		@copy sp loc2;
+		@stkcopy 1;
+		print "7="; check(loc1, 7); print ", ";
+		print "7="; check(loc2, 7); print "^";
+		@copy sp loc1;
+		@copy sp loc2;
+		print "8="; check(loc1, 8); print ", ";
+		print "8="; check(loc2, 8); print "^";
+
+		count_failures();
+	];
+
 TestClass CompoundArithTest
 	with name 'comarith' 'comparith',
 	testfunc [ val xloc yloc zloc;
@@ -5370,7 +5429,16 @@ TestClass UndoTest
 
 		@restoreundo val;
 		print "Restore without saveundo: "; check(val, 1); print "^";
-			
+
+		testglobal = 0;
+		@restoreundo testglobal;
+		print "Restore without saveundo: "; check(testglobal, 1); print "^";
+
+		val = 0;
+		@restoreundo sp;
+		@copy sp val;
+		print "Restore without saveundo: "; check(val, 1); print "^";
+		
 		loc = 99;
 		testglobal = 999;
 		@saveundo val;
@@ -6060,6 +6128,7 @@ TestClass UndoRestartTest
 			startovertest-->1 = 2;
 			startovertest-->2 = 2;
 			failures++;
+			@push 999;
 			@restart;
 			count_failures();
 			return;
