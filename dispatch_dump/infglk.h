@@ -29,6 +29,9 @@ Constant gestalt_GraphicsTransparency = 14;
 Constant gestalt_HyperlinkInput = 12;
 Constant gestalt_Hyperlinks = 11;
 Constant gestalt_LineInput = 2;
+Constant gestalt_LineInputEcho = 17;
+Constant gestalt_LineTerminatorKey = 19;
+Constant gestalt_LineTerminators = 18;
 Constant gestalt_MouseInput = 4;
 Constant gestalt_Sound = 8;
 Constant gestalt_SoundMusic = 13;
@@ -101,10 +104,13 @@ Constant stylehint_just_LeftRight = 1;
 Constant stylehint_just_RightFlush = 3;
 Constant winmethod_Above = 2;
 Constant winmethod_Below = 3;
+Constant winmethod_Border = 0;
+Constant winmethod_BorderMask = 256;
 Constant winmethod_DirMask = 15;
 Constant winmethod_DivisionMask = 240;
 Constant winmethod_Fixed = 16;
 Constant winmethod_Left = 0;
+Constant winmethod_NoBorder = 256;
 Constant winmethod_Proportional = 32;
 Constant winmethod_Right = 1;
 Constant wintype_AllTypes = 0;
@@ -729,6 +735,18 @@ Constant wintype_TextGrid = 4;
 [ glk_request_line_event_uni _vararg_count;
   ! glk_request_line_event_uni(window, uintarray, arraylen, uint)
   @glk 321 _vararg_count 0;
+  return 0;
+];
+
+[ glk_set_echo_line_event _vararg_count;
+  ! glk_set_echo_line_event(window, uint)
+  @glk 336 _vararg_count 0;
+  return 0;
+];
+
+[ glk_set_terminators_line_event _vararg_count;
+  ! glk_set_terminators_line_event(window, uintarray, arraylen)
+  @glk 337 _vararg_count 0;
   return 0;
 ];
 

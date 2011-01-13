@@ -1,11 +1,10 @@
-
 * classes 4
 fileref 2
 schannel 3
 stream 1
 window 0
 
-* constants 115
+* constants 121
 evtype_Arrange 5
 evtype_CharInput 2
 evtype_Hyperlink 8
@@ -37,6 +36,9 @@ gestalt_GraphicsTransparency 14
 gestalt_HyperlinkInput 12
 gestalt_Hyperlinks 11
 gestalt_LineInput 2
+gestalt_LineInputEcho 17
+gestalt_LineTerminatorKey 19
+gestalt_LineTerminators 18
 gestalt_MouseInput 4
 gestalt_Sound 8
 gestalt_SoundMusic 13
@@ -109,10 +111,13 @@ stylehint_just_LeftRight 1
 stylehint_just_RightFlush 3
 winmethod_Above 2
 winmethod_Below 3
+winmethod_Border 0
+winmethod_BorderMask 256
 winmethod_DirMask 15
 winmethod_DivisionMask 240
 winmethod_Fixed 16
 winmethod_Left 0
+winmethod_NoBorder 256
 winmethod_Proportional 32
 winmethod_Right 1
 wintype_AllTypes 0
@@ -122,7 +127,7 @@ wintype_Pair 1
 wintype_TextBuffer 3
 wintype_TextGrid 4
 
-* functions 104
+* functions 106
 1 exit 0:
 2 set_interrupt_handler _
 3 tick 0:
@@ -227,4 +232,6 @@ wintype_TextGrid 4
 321 request_line_event_uni 3Qa&+#!IuIu:
 291 buffer_canon_decompose_uni 3&+#IuIu:Iu
 292 buffer_canon_normalize_uni 3&+#IuIu:Iu
+336 set_echo_line_event 2QaIu:
+337 set_terminators_line_event 2Qa>#Iu:
 

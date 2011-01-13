@@ -1,4 +1,3 @@
-
 <glkapi>
   <classes count="4">
     <class name="fileref" value="2" />
@@ -7,7 +6,7 @@
     <class name="window" value="0" />
   </classes>
 
-  <constants count="115">
+  <constants count="121">
     <constant name="evtype_Arrange" value="5" />
     <constant name="evtype_CharInput" value="2" />
     <constant name="evtype_Hyperlink" value="8" />
@@ -39,6 +38,9 @@
     <constant name="gestalt_HyperlinkInput" value="12" />
     <constant name="gestalt_Hyperlinks" value="11" />
     <constant name="gestalt_LineInput" value="2" />
+    <constant name="gestalt_LineInputEcho" value="17" />
+    <constant name="gestalt_LineTerminatorKey" value="19" />
+    <constant name="gestalt_LineTerminators" value="18" />
     <constant name="gestalt_MouseInput" value="4" />
     <constant name="gestalt_Sound" value="8" />
     <constant name="gestalt_SoundMusic" value="13" />
@@ -111,10 +113,13 @@
     <constant name="stylehint_just_RightFlush" value="3" />
     <constant name="winmethod_Above" value="2" />
     <constant name="winmethod_Below" value="3" />
+    <constant name="winmethod_Border" value="0" />
+    <constant name="winmethod_BorderMask" value="256" />
     <constant name="winmethod_DirMask" value="15" />
     <constant name="winmethod_DivisionMask" value="240" />
     <constant name="winmethod_Fixed" value="16" />
     <constant name="winmethod_Left" value="0" />
+    <constant name="winmethod_NoBorder" value="256" />
     <constant name="winmethod_Proportional" value="32" />
     <constant name="winmethod_Right" value="1" />
     <constant name="wintype_AllTypes" value="0" />
@@ -125,7 +130,7 @@
     <constant name="wintype_TextGrid" value="4" />
   </constants>
 
-  <functions count="104">
+  <functions count="106">
     <function id="1" name="exit" proto="0:" />
     <function id="2" name="set_interrupt_handler" proto="_" />
     <function id="3" name="tick" proto="0:" />
@@ -230,6 +235,8 @@
     <function id="321" name="request_line_event_uni" proto="3Qa&amp;+#!IuIu:" />
     <function id="291" name="buffer_canon_decompose_uni" proto="3&amp;+#IuIu:Iu" />
     <function id="292" name="buffer_canon_normalize_uni" proto="3&amp;+#IuIu:Iu" />
+    <function id="336" name="set_echo_line_event" proto="2QaIu:" />
+    <function id="337" name="set_terminators_line_event" proto="2Qa&gt;#Iu:" />
   </functions>
 
 </glkapi>
