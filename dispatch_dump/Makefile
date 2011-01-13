@@ -29,3 +29,5 @@ all: dispatch_dump
 dispatch_dump: $(OBJS)
 	$(CC) $(OPTIONS) -o dispatch_dump $(OBJS) $(LIBS)
 
+clean:
+	rm -f *~ *.o dispatch_dump

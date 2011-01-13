@@ -89,9 +89,9 @@ void glk_main()
     for (ix=0; ix<count; ix++) {
         gidispatch_intconst_t *constant = gidispatch_get_class(ix);
         if (usexml)
-            sprintf(buf, "    <class name=\"%s\" value=\"%ld\" />\n", constant->name, constant->val);
+            sprintf(buf, "    <class name=\"%s\" value=\"%ld\" />\n", constant->name, (long)constant->val);
         else
-            sprintf(buf, "%s %ld\n", constant->name, constant->val);
+            sprintf(buf, "%s %ld\n", constant->name, (long)constant->val);
         glk_put_string(buf);
     }
     if (usexml)
@@ -107,9 +107,9 @@ void glk_main()
     for (ix=0; ix<count; ix++) {
         gidispatch_intconst_t *constant = gidispatch_get_intconst(ix);
         if (usexml)
-            sprintf(buf, "    <constant name=\"%s\" value=\"%ld\" />\n", constant->name, constant->val);
+            sprintf(buf, "    <constant name=\"%s\" value=\"%ld\" />\n", constant->name, (long)constant->val);
         else
-            sprintf(buf, "%s %ld\n", constant->name, constant->val);
+            sprintf(buf, "%s %ld\n", constant->name, (long)constant->val);
         glk_put_string(buf);
     }
     if (usexml)
@@ -130,9 +130,9 @@ void glk_main()
         if (usexml)
             proto = xml_encode(proto);
         if (usexml)
-            sprintf(buf, "    <function id=\"%ld\" name=\"%s\" proto=\"%s\" />\n", func->id, func->name, proto);
+            sprintf(buf, "    <function id=\"%ld\" name=\"%s\" proto=\"%s\" />\n", (long)func->id, func->name, proto);
         else
-            sprintf(buf, "%ld %s %s\n", func->id, func->name, proto);
+            sprintf(buf, "%ld %s %s\n", (long)func->id, func->name, proto);
         glk_put_string(buf);
     }
     if (usexml)
