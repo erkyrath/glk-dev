@@ -1,0 +1,284 @@
+Constant Story "InputLineFeatureTest";
+Constant Headline "Not a game.^";
+
+Release 1;
+
+Global mainwin = 0;
+Array gg_event --> 4;
+Constant BUFLEN = 240;
+Array input_buffer -> 4+BUFLEN;
+Array gg_tokenbuf -> DICT_WORD_SIZE;
+Constant MAX_BUFFER_WORDS = 20;
+Constant PARSE_BUFFER_LEN = 244;    ! 4 + MAX_BUFFER_WORDS*4;
+Array parse_buffer --> PARSE_BUFFER_LEN/WORDSIZE;
+
+Global echo_mode = true;
+
+Constant HDR_GLULXVERSION  $04;     ! long word
+Constant ROM_GAMERELEASE   $34;     ! short word
+Constant ROM_GAMESERIAL    $36;     ! six ASCII characters
+
+Constant MAINWIN_ROCK 100;
+
+[ Main;
+	@setiosys 2 0; ! select Glk I/O system
+	mainwin = glk($0023, 0, 0, 0, 3, MAINWIN_ROCK); ! glk_window_open
+	glk($002F, mainwin); ! glk_set_window
+
+	new_line;
+	Banner();
+	new_line;
+
+	RoomDesc();
+
+	mainloop();
+];
+
+[ mainloop numwords wd addr res prefill;
+
+	! We don't initially prefill the buffer with anything.
+	prefill = 0;
+	
+	while (true) {
+		print "^>";
+		res = readline(prefill);
+
+		addr = input_buffer;
+		
+		if (~~res) {
+			glk($00D6, 0); ! glk_request_timer_events (off)
+			print "The timer went off!";
+			prefill = addr-->0;
+			if (prefill && echo_mode)
+				print " (But you may continue typing your command.)";
+			else if (prefill && ~~echo_mode)
+				print " (Notice that the command line has been rot13'd.
+					This demonstrates how the game can alter the appearance
+					of the player's input in ~noecho~ mode.)";
+			else
+				print " (The command line was empty, though. Try typing
+					something during those two seconds.)";
+			if (prefill && echo_mode)
+				print "^^Now try switching to ~noecho~ mode and typing
+					~interrupt~, to see an additional trick.";
+			print "^";
+			continue;
+		}
+
+		! An actual command means we have no prefill next round.
+		prefill = 0;
+
+		if (addr-->0 == 0) {
+			print "(Zero-length input.)^";
+			continue;
+		}
+
+		tokenise(input_buffer, parse_buffer);
+		numwords = parse_buffer-->0;
+		if (numwords == 0) {
+			print "(Whitespace input.)^";
+			continue;
+		}
+
+		wd = parse_buffer-->1;  ! the first word
+		if (wd == 'look' or 'l//' or 'help' or '?//') {
+			RoomDesc();
+		}
+		else if (wd == 'version') {
+			Banner();
+		}
+		else if (wd == 'quit' or 'q//') {
+			print "Goodbye!^";
+			quit;
+		}
+		else if (wd == 'echo') {
+			set_line_echo(true);
+		}
+		else if (wd == 'noecho') {
+			set_line_echo(false);
+		}
+		else if (wd == 'interrupt' or 'timer') {
+			set_timer_event();
+		}
+		else {
+			print "I didn't understand that.^";
+		}
+	}
+];
+
+! This returns true for normal line input, or false if a timer event
+! interrupted. The input buffer is filled in either way.
+[ readline prefill   count res addr ix ch;
+	glk($00D0, mainwin, input_buffer+4, BUFLEN, prefill); ! request_line_event
+	while (true) {
+		glk($00C0, gg_event); ! select
+		if (gg_event-->0 == 3 && gg_event-->1 == mainwin) {
+			! line input event
+			count = gg_event-->2;
+			res = true;
+			break;
+		}
+		if (gg_event-->0 == 1) {
+			! timer event; cancel line input and return what was there
+			glk($00D1, mainwin, gg_event); ! cancel_line_event
+			count = gg_event-->2;
+			res = false;
+			break;
+		}
+	}
+	addr = input_buffer;
+	addr-->0 = count;
+
+	if (~~echo_mode) {
+		! The library isn't echoing line input, so we should.
+		glk($0086, 8); ! set input style
+		! As a special treat, if we were interrupted by a timer, we
+		! rot13 the line before we echo it.
+		if (res) {
+			glk($0084, input_buffer+4, count); ! glk_put_buffer
+		}
+		else {
+			for (ix=4 : ix < 4+count : ix++) {
+				ch = input_buffer->ix;
+				if (ch >= 'A' && ch <= 'M')
+					ch = ch + 13;
+				else if (ch >= 'N' && ch <= 'Z')
+					ch = ch - 13;
+				else if (ch >= 'a' && ch <= 'm')
+					ch = ch + 13;
+				else if (ch >= 'n' && ch <= 'z')
+					ch = ch - 13;
+				glk($0080, ch); ! glk_put_char
+			}
+		}
+		glk($0086, 0); ! set normal style
+		print "^"; ! the newline
+	}
+
+	return res;
+];
+
+[ tokenise buf tab
+    cx numwords len bx ix wx wpos wlen val res dictlen entrylen;
+    len = buf-->0;
+    buf = buf+WORDSIZE;
+
+    ! First, split the buffer up into words. We use the standard Infocom
+    ! list of word separators (comma, period, double-quote).
+
+    cx = 0;
+    numwords = 0;
+    while (cx < len) {
+        while (cx < len && buf->cx == ' ') cx++;
+        if (cx >= len) break;
+        bx = cx;
+        if (buf->cx == '.' or ',' or '"') cx++;
+        else {
+            while (cx < len && buf->cx ~= ' ' or '.' or ',' or '"') cx++;
+        }
+        tab-->(numwords*3+2) = (cx-bx);
+        tab-->(numwords*3+3) = WORDSIZE+bx;
+        numwords++;
+        if (numwords >= MAX_BUFFER_WORDS) break;
+    }
+    tab-->0 = numwords;
+
+    ! Now we look each word up in the dictionary.
+
+    dictlen = #dictionary_table-->0;
+    entrylen = DICT_WORD_SIZE + 7;
+
+    for (wx=0 : wx<numwords : wx++) {
+        wlen = tab-->(wx*3+2);
+        wpos = tab-->(wx*3+3);
+
+        ! Copy the word into the gg_tokenbuf array, clipping to DICT_WORD_SIZE
+        ! characters and lower case.
+        if (wlen > DICT_WORD_SIZE) wlen = DICT_WORD_SIZE;
+        cx = wpos - WORDSIZE;
+        for (ix=0 : ix<wlen : ix++) gg_tokenbuf->ix = glk($00A0, buf->(cx+ix));
+        for (: ix<DICT_WORD_SIZE : ix++) gg_tokenbuf->ix = 0;
+
+        val = #dictionary_table + WORDSIZE;
+        @binarysearch gg_tokenbuf DICT_WORD_SIZE val entrylen dictlen 1 1 res;
+        tab-->(wx*3+1) = res;
+    }
+];
+
+[ Banner  i ix;
+	if (Story ~= 0) {
+		glk($0086, 3); ! set header style
+		print (string) Story;
+		glk($0086, 0); ! set normal style
+	}
+	if (Headline ~= 0) print ": ", (string) Headline;
+	print "Release ";
+	@aloads ROM_GAMERELEASE 0 i;
+	print i;
+	print " / Serial number ";
+	for (i=0 : i<6 : i++) print (char) ROM_GAMESERIAL->i;
+	print " / Inform v"; inversion;
+	print ", compiler options ";
+	i = false;
+	#Ifdef STRICT_MODE;
+	print "S"; i++;
+	#Endif; ! STRICT_MODE
+	#Ifdef INFIX;
+	print "X"; i++;
+	#Ifnot;
+	#Ifdef DEBUG;
+	print "D"; i++;
+	#Endif; ! DEBUG
+	#Endif; ! INFIX
+	if (~~i) print "(none)";
+	new_line;
+
+	@gestalt 1 0 ix;
+	print "Interpreter version ", ix / $10000, ".", (ix & $FF00) / $100,
+	".", ix & $FF, " / ";
+	@gestalt 0 0 ix;
+	print "VM ", ix / $10000, ".", (ix & $FF00) / $100, ".", ix & $FF, " / ";
+	ix = HDR_GLULXVERSION-->0;
+	print "game file format ", ix / $10000, ".", (ix & $FF00) / $100, ".", ix & $FF, "^";
+];
+
+[ RoomDesc;
+	print "A voice booooms out: Welcome to the test chamber.^^";
+	print "Type ~help~ to repeat this message, ~quit~ to exit,
+		~noecho~ to turn off automatic echoing, ~echo~ to turn it
+		back on, or ~interrupt~ to have a timed event interrupt your
+		next input.^";
+];
+
+[ set_line_echo val;
+    if (~~glk($0004, 17, 0)) { ! gestalt(gestalt_LineInputEcho)
+        print "This Glk library does not support glk_set_echo_line_event().^";
+        return;
+    }
+
+	! We are between line input requests here, so this will affect the
+	! next line input.
+	echo_mode = val;
+	glk($0150, mainwin, echo_mode); ! glk_set_echo_line_event
+
+	if (~~val) {
+		print "The library has been set to no-echo mode for line input.
+			The game will handle echoing of input lines, so you should
+			see no difference at all.^";
+	}
+	else {
+		print "The library has been set to echo mode for line input
+			(the normal behavior).^";
+	}
+];
+
+[ set_timer_event;
+    if (~~glk($0004, 5, 0)) { ! gestalt(gestalt_Timer)
+        print "This Glk library does not support glk_set_echo_line_event().^";
+        return;
+    }
+
+	print "Your input will be interrupted in two seconds by a timer event.^";
+
+	glk($00D6, 2000); ! glk_request_timer_events
+];
