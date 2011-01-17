@@ -274,7 +274,7 @@ Constant MAINWIN_ROCK 100;
 
 [ set_timer_event;
     if (~~glk($0004, 5, 0)) { ! gestalt(gestalt_Timer)
-        print "This Glk library does not support glk_set_echo_line_event().^";
+        print "This Glk library does not support glk_set_timer_event().^";
         return;
     }
 
