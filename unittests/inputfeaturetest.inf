@@ -50,16 +50,19 @@ Constant MAINWIN_ROCK 100;
 			print "The timer went off!";
 			prefill = addr-->0;
 			if (prefill && echo_mode)
-				print " (But you may continue typing your command.)";
+				print " (Your command should appear on the interrupted
+					line above, and also on the next line so you can
+					continue editing it.)";
 			else if (prefill && ~~echo_mode)
 				print " (Notice that the command line has been rot13'd.
 					This demonstrates how the game can alter the appearance
 					of the player's input in ~noecho~ mode.)";
 			else
-				print " (The command line was empty, though. Try typing
+				print " (The command line was empty, though. You should
+					see an empty prompt on the line above. Try typing
 					something during those two seconds.)";
 			if (prefill && echo_mode)
-				print "^^Now try switching to ~noecho~ mode and typing
+				print "^^Try switching to ~noecho~ mode and typing
 					~interrupt~, to see an additional trick.";
 			print "^";
 			continue;
