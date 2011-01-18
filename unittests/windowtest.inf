@@ -219,6 +219,26 @@ Constant ALTWIN_ROCK 101;
       glk($002F, mainwin); ! glk_set_window
       print "Cancelled line input from secondary window.^";
       
+    'echoline':
+      if (~~altwin) {
+        print "The window is not split.^";
+        continue;
+      }
+      val = glk($0004, 17, 0); ! gestalt LineInputEcho
+      if (~~val) {
+        print "This library claims to not support glk_set_echo_line_event!^";
+		continue;
+	  }
+      if (~~parse_number()) 
+        val = 0;
+      else 
+        val = num_understood;
+      glk($0150, altwin, val); ! glk_set_echo_line_event
+      if (val)
+        print "Future line input events in secondary window will auto-echo.^";
+      else
+        print "Future line input events in secondary window will NOT auto-echo.^";
+
     'dialog':
       parse_file_params();
       parse_operand_params();
@@ -486,6 +506,7 @@ Constant ALTWIN_ROCK 101;
         so you can cause a Glk error with this command.)^";
     print "  ~getline~: Request line input in the second window.^";
     print "  ~dropline~: Cancel line input in the second window.^";
+    print "  ~echoline NUM~: Begin/end line-input echoing in the second window.^";
     print "  ~echo~: Begin echoing all output from the first window to
         the second window. (Causes a Glk error if mixed with ~getline~.)^";
     print "  ~streams~: List all open streams.^";
