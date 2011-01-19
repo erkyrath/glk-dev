@@ -20,6 +20,7 @@ Array parse_buffer --> PARSE_BUFFER_LEN/WORDSIZE;
 Global num_understood;
 Global dir_understood;
 Global split_understood;
+Global border_understood;
 Global type_understood;
 Global size_understood;
 Global win_understood;
@@ -102,7 +103,7 @@ Constant ALTWIN_ROCK 101;
         continue;
       }
       parse_window_params();
-      altwin = glk($0023, mainwin, dir_understood+split_understood, size_understood, type_understood, ALTWIN_ROCK); ! glk_window_open
+      altwin = glk($0023, mainwin, dir_understood+split_understood+border_understood, size_understood, type_understood, ALTWIN_ROCK); ! glk_window_open
       if (~~altwin) {
         print "Failed.^";
         continue;
@@ -157,7 +158,7 @@ Constant ALTWIN_ROCK 101;
         print "Cannot change split axis to vertical.^";
         continue;
       }
-      glk($0026, win, dir_understood+split_understood, size_understood, win_understood); ! glk_window_set_arrangement
+      glk($0026, win, dir_understood+split_understood+border_understood, size_understood, win_understood); ! glk_window_set_arrangement
       print "Changed the parameters of the window split.^";
       announce_window_sizes();
 
@@ -227,8 +228,8 @@ Constant ALTWIN_ROCK 101;
       val = glk($0004, 17, 0); ! gestalt LineInputEcho
       if (~~val) {
         print "This library claims to not support glk_set_echo_line_event!^";
-		continue;
-	  }
+        continue;
+      }
       if (~~parse_number()) 
         val = 0;
       else 
@@ -425,6 +426,7 @@ Constant ALTWIN_ROCK 101;
   type_understood = 4;
   size_understood = 1;
   win_understood = mainwin;
+  border_understood = $0;
   
   numwords = parse_buffer-->0;
   for (wx=1 : wx<numwords : wx++) {
@@ -437,6 +439,9 @@ Constant ALTWIN_ROCK 101;
 
       'fixed': split_understood = $10;
       'prop', 'proportional': split_understood = $20;
+
+      'border', 'borders': border_understood = $0;
+      'noborder', 'noborders': border_understood = $100;
       
       'grid', 'textgrid': type_understood = 4;
       'buffer', 'textbuffer': type_understood = 3;
@@ -498,7 +503,8 @@ Constant ALTWIN_ROCK 101;
     print "  ~windows~: List all open windows.^";
     print "  ~size~: Show the sizes of all open windows.^";
     print "  ~open PARAMS~: Open a second window. PARAMS can include any of
-        left/right/top/bottom, fixed/proportional, grid/buffer/blank/graphic,
+        left/right/top/bottom, fixed/proportional, border/noborder,
+        grid/buffer/blank/graphic,
         and a (numeric) size.^";
     print "  ~close~: Close the second window.^";
     print "  ~arrange PARAMS~: Change the second window arrangement. The
@@ -557,6 +563,11 @@ Constant ALTWIN_ROCK 101;
         $10: print "fixed";
         $20: print "proportional";
         default: print "???";
+    }
+    print "/";
+    switch (val & $100) {
+        $0: print "border";
+        $100: print "noborder";
     }
 ];
 
@@ -750,11 +761,11 @@ Array style_names --> "Normal" "Emphasized" "Preformatted" "Header"
   "Subheader" "Alert" "Note" "BlockQuote" "Input" "User1" "User2";
 
 [ show_styles ix;
-	print "The eleven standard Glk styles:^^";
+    print "The eleven standard Glk styles:^^";
     for (ix=0 : ix<11 : ix++) {
         glk($0086, ix); ! set the given style
         print "This is style ", ix, ": ", (string) style_names-->ix;
-		new_line;
+        new_line;
     }
     glk($0086, 0); ! set normal style
 ];
