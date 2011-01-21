@@ -45,10 +45,10 @@ Constant MAINWIN_ROCK 100;
 
 		addr = input_buffer;
 		
-		if (~~res) {
+		if (res == 1) {
 			glk($00D6, 0); ! glk_request_timer_events (off)
-			print "The timer went off!";
 			prefill = addr-->0;
+			print "The timer went off!";
 			if (prefill && echo_mode)
 				print " (Your command should appear on the interrupted
 					line above, and also on the next line so you can
@@ -64,6 +64,19 @@ Constant MAINWIN_ROCK 100;
 			if (prefill && echo_mode)
 				print "^^Try switching to ~noecho~ mode and typing
 					~interrupt~, to see an additional trick.";
+			print "^";
+			continue;
+		}
+		if (res == 2) {
+			prefill = addr-->0;
+			print "Input was interrupted by a special key.";
+			if (echo_mode)
+				print " (Try switching to ~noecho~ mode and trying the
+					same key.)";
+			else
+				print " (Notice that the command line has been replaced.
+					This demonstrates how the game can alter the appearance
+					of the player's input in ~noecho~ mode.)";
 			print "^";
 			continue;
 		}
@@ -103,44 +116,69 @@ Constant MAINWIN_ROCK 100;
 		else if (wd == 'interrupt' or 'timer') {
 			set_timer_event();
 		}
+		else if (wd == 'keys') {
+			show_possible_term_keys();
+		}
+		else if (wd == 'term' or 'terminate' or 'all') {
+			set_term_keys(arr_all_func);
+		}
+		else if (wd == 'even') {
+			set_term_keys(arr_even_func);
+		}
+		else if (wd == 'odd') {
+			set_term_keys(arr_odd_func);
+		}
+		else if (wd == 'none') {
+			set_term_keys();
+		}
 		else {
 			print "I didn't understand that.^";
 		}
 	}
 ];
 
-! This returns true for normal line input, or false if a timer event
-! interrupted. The input buffer is filled in either way.
-[ readline prefill   count res addr ix ch;
+! This returns 0 for normal line input, 1 if a timer event interrupted,
+! or 2 if a special key ended line input. The input buffer is filled in
+! either way.
+[ readline prefill   count termkey res ix ch;
 	glk($00D0, mainwin, input_buffer+4, BUFLEN, prefill); ! request_line_event
 	while (true) {
 		glk($00C0, gg_event); ! select
 		if (gg_event-->0 == 3 && gg_event-->1 == mainwin) {
 			! line input event
 			count = gg_event-->2;
-			res = true;
+			termkey = gg_event-->3;
+			if (termkey == 0)
+				res = 0;
+			else
+				res = 2;
 			break;
 		}
 		if (gg_event-->0 == 1) {
 			! timer event; cancel line input and return what was there
 			glk($00D1, mainwin, gg_event); ! cancel_line_event
 			count = gg_event-->2;
-			res = false;
+			res = 1;
 			break;
 		}
 	}
-	addr = input_buffer;
-	addr-->0 = count;
+	(input_buffer+0)-->0 = count;
 
 	if (~~echo_mode) {
 		! The library isn't echoing line input, so we should.
 		glk($0086, 8); ! set input style
-		! As a special treat, if we were interrupted by a timer, we
-		! rot13 the line before we echo it.
-		if (res) {
+		if (res == 0) {
+			! Print the input line verbatim.
 			glk($0084, input_buffer+4, count); ! glk_put_buffer
 		}
+		else if (res == 2) {
+			! If line input ended via terminator key, replace the line
+			! with a fake command.
+			print "special ", (SpecialKeyName) termkey;
+		}
 		else {
+			! As a special treat, if we were interrupted by a timer, we
+			! rot13 the line before we echo it.
 			for (ix=4 : ix < 4+count : ix++) {
 				ch = input_buffer->ix;
 				if (ch >= 'A' && ch <= 'M')
@@ -247,17 +285,54 @@ Constant MAINWIN_ROCK 100;
 
 [ RoomDesc;
 	print "A voice booooms out: Welcome to the test chamber.^^";
-	print "Type ~help~ to repeat this message, ~quit~ to exit,
-		~noecho~ to turn off automatic echoing, ~echo~ to turn it
+	print "Type ~help~ to repeat this message, ~quit~ to exit.
+		Type ~noecho~ to turn off automatic echoing, ~echo~ to turn it
 		back on, or ~interrupt~ to have a timed event interrupt your
-		next input.^";
+		next input.
+		Type ~keys~ to list the keys available as line input terminators,
+		~terminate~ to set the function keys plus escape as input terminators,
+		~even~ for only the even function keys, ~odd~ for only the odd ones,
+		and ~none~ to remove all special line input terminators.^";
+];
+
+[ SpecialKeyName res;
+	print "<";
+	switch (res) {
+		$ffffffff: print "unknown";
+		$fffffffe: print "left";
+		$fffffffd: print "right";
+		$fffffffc: print "up";
+		$fffffffb: print "down";
+		$fffffffa: print "return";
+		$fffffff9: print "delete";
+		$fffffff8: print "escape";
+		$fffffff7: print "tab";
+		$fffffff6: print "page-up";
+		$fffffff5: print "page-down";
+		$fffffff4: print "home";
+		$fffffff3: print "end";
+		$ffffffef: print "f1";
+		$ffffffee: print "f2";
+		$ffffffed: print "f3";
+		$ffffffec: print "f4";
+		$ffffffeb: print "f5";
+		$ffffffea: print "f6";
+		$ffffffe9: print "f7";
+		$ffffffe8: print "f8";
+		$ffffffe7: print "f9";
+		$ffffffe6: print "f10";
+		$ffffffe5: print "f11";
+		$ffffffe4: print "f12";
+		default: print "???";
+	}
+	print ">";
 ];
 
 [ set_line_echo val;
-    if (~~glk($0004, 17, 0)) { ! gestalt(gestalt_LineInputEcho)
-        print "This Glk library does not support glk_set_echo_line_event().^";
-        return;
-    }
+	if (~~glk($0004, 17, 0)) { ! gestalt(gestalt_LineInputEcho)
+		print "This Glk library does not support glk_set_echo_line_event().^";
+		return;
+	}
 
 	! We are between line input requests here, so this will affect the
 	! next line input.
@@ -276,12 +351,56 @@ Constant MAINWIN_ROCK 100;
 ];
 
 [ set_timer_event;
-    if (~~glk($0004, 5, 0)) { ! gestalt(gestalt_Timer)
-        print "This Glk library does not support glk_set_timer_event().^";
-        return;
-    }
+	if (~~glk($0004, 5, 0)) { ! gestalt(gestalt_Timer)
+		print "This Glk library does not support glk_set_timer_event().^";
+		return;
+	}
 
 	print "Your input will be interrupted in two seconds by a timer event.^";
 
 	glk($00D6, 2000); ! glk_request_timer_events
 ];
+
+[ show_possible_term_keys  ix count;
+	if (~~glk($0004, 18, 0)) { ! gestalt(gestalt_LineTerminators)
+		print "This Glk library does not support glk_set_terminators_line_event().^";
+		return;
+	}
+
+	count = 0;
+	for (ix=1 : ix<=28 : ix++) {
+		if (glk($0004, 19, (-1-ix))) { ! gestalt(gestalt_LineTerminatorKey)
+			if (count) print ", ";
+			print (SpecialKeyName) (-1-ix);
+			count++;
+		}
+	}
+	if (count)
+		print " are available as line input terminator keys.^";
+	else
+		print "No keys are available as line input terminators.^";
+];
+
+Array arr_odd_func table  $ffffffef $ffffffed $ffffffeb $ffffffe9 $ffffffe7 $ffffffe5;
+Array arr_even_func table $ffffffe4 $ffffffe6 $ffffffe8 $ffffffea $ffffffec $ffffffee;
+Array arr_all_func table  $ffffffef $ffffffee $ffffffed $ffffffec $ffffffeb $ffffffea $ffffffe9 $ffffffe8 $ffffffe7 $ffffffe6 $ffffffe5 $ffffffe4 $fffffff8;
+
+[ set_term_keys arr   addr count;
+	if (~~glk($0004, 18, 0)) { ! gestalt(gestalt_LineTerminators)
+		print "This Glk library does not support glk_set_terminators_line_event().^";
+		return;
+	}
+
+	if (arr) {
+		count = arr-->0;
+		addr = arr+4;
+	}
+	else {
+		count = 0;
+		addr = 0;
+	}
+	
+	glk($0151, mainwin, addr, count); ! glk_set_terminators_line_event
+	print "There are now ", count, " special line input terminator keys.^";
+];
+
