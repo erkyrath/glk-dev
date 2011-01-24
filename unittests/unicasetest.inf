@@ -1,3 +1,5 @@
+!% $MAX_UNICODE_CHARS=128
+
 Constant Story "UniCaseTest";
 Constant Headline "Not a game.^";
 
@@ -635,16 +637,20 @@ Array normalize_strings -->
   "Ordinary fiffi ss string."
   ""
   ""
+  "D@{323}@{307} D@{307}@{31B}@{323} D@{31B}@{323}@{307}"
+  "@{1E0C}@{307} @{1E0C}@{31B}@{307} @{1E0C}@{31B}@{307}"
   "Single @{C0}@{E0} @{2126} @{212F}"
   "Single @{C0}@{E0} @{3A9} @{212F}"
   "E@{300}e@{300}h@{331} @{3B1}@{313}@{300}@{345} @{fb04}@{fb01}."
   "@{C8}@{E8}@{1e96} @{1f82} @{fb04}@{fb01}."
   "@{300} +@{301}@{316} -@{304} a"
   "@{300} +@{316}@{301} -@{304} a"
+  "@{360}@{315}@{300}@{316}@{321}@{336} @{321}@{336}"
+  "@{336}@{321}@{316}@{300}@{315}@{360} @{336}@{321}"
   "@{1E09} @{107}@{327} @{E7}@{301} c@{327}@{301} c@{301}@{327}"
   "@{1E09} @{1E09} @{1E09} @{1E09} @{1E09}"
   "A@{301}@{336}A@{301}"
-  "A@{336}@{301}@{C1}"
+  "@{C1}@{336}@{C1}"
   0;
 
 [ test_normalize ix jx src target startlen targetlen newlen val;
@@ -718,7 +724,7 @@ Array normalize_strings -->
     }
     
     if (1) {
-        testarray-->0 = $1e96;
+        testarray-->0 = $1EB0;
         testarray-->1 = '.';
         startlen = 1;
         
@@ -735,9 +741,9 @@ Array normalize_strings -->
             print "  FAILED -- wrong length^";
         }
         else {
-            if (testarray-->0 ~= $1e96) {
+            if (testarray-->0 ~= $1EB0) {
                 errorcount++;
-                print "  FAILED -- should be @{1e96}^";
+                print "  FAILED -- should be @{1EB0}^";
             }
             if (testarray-->1 ~= '.') {
                 errorcount++;
@@ -747,7 +753,7 @@ Array normalize_strings -->
     }
 
     if (1) {
-        testarray-->0 = $1e96;
+        testarray-->0 = $1E96;
         testarray-->1 = $336;
         testarray-->2 = '.';
         startlen = 2;
@@ -760,14 +766,14 @@ Array normalize_strings -->
         print "Normalize: ";
         print_buffer(testarray, 2);
         print "^";
-        if (newlen ~= 3) {
+        if (newlen ~= 2) {
             errorcount++;
             print "  FAILED -- wrong length^";
         }
         else {
-            if (testarray-->0 ~= 'h') {
+            if (testarray-->0 ~= $1E96) {
                 errorcount++;
-                print "  FAILED -- should be h^";
+                print "  FAILED -- should be @{1E96}^";
             }
             if (testarray-->1 ~= $336) {
                 errorcount++;
