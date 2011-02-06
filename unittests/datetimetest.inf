@@ -39,8 +39,8 @@ Object Kitchen "Clock Room"
 			print " (local)~; a large green clock says ~";
 			print_current_time_short(timeval, false);
 			print " (utc)~.";
-			print " You can examine either more closely, or look at the
-				ticking meter.^";
+			print " You can examine either more closely. A
+				ticking meter and a calendar are also hanging nearby.^";
 			rtrue;
 		],
 	has light;
@@ -68,6 +68,55 @@ Object -> meter "ticking taxi meter"
 			print_meter_description();
 		],
 	has scenery;
+
+Attribute non32ish;
+	
+Class CalEntry
+	with
+		name 'entry',
+		dateprop 0 0 0 0 0 0 0 0,
+		timeprop 0 0 0,
+		description [;
+			print_entry_description(self);
+		],
+	has scenery ~non32ish;
+
+Object -> calendar "calendar"
+	with
+		name 'calendar' 'entries',
+		description [ ent;
+			print "You look through the calendar. A few entries are
+				picked out.^^";
+			objectloop (ent in calendar) {
+				print_entry_description(ent);
+			}
+		],
+	has scenery transparent;
+
+CalEntry -> -> moonlanding "first Moon landing"
+	with
+		name 'first' 'moon' 'landing',
+		dateprop 1969 7 20 0 20 17 40 0,
+		timeprop (-1) (-14182940) 0;
+	
+CalEntry -> -> epoch "Unix epoch"
+	with
+		name 'unix' 'epoch',
+		dateprop 1970 1 1 4 0 0 0 0,
+		timeprop 0 0 0;
+	
+CalEntry -> -> i7birthday "birthday of Inform 7"
+	with
+		name 'birthday' 'of' 'inform' '7//',
+		dateprop 2006 4 30 0 17 48 9 0,
+		timeprop 0 1146419289 0;
+	
+CalEntry -> -> tricentennial "American Tricentennial"
+	with
+		name 'american' 'tricentennial',
+		dateprop 2076 7 4 6 12 0 0 0,
+		timeprop 0 3361107600 0
+	has non32ish;
 	
 Include "Grammar";
 
@@ -184,6 +233,38 @@ Include "Grammar";
 			second difference.)^";
 ];
 
+[ print_entry_description ent   dv tv;
+	print "  ", (The) ent, ": ";
+	if (~~hasdatetime)
+		print_ret "???";
+	dv = ent.&dateprop;
+	tv = ent.&timeprop;
+	print_date(dv);
+	print " at ";
+	print_long_time(dv);
+	print " (utc)";
+	new_line;
+	
+	glk($016C, dv, timeval); ! date_to_time_utc
+	if (timeval-->0 ~= tv-->0 || timeval-->1 ~= tv-->1 || timeval-->2 ~= tv-->2) {
+		print "(Error: ";
+		if (timeval-->0 == -1 && timeval-->1 == -1 && timeval-->2 == 0
+			&& ent has non32ish) {
+			print "your platform has 32-bit time_t, so this date could
+				not be converted.";
+		}
+		else {
+			print "converting to timestamp produced ",
+				timeval-->0, ";", timeval-->1, ";", timeval-->2,
+				" which should have been ",
+				tv-->0, ";", tv-->1, ";", tv-->2, ".";
+		}
+		print ")^";
+	}
+
+	!### test date_to_simple_time_utc
+];
+
 [ print_short_time dv;
 	if (dv-->4 == 0)
 		print "12";
@@ -195,7 +276,11 @@ Include "Grammar";
 	if (dv-->5 < 10)
 		print "0";
 	print (dv-->5);
-	if (dv-->4 >= 1 && dv-->4 <= 12)
+	if (dv-->4 == 12 && dv-->5 == 0)
+		print " noon";
+	else if (dv-->4 == 0 && dv-->5 == 0)
+		print " midnight";
+	else if (dv-->4 < 12)
 		print " am";
 	else
 		print " pm";
@@ -219,7 +304,11 @@ Include "Grammar";
 		print "0";
 	print (dv-->6);
 	
-	if (dv-->4 >= 1 && dv-->4 <= 12)
+	if (dv-->4 == 12 && dv-->5 == 0 && dv-->6 == 0)
+		print " noon";
+	else if (dv-->4 == 0 && dv-->5 == 0 && dv-->6 == 0)
+		print " midnight";
+	else if (dv-->4 < 12)
 		print " am";
 	else
 		print " pm";
@@ -239,18 +328,18 @@ Include "Grammar";
 	print ", ";
 	
 	switch (dv-->1) {
-		0: print "Jan";
-		1: print "Feb";
-		2: print "Mar";
-		3: print "Apr";
-		4: print "May";
-		5: print "Jun";
-		6: print "Jul";
-		7: print "Aug";
-		8: print "Sep";
-		9: print "Oct";
-		10: print "Nov";
-		11: print "Dec";
+		1: print "Jan";
+		2: print "Feb";
+		3: print "Mar";
+		4: print "Apr";
+		5: print "May";
+		6: print "Jun";
+		7: print "Jul";
+		8: print "Aug";
+		9: print "Sep";
+		10: print "Oct";
+		11: print "Nov";
+		12: print "Dec";
 		default: print "???";
 	}
 	print " ";
