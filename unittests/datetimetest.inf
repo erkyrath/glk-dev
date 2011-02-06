@@ -1,0 +1,259 @@
+Constant Story "DateTimeTest";
+Constant Headline "^Not a game.^";
+
+! Unit test for the Glk date-time functions
+
+Include "Parser";
+Include "VerbLib";
+
+Global hasdatetime;
+
+Global startmin;
+Array starttimeval --> 4;
+Array timeval --> 4;
+Array date --> 9;
+Array bdate --> 9;
+
+[ Initialise;
+	location = Kitchen;
+	hasdatetime = glk($0004, 20, 0); ! gestalt_DateTime
+	if (hasdatetime) {
+		glk($0160, starttimeval); ! current_time
+		startmin = glk($0161, 60); ! current_simple_time
+	}
+];
+
+Object Kitchen "Clock Room"
+	with
+		description [;
+			if (~~hasdatetime) {
+				print "Warning: Your Glk library does not support the date
+					and time functions, so the clocks here don't work.^^";
+			}
+			print "This is a room of time and space. Well, mostly time.
+				It's not very big.^^";
+			if (hasdatetime)
+				glk($0160, timeval); ! current_time
+			print "A large blue clock on the wall says ~";
+			print_current_time_short(timeval, true);
+			print " (local)~; a large green clock says ~";
+			print_current_time_short(timeval, false);
+			print " (utc)~.";
+			print " You can examine either more closely, or look at the
+				ticking meter.^";
+			rtrue;
+		],
+	has light;
+
+Object -> local_clock "large blue clock"
+	with
+		name 'large' 'blue' 'local' 'time' 'clock',
+		description [;
+			print_clock_description(true);
+		],
+	has scenery;
+	
+Object -> utc_clock "large green clock"
+	with
+		name 'large' 'green' 'utc' 'time' 'clock',
+		description [;
+			print_clock_description(false);
+		],
+	has scenery;
+
+Object -> meter "ticking taxi meter"
+	with
+		name 'ticking' 'taxi' 'meter',
+		description [;
+			print_meter_description();
+		],
+	has scenery;
+	
+Include "Grammar";
+
+[ print_current_time_short tv islocal;
+	if (~~hasdatetime) {
+		print "??:??";
+		return;
+	}
+
+	if (islocal)
+		glk($0169, tv, date); ! time_to_date_local
+	else
+		glk($0168, tv, date); ! time_to_date_utc
+
+	print_short_time(date);
+];
+
+[ print_clock_description islocal   curmin;
+	if (islocal)
+		print "The large blue clock";
+	else
+		print "The large green clock";
+		
+	if (~~hasdatetime)
+		print_ret " is blinking ~??:??~.";
+		
+	timeval-->3 = $12345678;
+	glk($0160, timeval); ! current_time
+	curmin = glk($0161, 60); ! current_simple_time
+
+	date-->8 = $23456789;
+	if (islocal)
+		glk($0169, timeval, date); ! time_to_date_local
+	else
+		glk($0168, timeval, date); ! time_to_date_utc
+	
+	print " says ~";
+	print_long_time(date);
+	if (islocal)
+		print " (local time)";
+	else
+		print " (utc time)";
+	print ".~ Below that, in smaller letters, you see ~To be precise: ";
+	print timeval-->0, ";", timeval-->1, " seconds plus ", timeval-->2;
+	print " microseconds, or ";
+	print curmin;
+	print " minutes, since the epoch.~ And below that, more comfortably, ~";
+	print_date(date);
+	print ".~^";
+
+	if (timeval-->2 ~= date-->7)
+		print "^(Error: the microseconds value of the date does not
+			match the time.)^";
+	if (timeval-->0 > 0)
+		print "^(You're playing this after the 2106-ocalypse?
+			Impressive stamina.)^";
+	if (timeval-->0 < 0)
+		print "^(You're playing this before the 1970 epoch?
+			Impressive foresight.)^";
+	if (timeval-->3 ~= $12345678)
+		print "^(Error: timeval struct overflow!)^";
+	if (date-->8 ~= $23456789)
+		print "^(Error: date struct overflow!)^";
+
+	if (islocal)
+		glk($016B, curmin, 60, bdate); ! simple_time_to_date_local
+	else
+		glk($016A, curmin, 60, bdate); ! simple_time_to_date_utc
+	if (date-->0 ~= bdate-->0)
+		print "^(Error: the year does not match the simple year.)^";
+	if (date-->1 ~= bdate-->1)
+		print "^(Error: the month does not match the simple month.)^";
+	if (date-->2 ~= bdate-->2)
+		print "^(Error: the day does not match the simple day.)^";
+	if (date-->3 ~= bdate-->3)
+		print "^(Error: the weekday does not match the simple weekday.)^";
+	if (date-->4 ~= bdate-->4)
+		print "^(Error: the hour does not match the simple hour.)^";
+	if (date-->5 < (bdate-->5)-1 || date-->5 > (bdate-->5)+1)
+		print "^(Error: the minute does not match the simple minute.)^";
+	if (bdate-->7 ~= 0)
+		print "^(Error: the simple microsecond is not zero.)^";
+];
+
+[ print_meter_description   curmin diffmin val;
+	print "The ticking taxi meter";
+	if (~~hasdatetime)
+		print_ret " is blank.";
+
+	glk($0160, timeval); ! current_time
+	curmin = glk($0161, 60); ! current_simple_time
+
+	glk($0169, starttimeval, date); ! time_to_date_local
+		
+	if (timeval-->0 ~= starttimeval-->0)
+		print_ret " indicates that you've been waiting here across a
+			Unix high-word epoch. That's crazy talk.";
+	
+	print " indicates that it has been ";
+	print timeval-->1 - starttimeval-->1;
+	print " seconds since you entered the room (which was ";
+	print_long_time(date);
+	print " local time). That's roughly ";
+	diffmin = (curmin - startmin);
+	print diffmin;
+	print " minute";
+	if (diffmin ~= 1)
+		print "s";
+	print ".^";
+
+	val = (timeval-->1 - starttimeval-->1) / 60;
+	if (val < diffmin-1 || val > diffmin+1)
+		print "^(Error: the minute difference doesn't seem to match the
+			second difference.)^";
+];
+
+[ print_short_time dv;
+	if (dv-->4 == 0)
+		print "12";
+	else if (dv-->4 > 12)
+		print (dv-->4 - 12);
+	else
+		print (dv-->4);
+	print ":";
+	if (dv-->5 < 10)
+		print "0";
+	print (dv-->5);
+	if (dv-->4 >= 1 && dv-->4 <= 12)
+		print " am";
+	else
+		print " pm";
+];
+
+[ print_long_time dv;
+	if (dv-->4 == 0)
+		print "12";
+	else if (dv-->4 > 12)
+		print (dv-->4 - 12);
+	else
+		print (dv-->4);
+		
+	print ":";
+	if (dv-->5 < 10)
+		print "0";
+	print (dv-->5);
+	
+	print ":";
+	if (dv-->6 < 10)
+		print "0";
+	print (dv-->6);
+	
+	if (dv-->4 >= 1 && dv-->4 <= 12)
+		print " am";
+	else
+		print " pm";
+];
+
+[ print_date dv;
+	switch (dv-->3) {
+		0: print "Sunday";
+		1: print "Monday";
+		2: print "Tuesday";
+		3: print "Wednesday";
+		4: print "Thursday";
+		5: print "Friday";
+		6: print "Saturday";
+		default: print "???day";
+	}
+	print ", ";
+	
+	switch (dv-->1) {
+		0: print "Jan";
+		1: print "Feb";
+		2: print "Mar";
+		3: print "Apr";
+		4: print "May";
+		5: print "Jun";
+		6: print "Jul";
+		7: print "Aug";
+		8: print "Sep";
+		9: print "Oct";
+		10: print "Nov";
+		11: print "Dec";
+		default: print "???";
+	}
+	print " ";
+	
+	print dv-->2, ", ", dv-->0;
+];
