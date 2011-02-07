@@ -70,6 +70,7 @@ Object -> meter "ticking taxi meter"
 	has scenery;
 
 Attribute non32ish;
+Attribute normalized;
 	
 Class CalEntry
 	with
@@ -79,7 +80,7 @@ Class CalEntry
 		description [;
 			print_entry_description(self);
 		],
-	has scenery ~non32ish;
+	has scenery normalized ~non32ish;
 
 Object -> calendar "calendar"
 	with
@@ -105,17 +106,39 @@ CalEntry -> -> epoch "Unix epoch"
 		dateprop 1970 1 1 4 0 0 0 0,
 		timeprop 0 0 0;
 	
+CalEntry -> -> einstein "Einstein's first time journey"
+	with
+		name 'einstein' 'time' 'journey',
+		! 1:20 AM California time (still on daylight saving!)
+		! This would be: 1986 10 26 1 8 20 0 0,
+		! but we're testing the normalization feature here.
+		dateprop 1986 11 (-7) (-1) 57 (-42) 120 0,
+		timeprop 0 530698800 0
+	has proper ~normalized;
+	
 CalEntry -> -> i7birthday "birthday of Inform 7"
 	with
 		name 'birthday' 'of' 'inform' '7//',
+		! The time of Graham Nelson's public-beta post on RAIF.
 		dateprop 2006 4 30 0 17 48 9 0,
 		timeprop 0 1146419289 0;
 	
 CalEntry -> -> tricentennial "American Tricentennial"
 	with
 		name 'american' 'tricentennial',
+		! I tried to find the exact time of the Declaration's signing,
+		! but nobody seems to know.
 		dateprop 2076 7 4 6 12 0 0 0,
 		timeprop 0 3361107600 0
+	has non32ish;
+	
+CalEntry -> -> eclipse "longest solar eclipse of the millennium"
+	with
+		name 'longest' 'solar' 'eclipse',
+		! The longest solar eclipse of the past three millennia, actually.
+		! The given moment is the eclipse maximum.
+		dateprop 2186 7 16 0 15 8 5 0,
+		timeprop 1 2538376789 0
 	has non32ish;
 	
 Include "Grammar";
@@ -233,36 +256,71 @@ Include "Grammar";
 			second difference.)^";
 ];
 
-[ print_entry_description ent   dv tv;
+[ print_entry_description ent   dv tv val val2;
 	print "  ", (The) ent, ": ";
 	if (~~hasdatetime)
 		print_ret "???";
 	dv = ent.&dateprop;
 	tv = ent.&timeprop;
-	print_date(dv);
-	print " at ";
-	print_long_time(dv);
-	print " (utc)";
-	new_line;
 	
 	glk($016C, dv, timeval); ! date_to_time_utc
+	glk($0168, timeval, date); ! time_to_date_utc
+
+	if (ent has normalized) {
+		print_date(dv);
+		print " at ";
+		print_long_time(dv);
+	}
+	else {
+		print_date(date);
+		print " at ";
+		print_long_time(date);
+	}
+	print " (utc)";
+	new_line;
+
+	if (ent has normalized) {
+		val2 = false;
+		for (val = 0 : val < 8 : val++)
+			if (dv-->val ~= date-->val)
+				val2 = true;
+		if (val2 && ent hasnt non32ish) {
+			print "(Error: that should have been ";
+			print_date(dv);
+			print " at ";
+			print_long_time(dv);
+			print ")^";
+		}
+	}
+	
 	if (timeval-->0 ~= tv-->0 || timeval-->1 ~= tv-->1 || timeval-->2 ~= tv-->2) {
-		print "(Error: ";
 		if (timeval-->0 == -1 && timeval-->1 == -1 && timeval-->2 == 0
 			&& ent has non32ish) {
-			print "your platform has 32-bit time_t, so this date could
-				not be converted.";
+			print "(Error: your platform has 32-bit time_t, so this date could
+				not be converted.)^";
 		}
 		else {
-			print "converting to timestamp produced ",
+			print "(Error: converting to timestamp produced ",
 				timeval-->0, ";", timeval-->1, ";", timeval-->2,
 				" which should have been ",
-				tv-->0, ";", tv-->1, ";", tv-->2, ".";
+				tv-->0, ";", tv-->1, ";", tv-->2, ".)^";
 		}
-		print ")^";
 	}
 
-	!### test date_to_simple_time_utc
+	val = glk($016E, dv, 16); ! date_to_simple_time_utc
+	! divide the timeprop seconds value by 16, rounding towards negative
+	! infinity
+	val2 = tv-->1;
+	@ushiftr val2 4 val2;
+	val2 = val2 + (tv-->0 * $10000000);
+	if (val ~= val2) {
+		if (val == -1 && ent has non32ish) 
+			print "(Error: simple time conversion failed, same reason.)^";
+		else
+			print "(Error: converting to simple time produced ",
+				val, " which should have been ",
+				val2, ".)^";
+	}
 ];
 
 [ print_short_time dv;
