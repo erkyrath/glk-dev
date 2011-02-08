@@ -1,4 +1,4 @@
-<glkapi>
+<glkapi version="0.7.2">
   <classes count="4">
     <class name="fileref" value="2" />
     <class name="schannel" value="3" />

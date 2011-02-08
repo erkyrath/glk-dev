@@ -76,9 +76,12 @@ void glk_main()
         return;
     glk_set_window(mainwin);
 
-    if (usexml)
-        glk_put_string("<glkapi>\n");
-
+    if (usexml) {
+        glui32 vers = glk_gestalt(gestalt_Version, 0);
+        sprintf(buf, "<glkapi version=\"%d.%d.%d\">\n",
+            (vers >> 16) & 0xFFFF, (vers >> 8) & 0xFF, (vers & 0xFF));
+        glk_put_string(buf);
+    }
 
     count = gidispatch_count_classes();
     if (usexml)
