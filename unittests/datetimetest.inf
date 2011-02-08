@@ -20,6 +20,15 @@ Array bdate --> 9;
 	if (hasdatetime) {
 		glk($0160, starttimeval); ! current_time
 		startmin = glk($0161, 60); ! current_simple_time
+		
+		glk($0169, starttimeval, date); ! time_to_date_local
+		yearwheel.setting = date-->0;
+		monthwheel.setting = date-->1;
+		daywheel.setting = date-->2;
+		hourwheel.setting = date-->4;
+		minutewheel.setting = date-->5;
+		secondwheel.setting = date-->6;
+		microsecwheel.setting = date-->7;
 	}
 ];
 
@@ -31,7 +40,7 @@ Object Kitchen "Clock Room"
 					and time functions, so the clocks here don't work.^^";
 			}
 			print "This is a room of time and space. Well, mostly time.
-				It's not very big.^^";
+				It's not very big. But there is a faint smell of bacon.^^";
 			if (hasdatetime)
 				glk($0160, timeval); ! current_time
 			print "A large blue clock on the wall says ~";
@@ -40,11 +49,22 @@ Object Kitchen "Clock Room"
 			print_current_time_short(timeval, false);
 			print " (utc)~.";
 			print " You can examine either more closely. A
-				ticking meter and a calendar are also hanging nearby.^";
+				ticking meter and a calendar are also hanging nearby.
+				In one corner is an elaborate... gizmo... with seven
+				control wheels.^";
 			rtrue;
 		],
 	has light;
 
+Object -> bacon "bacon"
+	with
+		name 'bacon',
+		before [;
+			"~Both unit tests and brussels sprouts can be made better with
+				liberal application of bacon.~ -- nloofbourrow";
+		],
+	has scenery;
+	
 Object -> local_clock "large blue clock"
 	with
 		name 'large' 'blue' 'local' 'time' 'clock',
@@ -140,8 +160,110 @@ CalEntry -> -> eclipse "longest solar eclipse of the millennium"
 		dateprop 2186 7 16 0 15 8 5 0,
 		timeprop 1 2538376789 0
 	has non32ish;
-	
+
+Class Wheel
+	with
+		name 'control' 'dial' 'wheel',
+		setting 0,
+		description [;
+			print_ret (The) self, " is set to ", self.setting, ".";
+		],
+		before [;
+			SetTo:
+				self.setting = special_number1;
+				print "You set ", (the) self, " to ", self.setting, ".^^";
+				print_gizmo_readout();
+				rtrue;
+		],
+	has scenery;
+
+Object -> gizmo "gizmo"
+	with
+		name 'gizmo' 'elaborate' 'digital' 'readout' 'dials' 'wheels',
+		description [;
+			print "The gizmo is a digital readout above a row of seven
+				control wheels. The wheels, in order, say: ~";
+			print "year:", yearwheel.setting, ", ";
+			print "month:", monthwheel.setting, ", ";
+			print "day:", daywheel.setting, ", ";
+			print "hour:", hourwheel.setting, ", ";
+			print "minute:", minutewheel.setting, ", ";
+			print "second:", secondwheel.setting, ", ";
+			print "microsecond:", microsecwheel.setting, "~.^^";
+			
+			print_gizmo_readout();
+
+			if (self hasnt general) {
+				give self general;
+				print "^(You can set any of the dials to any number,
+					positive or negative.)^";
+			}
+		],
+	has scenery transparent;
+
+Wheel -> -> yearwheel "year wheel"
+	with
+		name 'year';
+		
+Wheel -> -> monthwheel "month wheel"
+	with
+		name 'month' 'mon';
+		
+Wheel -> -> daywheel "day wheel"
+	with
+		name 'day';
+		
+Wheel -> -> hourwheel "hour wheel"
+	with
+		name 'hour';
+		
+Wheel -> -> minutewheel "minute wheel"
+	with
+		name 'minute' 'min';
+		
+Wheel -> -> secondwheel "second wheel"
+	with
+		name 'second' 'sec';
+		
+Wheel -> -> microsecwheel "microsecond wheel"
+	with
+		name 'microsecond' 'micro' 'microsec' 'usec';
+		
 Include "Grammar";
+
+[ SignedNum   ix addr len negflag res gotany;
+	res = 0;
+	negflag = false;
+	gotany = false;
+	
+	if (wn > num_words)
+		return GPR_FAIL;
+
+	addr = WordAddress(wn);
+	len = WordLength(wn);
+	for (ix=0 : ix<len : ix++) {
+		if (addr->ix == '-')
+			negflag = true;
+		else if (addr->ix >= '0' && addr->ix <= '9')
+			res = res*10 + (addr->ix - '0');
+		else
+			break;
+		gotany++;
+	}
+	wn++;
+
+	if (~~gotany)
+		return GPR_FAIL;
+	if (negflag)
+		res = -res;
+	parsed_number = res;
+	return GPR_NUMBER;
+];
+
+Extend 'set' replace 
+	* noun 'to' SignedNum -> SetTo;
+Extend 'adjust' replace 
+	* noun 'to' SignedNum -> SetTo;
 
 [ print_current_time_short tv islocal;
 	if (~~hasdatetime) {
@@ -321,6 +443,29 @@ Include "Grammar";
 				val, " which should have been ",
 				val2, ".)^";
 	}
+];
+
+[ print_gizmo_readout;
+	if (~~hasdatetime)
+		print_ret "The readout, however, is blank.";
+
+	date-->0 = yearwheel.setting;
+	date-->1 = monthwheel.setting;
+	date-->2 = daywheel.setting;
+	date-->3 = 0; ! day of week is ignored
+	date-->4 = hourwheel.setting;
+	date-->5 = minutewheel.setting;
+	date-->6 = secondwheel.setting;
+	date-->7 = microsecwheel.setting;
+	glk($016D, date, timeval); ! date_to_time_local
+	glk($0169, timeval, date); ! time_to_date_local
+	
+	print "The readout says, ~";
+	print_date(date);
+	print " at ";
+	print_long_time(date);
+	print " plus ", date-->7, " microseconds";
+	print_ret "~.";
 ];
 
 [ print_short_time dv;
