@@ -148,14 +148,15 @@ CalEntry -> -> tricentennial "American Tricentennial"
 		name 'american' 'tricentennial',
 		! I tried to find the exact time of the Declaration's signing,
 		! but nobody seems to know.
-		dateprop 2076 7 4 6 12 0 0 0,
-		timeprop 0 3361107600 0
+		dateprop 2076 7 4 6 12 0 0 500000,
+		timeprop 0 3361107600 500000
 	has non32ish;
 	
 CalEntry -> -> eclipse "longest solar eclipse of the millennium"
 	with
 		name 'longest' 'solar' 'eclipse',
 		! The longest solar eclipse of the past three millennia, actually.
+		! http://eclipse.gsfc.nasa.gov/SEcat5/SE2101-2200.html
 		! The given moment is the eclipse maximum.
 		dateprop 2186 7 16 0 15 8 5 0,
 		timeprop 1 2538376789 0
@@ -183,13 +184,13 @@ Object -> gizmo "gizmo"
 		description [;
 			print "The gizmo is a digital readout above a row of seven
 				control wheels. The wheels, in order, say: ~";
-			print "year:", yearwheel.setting, ", ";
-			print "month:", monthwheel.setting, ", ";
-			print "day:", daywheel.setting, ", ";
-			print "hour:", hourwheel.setting, ", ";
-			print "minute:", minutewheel.setting, ", ";
-			print "second:", secondwheel.setting, ", ";
-			print "microsecond:", microsecwheel.setting, "~.^^";
+			print "year ", yearwheel.setting, ", ";
+			print "month ", monthwheel.setting, ", ";
+			print "day ", daywheel.setting, ", ";
+			print "hour ", hourwheel.setting, ", ";
+			print "minute ", minutewheel.setting, ", ";
+			print "second ", secondwheel.setting, ", ";
+			print "microsecond ", microsecwheel.setting, "~.^^";
 			
 			print_gizmo_readout();
 
@@ -203,27 +204,27 @@ Object -> gizmo "gizmo"
 
 Wheel -> -> yearwheel "year wheel"
 	with
-		name 'year';
+		name 'year' 'years';
 		
 Wheel -> -> monthwheel "month wheel"
 	with
-		name 'month' 'mon';
+		name 'month' 'months' 'mon';
 		
 Wheel -> -> daywheel "day wheel"
 	with
-		name 'day';
+		name 'day' 'days';
 		
 Wheel -> -> hourwheel "hour wheel"
 	with
-		name 'hour';
+		name 'hour' 'hours';
 		
 Wheel -> -> minutewheel "minute wheel"
 	with
-		name 'minute' 'min';
+		name 'minute' 'minutes' 'min';
 		
 Wheel -> -> secondwheel "second wheel"
 	with
-		name 'second' 'sec';
+		name 'second' 'seconds' 'sec';
 		
 Wheel -> -> microsecwheel "microsecond wheel"
 	with
@@ -416,8 +417,7 @@ Extend 'adjust' replace
 	}
 	
 	if (timeval-->0 ~= tv-->0 || timeval-->1 ~= tv-->1 || timeval-->2 ~= tv-->2) {
-		if (timeval-->0 == -1 && timeval-->1 == -1 && timeval-->2 == 0
-			&& ent has non32ish) {
+		if (timeval-->0 == -1 && timeval-->1 == -1 && ent has non32ish) {
 			print "(Error: your platform has 32-bit time_t, so this date could
 				not be converted.)^";
 		}
