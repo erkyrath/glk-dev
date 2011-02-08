@@ -1,5 +1,6 @@
 Constant Story "DateTimeTest";
 Constant Headline "^Not a game.^";
+Release 3;
 
 ! Unit test for the Glk date-time functions
 
@@ -11,6 +12,7 @@ Global hasdatetime;
 Global startmin;
 Array starttimeval --> 4;
 Array timeval --> 4;
+Array btimeval --> 4;
 Array date --> 9;
 Array bdate --> 9;
 
@@ -48,8 +50,8 @@ Object Kitchen "Clock Room"
 			print " (local)~; a large green clock says ~";
 			print_current_time_short(timeval, false);
 			print " (utc)~.";
-			print " You can examine either more closely. A
-				ticking meter and a calendar are also hanging nearby.
+			print " You can examine either more closely. A ticking meter,
+				a time zone sign, and a calendar are also hanging nearby.
 				In one corner is an elaborate... gizmo... with seven
 				control wheels.^";
 			rtrue;
@@ -81,6 +83,14 @@ Object -> utc_clock "large green clock"
 		],
 	has scenery;
 
+Object -> timezone "time zone sign"
+	with
+		name 'time' 'zone' 'sign',
+		description [;
+			print_zone_description();
+		],
+	has scenery;
+	
 Object -> meter "ticking taxi meter"
 	with
 		name 'ticking' 'taxi' 'meter',
@@ -149,7 +159,7 @@ CalEntry -> -> tricentennial "American Tricentennial"
 		! I tried to find the exact time of the Declaration's signing,
 		! but nobody seems to know.
 		dateprop 2076 7 4 6 12 0 0 500000,
-		timeprop 0 3361107600 500000
+		timeprop 0 3361089600 500000
 	has non32ish;
 	
 CalEntry -> -> eclipse "longest solar eclipse of the millennium"
@@ -345,6 +355,36 @@ Extend 'adjust' replace
 		print "^(Error: the minute does not match the simple minute.)^";
 	if (bdate-->7 ~= 0)
 		print "^(Error: the simple microsecond is not zero.)^";
+];
+
+[ print_zone_description zonesec zonemin zonehour;
+	if (~~hasdatetime)
+		print_ret (The) self, " is blank.";
+
+	glk($0160, timeval); ! current_time
+	glk($0169, timeval, date); ! time_to_date_local
+	glk($016C, date, btimeval); ! date_to_time_utc
+
+	zonesec = btimeval-->1 - timeval-->1;
+
+	print "Your current time zone is";
+
+	if (zonesec < 0) {
+		zonesec = -zonesec;
+		print " minus";
+	}
+	
+	zonehour = zonesec/ 3600;
+	zonesec = zonesec % 3600;
+	print " ", zonehour, " hours";
+	if (zonesec == 0)
+		print_ret ".";
+	zonemin = zonesec / 60;
+	zonesec = zonesec % 60;
+	print ", ", zonemin, " minutes";
+	if (zonesec == 0)
+		print_ret ".";
+	print_ret ", ", zonesec, " seconds.";
 ];
 
 [ print_meter_description   curmin diffmin val;
