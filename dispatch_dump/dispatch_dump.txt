@@ -4,7 +4,7 @@ schannel 3
 stream 1
 window 0
 
-* constants 121
+* constants 122
 evtype_Arrange 5
 evtype_CharInput 2
 evtype_Hyperlink 8
@@ -30,6 +30,7 @@ gestalt_CharOutput 3
 gestalt_CharOutput_ApproxPrint 1
 gestalt_CharOutput_CannotPrint 0
 gestalt_CharOutput_ExactPrint 2
+gestalt_DateTime 20
 gestalt_DrawImage 7
 gestalt_Graphics 6
 gestalt_GraphicsTransparency 14
@@ -127,7 +128,7 @@ wintype_Pair 1
 wintype_TextBuffer 3
 wintype_TextGrid 4
 
-* functions 106
+* functions 116
 1 exit 0:
 2 set_interrupt_handler _
 3 tick 0:
@@ -234,4 +235,14 @@ wintype_TextGrid 4
 292 buffer_canon_normalize_uni 3&+#IuIu:Iu
 336 set_echo_line_event 2QaIu:
 337 set_terminators_line_event 2Qa>#Iu:
+352 current_time 1<+[3IsIuIs]:
+353 current_simple_time 2Iu:Is
+360 time_to_date_utc 2>+[3IsIuIs]<+[8IsIsIsIsIsIsIsIs]:
+361 time_to_date_local 2>+[3IsIuIs]<+[8IsIsIsIsIsIsIsIs]:
+362 simple_time_to_date_utc 3IsIu<+[8IsIsIsIsIsIsIsIs]:
+363 simple_time_to_date_local 3IsIu<+[8IsIsIsIsIsIsIsIs]:
+364 date_to_time_utc 2>+[8IsIsIsIsIsIsIsIs]<+[3IsIuIs]:
+365 date_to_time_local 2>+[8IsIsIsIsIsIsIsIs]<+[3IsIuIs]:
+366 date_to_simple_time_utc 3>+[8IsIsIsIsIsIsIsIs]Iu:Is
+367 date_to_simple_time_local 3>+[8IsIsIsIsIsIsIsIs]Iu:Is
 

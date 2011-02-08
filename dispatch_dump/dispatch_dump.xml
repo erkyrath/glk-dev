@@ -6,7 +6,7 @@
     <class name="window" value="0" />
   </classes>
 
-  <constants count="121">
+  <constants count="122">
     <constant name="evtype_Arrange" value="5" />
     <constant name="evtype_CharInput" value="2" />
     <constant name="evtype_Hyperlink" value="8" />
@@ -32,6 +32,7 @@
     <constant name="gestalt_CharOutput_ApproxPrint" value="1" />
     <constant name="gestalt_CharOutput_CannotPrint" value="0" />
     <constant name="gestalt_CharOutput_ExactPrint" value="2" />
+    <constant name="gestalt_DateTime" value="20" />
     <constant name="gestalt_DrawImage" value="7" />
     <constant name="gestalt_Graphics" value="6" />
     <constant name="gestalt_GraphicsTransparency" value="14" />
@@ -130,7 +131,7 @@
     <constant name="wintype_TextGrid" value="4" />
   </constants>
 
-  <functions count="106">
+  <functions count="116">
     <function id="1" name="exit" proto="0:" />
     <function id="2" name="set_interrupt_handler" proto="_" />
     <function id="3" name="tick" proto="0:" />
@@ -237,6 +238,16 @@
     <function id="292" name="buffer_canon_normalize_uni" proto="3&amp;+#IuIu:Iu" />
     <function id="336" name="set_echo_line_event" proto="2QaIu:" />
     <function id="337" name="set_terminators_line_event" proto="2Qa&gt;#Iu:" />
+    <function id="352" name="current_time" proto="1&lt;+[3IsIuIs]:" />
+    <function id="353" name="current_simple_time" proto="2Iu:Is" />
+    <function id="360" name="time_to_date_utc" proto="2&gt;+[3IsIuIs]&lt;+[8IsIsIsIsIsIsIsIs]:" />
+    <function id="361" name="time_to_date_local" proto="2&gt;+[3IsIuIs]&lt;+[8IsIsIsIsIsIsIsIs]:" />
+    <function id="362" name="simple_time_to_date_utc" proto="3IsIu&lt;+[8IsIsIsIsIsIsIsIs]:" />
+    <function id="363" name="simple_time_to_date_local" proto="3IsIu&lt;+[8IsIsIsIsIsIsIsIs]:" />
+    <function id="364" name="date_to_time_utc" proto="2&gt;+[8IsIsIsIsIsIsIsIs]&lt;+[3IsIuIs]:" />
+    <function id="365" name="date_to_time_local" proto="2&gt;+[8IsIsIsIsIsIsIsIs]&lt;+[3IsIuIs]:" />
+    <function id="366" name="date_to_simple_time_utc" proto="3&gt;+[8IsIsIsIsIsIsIsIs]Iu:Is" />
+    <function id="367" name="date_to_simple_time_local" proto="3&gt;+[8IsIsIsIsIsIsIsIs]Iu:Is" />
   </functions>
 
 </glkapi>
