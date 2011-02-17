@@ -19,8 +19,8 @@ library. (CheapGlk is easiest.) Running it (with CheapGlk, including
 the -q option to suppress CheapGlk's version banner) looks like this:
 
   make
-  dispatch_dump -q > dispatch_dump.txt
-  dispatch_dump -q --xml > dispatch_dump.xml
+  ./dispatch_dump -q > dispatch_dump.txt
+  ./dispatch_dump -q --xml > dispatch_dump.xml
 
 However, you don't have to do this, because this directory already
 contains up-to-date dispatch_dump.txt and dispatch_dump.xml files.
@@ -28,8 +28,8 @@ contains up-to-date dispatch_dump.txt and dispatch_dump.xml files.
 The parse_dispatch.py script takes the XML output and generates two
 further formats:
 
-  parse_dispatch.py --dispajs dispatch_dump.xml > proto_map.js
-  parse_dispatch.py --infglk  dispatch_dump.xml > infglk.h
+  ./parse_dispatch.py --dispajs dispatch_dump.xml > proto_map.js
+  ./parse_dispatch.py --infglk  dispatch_dump.xml > infglk.h
 
 The proto_map.js file is a segment of gi_dispa.js (in the Quixe
 distribution). The infglk.h file is an Inform 6 header, and also
