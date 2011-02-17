@@ -1,0 +1,591 @@
+Constant Story "DateTimeTest";
+Constant Headline "^Not a game.^";
+Release 3;
+
+! Unit test for the Glk date-time functions
+
+Include "Parser";
+Include "VerbLib";
+
+Global hasdatetime;
+
+Global startmin;
+Array starttimeval --> 4;
+Array timeval --> 4;
+Array btimeval --> 4;
+Array date --> 9;
+Array bdate --> 9;
+
+[ Initialise;
+	location = Kitchen;
+	hasdatetime = glk($0004, 20, 0); ! gestalt_DateTime
+	if (hasdatetime) {
+		glk($0160, starttimeval); ! current_time
+		startmin = glk($0161, 60); ! current_simple_time
+		
+		glk($0169, starttimeval, date); ! time_to_date_local
+		yearwheel.setting = date-->0;
+		monthwheel.setting = date-->1;
+		daywheel.setting = date-->2;
+		hourwheel.setting = date-->4;
+		minutewheel.setting = date-->5;
+		secondwheel.setting = date-->6;
+		microsecwheel.setting = date-->7;
+	}
+];
+
+Object Kitchen "Clock Room"
+	with
+		description [;
+			if (~~hasdatetime) {
+				print "Warning: Your Glk library does not support the date
+					and time functions, so the clocks here don't work.^^";
+			}
+			print "This is a room of time and space. Well, mostly time.
+				It's not very big. But there is a faint smell of bacon.^^";
+			if (hasdatetime)
+				glk($0160, timeval); ! current_time
+			print "A large blue clock on the wall says ~";
+			print_current_time_short(timeval, true);
+			print " (local)~; a large green clock says ~";
+			print_current_time_short(timeval, false);
+			print " (utc)~.";
+			print " You can examine either more closely. A ticking meter,
+				a time zone sign, and a calendar are also hanging nearby.
+				In one corner is an elaborate... gizmo... with seven
+				control wheels.^";
+			rtrue;
+		],
+	has light;
+
+Object -> bacon "bacon"
+	with
+		name 'bacon',
+		before [;
+			"~Both unit tests and brussels sprouts can be made better with
+				liberal application of bacon.~ -- nloofbourrow";
+		],
+	has scenery;
+	
+Object -> local_clock "large blue clock"
+	with
+		name 'large' 'blue' 'local' 'time' 'clock',
+		description [;
+			print_clock_description(true);
+		],
+	has scenery;
+	
+Object -> utc_clock "large green clock"
+	with
+		name 'large' 'green' 'utc' 'time' 'clock',
+		description [;
+			print_clock_description(false);
+		],
+	has scenery;
+
+Object -> timezone "time zone sign"
+	with
+		name 'time' 'zone' 'sign',
+		description [;
+			print_zone_description();
+		],
+	has scenery;
+	
+Object -> meter "ticking taxi meter"
+	with
+		name 'ticking' 'taxi' 'meter',
+		description [;
+			print_meter_description();
+		],
+	has scenery;
+
+Attribute non32ish;
+Attribute normalized;
+	
+Class CalEntry
+	with
+		name 'entry',
+		dateprop 0 0 0 0 0 0 0 0,
+		timeprop 0 0 0,
+		description [;
+			print_entry_description(self);
+		],
+	has scenery normalized ~non32ish;
+
+Object -> calendar "calendar"
+	with
+		name 'calendar' 'entries',
+		description [ ent;
+			print "You look through the calendar. A few entries are
+				picked out.^^";
+			objectloop (ent in calendar) {
+				print_entry_description(ent);
+			}
+		],
+	has scenery transparent;
+
+CalEntry -> -> moonlanding "first Moon landing"
+	with
+		name 'first' 'moon' 'landing',
+		dateprop 1969 7 20 0 20 17 40 0,
+		timeprop (-1) (-14182940) 0;
+	
+CalEntry -> -> epoch "Unix epoch"
+	with
+		name 'unix' 'epoch',
+		dateprop 1970 1 1 4 0 0 0 0,
+		timeprop 0 0 0;
+	
+CalEntry -> -> einstein "Einstein's first time journey"
+	with
+		name 'einstein' 'time' 'journey',
+		! 1:20 AM California time (still on daylight saving!)
+		! This would be: 1986 10 26 1 8 20 0 0,
+		! but we're testing the normalization feature here.
+		dateprop 1986 11 (-7) (-1) 57 (-42) 120 0,
+		timeprop 0 530698800 0
+	has proper ~normalized;
+	
+CalEntry -> -> i7birthday "birthday of Inform 7"
+	with
+		name 'birthday' 'of' 'inform' '7//',
+		! The time of Graham Nelson's public-beta post on RAIF.
+		dateprop 2006 4 30 0 17 48 9 0,
+		timeprop 0 1146419289 0;
+	
+CalEntry -> -> tricentennial "American Tricentennial"
+	with
+		name 'american' 'tricentennial',
+		! I tried to find the exact time of the Declaration's signing,
+		! but nobody seems to know.
+		dateprop 2076 7 4 6 12 0 0 500000,
+		timeprop 0 3361089600 500000
+	has non32ish;
+	
+CalEntry -> -> eclipse "longest solar eclipse of the millennium"
+	with
+		name 'longest' 'solar' 'eclipse',
+		! The longest solar eclipse of the past three millennia, actually.
+		! http://eclipse.gsfc.nasa.gov/SEcat5/SE2101-2200.html
+		! The given moment is the eclipse maximum.
+		dateprop 2186 7 16 0 15 8 5 0,
+		timeprop 1 2538376789 0
+	has non32ish;
+
+Class Wheel
+	with
+		name 'control' 'dial' 'wheel',
+		setting 0,
+		description [;
+			print_ret (The) self, " is set to ", self.setting, ".";
+		],
+		before [;
+			SetTo:
+				self.setting = special_number1;
+				print "You set ", (the) self, " to ", self.setting, ".^^";
+				print_gizmo_readout();
+				rtrue;
+		],
+	has scenery;
+
+Object -> gizmo "gizmo"
+	with
+		name 'gizmo' 'elaborate' 'digital' 'readout' 'dials' 'wheels',
+		description [;
+			print "The gizmo is a digital readout above a row of seven
+				control wheels. The wheels, in order, say: ~";
+			print "year ", yearwheel.setting, ", ";
+			print "month ", monthwheel.setting, ", ";
+			print "day ", daywheel.setting, ", ";
+			print "hour ", hourwheel.setting, ", ";
+			print "minute ", minutewheel.setting, ", ";
+			print "second ", secondwheel.setting, ", ";
+			print "microsecond ", microsecwheel.setting, "~.^^";
+			
+			print_gizmo_readout();
+
+			if (self hasnt general) {
+				give self general;
+				print "^(You can set any of the dials to any number,
+					positive or negative.)^";
+			}
+		],
+	has scenery transparent;
+
+Wheel -> -> yearwheel "year wheel"
+	with
+		name 'year' 'years';
+		
+Wheel -> -> monthwheel "month wheel"
+	with
+		name 'month' 'months' 'mon';
+		
+Wheel -> -> daywheel "day wheel"
+	with
+		name 'day' 'days';
+		
+Wheel -> -> hourwheel "hour wheel"
+	with
+		name 'hour' 'hours';
+		
+Wheel -> -> minutewheel "minute wheel"
+	with
+		name 'minute' 'minutes' 'min';
+		
+Wheel -> -> secondwheel "second wheel"
+	with
+		name 'second' 'seconds' 'sec';
+		
+Wheel -> -> microsecwheel "microsecond wheel"
+	with
+		name 'microsecond' 'micro' 'microsec' 'usec';
+		
+Include "Grammar";
+
+[ SignedNum   ix addr len negflag res gotany;
+	res = 0;
+	negflag = false;
+	gotany = false;
+	
+	if (wn > num_words)
+		return GPR_FAIL;
+
+	addr = WordAddress(wn);
+	len = WordLength(wn);
+	for (ix=0 : ix<len : ix++) {
+		if (addr->ix == '-')
+			negflag = true;
+		else if (addr->ix >= '0' && addr->ix <= '9')
+			res = res*10 + (addr->ix - '0');
+		else
+			break;
+		gotany++;
+	}
+	wn++;
+
+	if (~~gotany)
+		return GPR_FAIL;
+	if (negflag)
+		res = -res;
+	parsed_number = res;
+	return GPR_NUMBER;
+];
+
+Extend 'set' replace 
+	* noun 'to' SignedNum -> SetTo;
+Extend 'adjust' replace 
+	* noun 'to' SignedNum -> SetTo;
+
+[ print_current_time_short tv islocal;
+	if (~~hasdatetime) {
+		print "??:??";
+		return;
+	}
+
+	if (islocal)
+		glk($0169, tv, date); ! time_to_date_local
+	else
+		glk($0168, tv, date); ! time_to_date_utc
+
+	print_short_time(date);
+];
+
+[ print_clock_description islocal   curmin;
+	if (islocal)
+		print "The large blue clock";
+	else
+		print "The large green clock";
+		
+	if (~~hasdatetime)
+		print_ret " is blinking ~??:??~.";
+		
+	timeval-->3 = $12345678;
+	glk($0160, timeval); ! current_time
+	curmin = glk($0161, 60); ! current_simple_time
+
+	date-->8 = $23456789;
+	if (islocal)
+		glk($0169, timeval, date); ! time_to_date_local
+	else
+		glk($0168, timeval, date); ! time_to_date_utc
+	
+	print " says ~";
+	print_long_time(date);
+	if (islocal)
+		print " (local time)";
+	else
+		print " (utc time)";
+	print ".~ Below that, in smaller letters, you see ~To be precise: ";
+	print timeval-->0, ";", timeval-->1, " seconds plus ", timeval-->2;
+	print " microseconds, or ";
+	print curmin;
+	print " minutes, since the epoch.~ And below that, more comfortably, ~";
+	print_date(date);
+	print ".~^";
+
+	if (timeval-->2 ~= date-->7)
+		print "^(Error: the microseconds value of the date does not
+			match the time.)^";
+	if (timeval-->0 > 0)
+		print "^(You're playing this after the 2106-ocalypse?
+			Impressive stamina.)^";
+	if (timeval-->0 < 0)
+		print "^(You're playing this before the 1970 epoch?
+			Impressive foresight.)^";
+	if (timeval-->3 ~= $12345678)
+		print "^(Error: timeval struct overflow!)^";
+	if (date-->8 ~= $23456789)
+		print "^(Error: date struct overflow!)^";
+
+	if (islocal)
+		glk($016B, curmin, 60, bdate); ! simple_time_to_date_local
+	else
+		glk($016A, curmin, 60, bdate); ! simple_time_to_date_utc
+	if (date-->0 ~= bdate-->0)
+		print "^(Error: the year does not match the simple year.)^";
+	if (date-->1 ~= bdate-->1)
+		print "^(Error: the month does not match the simple month.)^";
+	if (date-->2 ~= bdate-->2)
+		print "^(Error: the day does not match the simple day.)^";
+	if (date-->3 ~= bdate-->3)
+		print "^(Error: the weekday does not match the simple weekday.)^";
+	if (date-->4 ~= bdate-->4)
+		print "^(Error: the hour does not match the simple hour.)^";
+	if (date-->5 < (bdate-->5)-1 || date-->5 > (bdate-->5)+1)
+		print "^(Error: the minute does not match the simple minute.)^";
+	if (bdate-->7 ~= 0)
+		print "^(Error: the simple microsecond is not zero.)^";
+];
+
+[ print_zone_description zonesec zonemin zonehour;
+	if (~~hasdatetime)
+		print_ret (The) self, " is blank.";
+
+	glk($0160, timeval); ! current_time
+	glk($0169, timeval, date); ! time_to_date_local
+	glk($016C, date, btimeval); ! date_to_time_utc
+
+	zonesec = btimeval-->1 - timeval-->1;
+
+	print "Your current time zone is";
+
+	if (zonesec < 0) {
+		zonesec = -zonesec;
+		print " minus";
+	}
+	
+	zonehour = zonesec/ 3600;
+	zonesec = zonesec % 3600;
+	print " ", zonehour, " hours";
+	if (zonesec == 0)
+		print_ret ".";
+	zonemin = zonesec / 60;
+	zonesec = zonesec % 60;
+	print ", ", zonemin, " minutes";
+	if (zonesec == 0)
+		print_ret ".";
+	print_ret ", ", zonesec, " seconds.";
+];
+
+[ print_meter_description   curmin diffmin val;
+	print "The ticking taxi meter";
+	if (~~hasdatetime)
+		print_ret " is blank.";
+
+	glk($0160, timeval); ! current_time
+	curmin = glk($0161, 60); ! current_simple_time
+
+	glk($0169, starttimeval, date); ! time_to_date_local
+		
+	if (timeval-->0 ~= starttimeval-->0)
+		print_ret " indicates that you've been waiting here across a
+			Unix high-word epoch. That's crazy talk.";
+	
+	print " indicates that it has been ";
+	print timeval-->1 - starttimeval-->1;
+	print " seconds since you entered the room (which was ";
+	print_long_time(date);
+	print " local time). That's roughly ";
+	diffmin = (curmin - startmin);
+	print diffmin;
+	print " minute";
+	if (diffmin ~= 1)
+		print "s";
+	print ".^";
+
+	val = (timeval-->1 - starttimeval-->1) / 60;
+	if (val < diffmin-1 || val > diffmin+1)
+		print "^(Error: the minute difference doesn't seem to match the
+			second difference.)^";
+];
+
+[ print_entry_description ent   dv tv val val2;
+	print "  ", (The) ent, ": ";
+	if (~~hasdatetime)
+		print_ret "???";
+	dv = ent.&dateprop;
+	tv = ent.&timeprop;
+	
+	glk($016C, dv, timeval); ! date_to_time_utc
+	glk($0168, timeval, date); ! time_to_date_utc
+
+	if (ent has normalized) {
+		print_date(dv);
+		print " at ";
+		print_long_time(dv);
+	}
+	else {
+		print_date(date);
+		print " at ";
+		print_long_time(date);
+	}
+	print " (utc)";
+	new_line;
+
+	if (ent has normalized) {
+		val2 = false;
+		for (val = 0 : val < 8 : val++)
+			if (dv-->val ~= date-->val)
+				val2 = true;
+		if (val2 && ent hasnt non32ish) {
+			print "(Error: that should have been ";
+			print_date(dv);
+			print " at ";
+			print_long_time(dv);
+			print ")^";
+		}
+	}
+	
+	if (timeval-->0 ~= tv-->0 || timeval-->1 ~= tv-->1 || timeval-->2 ~= tv-->2) {
+		if (timeval-->0 == -1 && timeval-->1 == -1 && ent has non32ish) {
+			print "(Error: your platform has 32-bit time_t, so this date could
+				not be converted.)^";
+		}
+		else {
+			print "(Error: converting to timestamp produced ",
+				timeval-->0, ";", timeval-->1, ";", timeval-->2,
+				" which should have been ",
+				tv-->0, ";", tv-->1, ";", tv-->2, ".)^";
+		}
+	}
+
+	val = glk($016E, dv, 16); ! date_to_simple_time_utc
+	! divide the timeprop seconds value by 16, rounding towards negative
+	! infinity
+	val2 = tv-->1;
+	@ushiftr val2 4 val2;
+	val2 = val2 + (tv-->0 * $10000000);
+	if (val ~= val2) {
+		if (val == -1 && ent has non32ish) 
+			print "(Error: simple time conversion failed, same reason.)^";
+		else
+			print "(Error: converting to simple time produced ",
+				val, " which should have been ",
+				val2, ".)^";
+	}
+];
+
+[ print_gizmo_readout;
+	if (~~hasdatetime)
+		print_ret "The readout, however, is blank.";
+
+	date-->0 = yearwheel.setting;
+	date-->1 = monthwheel.setting;
+	date-->2 = daywheel.setting;
+	date-->3 = 0; ! day of week is ignored
+	date-->4 = hourwheel.setting;
+	date-->5 = minutewheel.setting;
+	date-->6 = secondwheel.setting;
+	date-->7 = microsecwheel.setting;
+	glk($016D, date, timeval); ! date_to_time_local
+	glk($0169, timeval, date); ! time_to_date_local
+	
+	print "The readout says, ~";
+	print_date(date);
+	print " at ";
+	print_long_time(date);
+	print " plus ", date-->7, " microseconds";
+	print_ret "~.";
+];
+
+[ print_short_time dv;
+	if (dv-->4 == 0)
+		print "12";
+	else if (dv-->4 > 12)
+		print (dv-->4 - 12);
+	else
+		print (dv-->4);
+	print ":";
+	if (dv-->5 < 10)
+		print "0";
+	print (dv-->5);
+	if (dv-->4 == 12 && dv-->5 == 0)
+		print " noon";
+	else if (dv-->4 == 0 && dv-->5 == 0)
+		print " midnight";
+	else if (dv-->4 < 12)
+		print " am";
+	else
+		print " pm";
+];
+
+[ print_long_time dv;
+	if (dv-->4 == 0)
+		print "12";
+	else if (dv-->4 > 12)
+		print (dv-->4 - 12);
+	else
+		print (dv-->4);
+		
+	print ":";
+	if (dv-->5 < 10)
+		print "0";
+	print (dv-->5);
+	
+	print ":";
+	if (dv-->6 < 10)
+		print "0";
+	print (dv-->6);
+	
+	if (dv-->4 == 12 && dv-->5 == 0 && dv-->6 == 0)
+		print " noon";
+	else if (dv-->4 == 0 && dv-->5 == 0 && dv-->6 == 0)
+		print " midnight";
+	else if (dv-->4 < 12)
+		print " am";
+	else
+		print " pm";
+];
+
+[ print_date dv;
+	switch (dv-->3) {
+		0: print "Sunday";
+		1: print "Monday";
+		2: print "Tuesday";
+		3: print "Wednesday";
+		4: print "Thursday";
+		5: print "Friday";
+		6: print "Saturday";
+		default: print "???day";
+	}
+	print ", ";
+	
+	switch (dv-->1) {
+		1: print "Jan";
+		2: print "Feb";
+		3: print "Mar";
+		4: print "Apr";
+		5: print "May";
+		6: print "Jun";
+		7: print "Jul";
+		8: print "Aug";
+		9: print "Sep";
+		10: print "Oct";
+		11: print "Nov";
+		12: print "Dec";
+		default: print "???";
+	}
+	print " ";
+	
+	print dv-->2, ", ", dv-->0;
+];
