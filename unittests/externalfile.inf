@@ -1,7 +1,7 @@
 Constant Story "ExternalFile";
 Constant Headline "Not a game.^";
 
-Release 3;
+Release 4;
 
 Global mainwin = 0;
 Constant BUFLEN = 80;
@@ -108,6 +108,28 @@ Constant ROM_GAMESERIAL    $36;     ! six ASCII characters
 [ write_stream str val   len;
     len = val.print_to_array(buffer, BUFLEN);
     glk($0085, str, buffer+4, len); ! put_buffer_stream
+];
+
+[ write_cstring_stream str val   len;
+    len = val.print_to_array(buffer, BUFLEN);
+    buffer->3 = $E0;
+    buffer->(4+len) = 0;
+    glk($0083, str, buffer+3); ! put_string_stream
+];
+
+[ write_chars_stream str val   len ix;
+    len = val.print_to_array(buffer, BUFLEN);
+    for (ix=0 : ix<len : ix++) {
+        glk($0081, str, buffer->(4+ix)); ! put_char_stream
+    }
+];
+
+[ write_unichars_stream str val   len ix ch;
+    len = val.print_to_array(buffer, BUFLEN);
+    for (ix=0 : ix<len : ix++) {
+        ch = (buffer->(4+ix)) & $FF;
+        glk($0012B, str, ch); ! put_char_stream_uni
+    }
 ];
 
 [ compare_string buf blen val   len ix;
@@ -313,6 +335,79 @@ Constant filemode_WriteAppend = 5;
     compare_string(buffer, len, "Purple monkey dishwasher.^");
     glk($0044, str, gg_result); ! stream_close
     check_result_counts(26, 0);
+
+    ! Write, close, read, write, close, read.
+    
+    name = "testfile10";
+    print "Testing: ", (string) name, "^";
+    fref = make_fref(name);
+    delete_if_exists(fref, name);
+    str = open_file(fref, name, filemode_ReadWrite);
+    write_stream(str, "Purple synchroscopes.^");
+    glk($0044, str, gg_result); ! stream_close
+    check_result_counts(0, 22);
+
+    str = open_file(fref, name, filemode_ReadWrite);
+    len = glk($0092, str, buffer, 7); ! get_buffer_stream
+    compare_string(buffer, len, "Purple ");
+    write_stream(str, "monkey dishwasher.^");
+    glk($0045, str, 0, 0); ! stream_set_position
+    len = glk($0092, str, buffer, BUFLEN); ! get_buffer_stream
+    compare_string(buffer, len, "Purple monkey dishwasher.^");
+    glk($0044, str, gg_result); ! stream_close
+    check_result_counts(33, 19);
+
+    ! Write with stream_string, close, then read.
+    
+    name = "testfile11";
+    print "Testing: ", (string) name, "^";
+    fref = make_fref(name);
+    delete_if_exists(fref, name);
+    str = open_file(fref, name, filemode_Write);
+    write_cstring_stream(str, "Purple monkey dishwasher.^");
+    glk($0044, str, gg_result); ! stream_close
+    check_result_counts(0, 26);
+
+    str = open_file(fref, name, filemode_Read);
+    len = glk($0092, str, buffer, BUFLEN); ! get_buffer_stream
+    compare_string(buffer, len, "Purple monkey dishwasher.^");
+    glk($0044, str, gg_result); ! stream_close
+    check_result_counts(26, 0);
+
+    ! Write with stream_char, close, then read.
+    
+    name = "testfile12";
+    print "Testing: ", (string) name, "^";
+    fref = make_fref(name);
+    delete_if_exists(fref, name);
+    str = open_file(fref, name, filemode_Write);
+    write_chars_stream(str, "Purple monkey dishwasher.^");
+    glk($0044, str, gg_result); ! stream_close
+    check_result_counts(0, 26);
+
+    str = open_file(fref, name, filemode_Read);
+    len = glk($0092, str, buffer, BUFLEN); ! get_buffer_stream
+    compare_string(buffer, len, "Purple monkey dishwasher.^");
+    glk($0044, str, gg_result); ! stream_close
+    check_result_counts(26, 0);
+
+    ! Write with stream_char_uni, close, then read.
+    
+    name = "testfile13";
+    print "Testing: ", (string) name, "^";
+    fref = make_fref(name);
+    delete_if_exists(fref, name);
+    str = open_file(fref, name, filemode_Write);
+    write_unichars_stream(str, "Purple monkey dishwasher.^");
+    glk($0044, str, gg_result); ! stream_close
+    check_result_counts(0, 26);
+
+    str = open_file(fref, name, filemode_Read);
+    len = glk($0092, str, buffer, BUFLEN); ! get_buffer_stream
+    compare_string(buffer, len, "Purple monkey dishwasher.^");
+    glk($0044, str, gg_result); ! stream_close
+    check_result_counts(26, 0);
+
 
     if (errorcount)
         print "^FAILED: ", errorcount, " errors occurred.^^";
