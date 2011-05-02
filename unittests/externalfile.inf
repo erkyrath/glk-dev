@@ -30,7 +30,7 @@ Constant ROM_GAMESERIAL    $36;     ! six ASCII characters
   
   RunOpenModeTest();
   print "This test should have created a set of files, named ~testfile1~
-    to ~testfile13~. These files should be identical -- each 26 bytes
+    to ~testfile14~. These files should be identical -- each 26 bytes
     long, containing the string ~Purple monkey dishwasher.~ followed
     by a Unix newline (ctrl-J).^";
 
@@ -149,31 +149,31 @@ Constant ROM_GAMESERIAL    $36;     ! six ASCII characters
     len = val.print_to_array(buffer, BUFLEN);
     for (ix=0 : ix<len : ix++) {
         ch = (buffer->(4+ix)) & $FF;
-		buffer2->(4*ix+0) = 0;
-		buffer2->(4*ix+1) = 0;
-		buffer2->(4*ix+2) = 0;
-		buffer2->(4*ix+3) = ch;
-	}
+        buffer2->(4*ix+0) = 0;
+        buffer2->(4*ix+1) = 0;
+        buffer2->(4*ix+2) = 0;
+        buffer2->(4*ix+3) = ch;
+    }
     glk($012D, str, buffer2, len); ! put_buffer_stream_uni
 ];
 
 [ write_unistring_stream str val   len ix ch;
     len = val.print_to_array(buffer, BUFLEN);
-	buffer2->0 = $E2;
-	buffer2->1 = $0;
-	buffer2->2 = $0;
-	buffer2->3 = $0;
+    buffer2->0 = $E2;
+    buffer2->1 = $0;
+    buffer2->2 = $0;
+    buffer2->3 = $0;
     for (ix=0 : ix<len : ix++) {
         ch = (buffer->(4+ix)) & $FF;
-		buffer2->(4+4*ix+0) = 0;
-		buffer2->(4+4*ix+1) = 0;
-		buffer2->(4+4*ix+2) = 0;
-		buffer2->(4+4*ix+3) = ch;
-	}
-	buffer2->(4+4*len+0) = 0;
-	buffer2->(4+4*len+1) = 0;
-	buffer2->(4+4*len+2) = 0;
-	buffer2->(4+4*len+3) = 0;
+        buffer2->(4+4*ix+0) = 0;
+        buffer2->(4+4*ix+1) = 0;
+        buffer2->(4+4*ix+2) = 0;
+        buffer2->(4+4*ix+3) = ch;
+    }
+    buffer2->(4+4*len+0) = 0;
+    buffer2->(4+4*len+1) = 0;
+    buffer2->(4+4*len+2) = 0;
+    buffer2->(4+4*len+3) = 0;
     glk($012C, str, buffer2); ! put_string_stream_uni
 ];
 
@@ -210,101 +210,101 @@ Constant filemode_ReadWrite = 3;
 Constant filemode_WriteAppend = 5;
 
 [ RunReadWriteFuncTest name fref str len ch cx ix jx kx;
-	name = "testfile0";
+    name = "testfile0";
     fref = make_fref(name);
     delete_if_exists(fref, name);
 
-	for (ix=0 : ix<2 : ix++) {
-		! byte or unicode file
-		if (ix == 0)
-			print "byte file";
-		else
-			print "unicode file";
-		print ", ";
-			
-		for (jx=0 : jx<6 : jx++) {
-			! pick a write function
-			switch (jx) {
-				0: print "put_char";
-				1: print "put_buffer";
-				2: print "put_string";
-				3: print "put_char_uni";
-				4: print "put_buffer_uni";
-				5: print "put_string_uni";
-			}
-			print ", ";
-			
-			for (kx=0 : kx<6 : kx++) {
-				! pick a read function
-				switch (kx) {
-					0: print "get_char";
-					1: print "get_buffer";
-					2: print "get_line";
-					3: print "get_char_uni";
-					4: print "get_buffer_uni";
-					5: print "get_line_uni";
-				}
-				print ": ";
+    for (ix=0 : ix<2 : ix++) {
+        ! byte or unicode file
+        if (ix == 0)
+            print "byte file";
+        else
+            print "unicode file";
+        print ", ";
+            
+        for (jx=0 : jx<6 : jx++) {
+            ! pick a write function
+            switch (jx) {
+                0: print "put_char";
+                1: print "put_buffer";
+                2: print "put_string";
+                3: print "put_char_uni";
+                4: print "put_buffer_uni";
+                5: print "put_string_uni";
+            }
+            print ", ";
+            
+            for (kx=0 : kx<6 : kx++) {
+                ! pick a read function
+                switch (kx) {
+                    0: print "get_char";
+                    1: print "get_buffer";
+                    2: print "get_line";
+                    3: print "get_char_uni";
+                    4: print "get_buffer_uni";
+                    5: print "get_line_uni";
+                }
+                print ": ";
 
-				if (ix == 0)
-					str = open_file(fref, name, filemode_Write);
-				else
-					str = open_file_uni(fref, name, filemode_Write);
-				switch (jx) {
-					0: write_chars_stream(str, "Zapp@:olicious.^");
-					1: write_stream(str, "Zapp@:olicious.^");
-					2: write_cstring_stream(str, "Zapp@:olicious.^");
-					3: write_unichars_stream(str, "Zapp@:olicious.^");
-					4: write_unibuf_stream(str, "Zapp@:olicious.^");
-					5: write_unistring_stream(str, "Zapp@:olicious.^");
-				}
-				glk($0044, str, gg_result); ! stream_close
-				check_result_counts(0, 14);
-				
-				if (ix == 0)
-					str = open_file(fref, name, filemode_Read);
-				else
-					str = open_file_uni(fref, name, filemode_Read);
-				switch (kx) {
-					0:
-						len = 0;
-						while (1) {
-							ch = glk($0090, str); ! get_char_stream
-							if (ch == -1)
-								break;
-							buffer->len = ch;
-							len++;
-						}
-					1: len = glk($0092, str, buffer, BUFLEN); ! get_buffer_stream
-					2: len = glk($0091, str, buffer, BUFLEN); ! get_line_stream
-					3:
-						len = 0;
-						while (1) {
-							ch = glk($0130, str); ! get_char_stream_uni
-							if (ch == -1)
-								break;
-							buffer->len = ch;
-							len++;
-						}
-					4: len = glk($0131, str, buffer2, BUFLEN/4); ! get_buffer_stream_uni
-						for (cx=0 : cx<len : cx++) {
-							buffer->cx = (buffer2+0)-->cx;
-						}
-					5: len = glk($0132, str, buffer2, BUFLEN/4); ! get_line_stream_uni
-						for (cx=0 : cx<len : cx++) {
-							buffer->cx = (buffer2+0)-->cx;
-						}
-				}
-				compare_string(buffer, len, "Zapp@:olicious.^");
-				glk($0044, str, gg_result); ! stream_close
-				check_result_counts(14, 0);
+                if (ix == 0)
+                    str = open_file(fref, name, filemode_Write);
+                else
+                    str = open_file_uni(fref, name, filemode_Write);
+                switch (jx) {
+                    0: write_chars_stream(str, "Zapp@:olicious.^");
+                    1: write_stream(str, "Zapp@:olicious.^");
+                    2: write_cstring_stream(str, "Zapp@:olicious.^");
+                    3: write_unichars_stream(str, "Zapp@:olicious.^");
+                    4: write_unibuf_stream(str, "Zapp@:olicious.^");
+                    5: write_unistring_stream(str, "Zapp@:olicious.^");
+                }
+                glk($0044, str, gg_result); ! stream_close
+                check_result_counts(0, 14);
+                
+                if (ix == 0)
+                    str = open_file(fref, name, filemode_Read);
+                else
+                    str = open_file_uni(fref, name, filemode_Read);
+                switch (kx) {
+                    0:
+                        len = 0;
+                        while (1) {
+                            ch = glk($0090, str); ! get_char_stream
+                            if (ch == -1)
+                                break;
+                            buffer->len = ch;
+                            len++;
+                        }
+                    1: len = glk($0092, str, buffer, BUFLEN); ! get_buffer_stream
+                    2: len = glk($0091, str, buffer, BUFLEN); ! get_line_stream
+                    3:
+                        len = 0;
+                        while (1) {
+                            ch = glk($0130, str); ! get_char_stream_uni
+                            if (ch == -1)
+                                break;
+                            buffer->len = ch;
+                            len++;
+                        }
+                    4: len = glk($0131, str, buffer2, BUFLEN/4); ! get_buffer_stream_uni
+                        for (cx=0 : cx<len : cx++) {
+                            buffer->cx = (buffer2+0)-->cx;
+                        }
+                    5: len = glk($0132, str, buffer2, BUFLEN/4); ! get_line_stream_uni
+                        for (cx=0 : cx<len : cx++) {
+                            buffer->cx = (buffer2+0)-->cx;
+                        }
+                }
+                compare_string(buffer, len, "Zapp@:olicious.^");
+                glk($0044, str, gg_result); ! stream_close
+                check_result_counts(14, 0);
 
-				print "read.^";
+                print "read.^";
 
-				glk($0066, fref); ! fileref_delete_file
-			}
-		}
-	}
+                glk($0066, fref); ! fileref_delete_file
+            }
+        }
+    }
 ];
 
 [ RunOpenModeTest name fref str len;
@@ -550,6 +550,28 @@ Constant filemode_WriteAppend = 5;
     compare_string(buffer, len, "Purple monkey dishwasher.^");
     glk($0044, str, gg_result); ! stream_close
     check_result_counts(26, 0);
+
+    ! Write, close, write, read, write, close, read.
+    
+    name = "testfile14";
+    print "Testing: ", (string) name, "^";
+    fref = make_fref(name);
+    delete_if_exists(fref, name);
+    str = open_file(fref, name, filemode_ReadWrite);
+    write_stream(str, "!urple synchroscopes.^");
+    glk($0044, str, gg_result); ! stream_close
+    check_result_counts(0, 22);
+
+    str = open_file(fref, name, filemode_ReadWrite);
+    glk($0081, str, 'P'); ! put_char_stream
+    len = glk($0092, str, buffer, 6); ! get_buffer_stream
+    compare_string(buffer, len, "urple ");
+    write_stream(str, "monkey dishwasher.^");
+    glk($0045, str, 0, 0); ! stream_set_position
+    len = glk($0092, str, buffer, BUFLEN); ! get_buffer_stream
+    compare_string(buffer, len, "Purple monkey dishwasher.^");
+    glk($0044, str, gg_result); ! stream_close
+    check_result_counts(32, 20);
 
 
     if (errorcount)
