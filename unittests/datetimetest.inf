@@ -10,9 +10,16 @@ Include "VerbLib";
 Global hasdatetime;
 
 Global startmin;
+
+! These arrays actually only have to be three words long. I define them as
+! four here so that I can include a guard value, to detect buggy interpreters.
+! If the interpreter behaves correctly (and all the extant ones do), the
+! timeval array should be three words.
 Array starttimeval --> 4;
 Array timeval --> 4;
 Array btimeval --> 4;
+
+! Similarly, the date array should be eight words.
 Array date --> 9;
 Array bdate --> 9;
 
