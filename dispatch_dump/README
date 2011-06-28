@@ -7,7 +7,7 @@ A Glk program written in C needs only the glk.h header file to compile.
 However, any other use -- such as a Glulx interpreter -- needs metadata
 about the Glk API. (In fact, a Glulx game needs this information at
 two levels. The game itself needs an an Inform-6 API; and the interpreter
-needs API information to dispatch the Glk calls.
+needs API information to dispatch the Glk calls.)
 
 The definitive source of this metadata is the gi_dispa.c source file
 (included with all Glk libraries). However, parsing this information

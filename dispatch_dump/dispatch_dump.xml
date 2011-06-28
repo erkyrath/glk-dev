@@ -1,4 +1,4 @@
-<glkapi version="0.7.2">
+<glkapi version="0.7.3">
   <classes count="4">
     <class name="fileref" value="2" />
     <class name="schannel" value="3" />
@@ -6,7 +6,7 @@
     <class name="window" value="0" />
   </classes>
 
-  <constants count="122">
+  <constants count="124">
     <constant name="evtype_Arrange" value="5" />
     <constant name="evtype_CharInput" value="2" />
     <constant name="evtype_Hyperlink" value="8" />
@@ -16,6 +16,7 @@
     <constant name="evtype_Redraw" value="6" />
     <constant name="evtype_SoundNotify" value="7" />
     <constant name="evtype_Timer" value="1" />
+    <constant name="evtype_VolumeNotify" value="9" />
     <constant name="filemode_Read" value="2" />
     <constant name="filemode_ReadWrite" value="3" />
     <constant name="filemode_Write" value="1" />
@@ -44,6 +45,7 @@
     <constant name="gestalt_LineTerminators" value="18" />
     <constant name="gestalt_MouseInput" value="4" />
     <constant name="gestalt_Sound" value="8" />
+    <constant name="gestalt_Sound2" value="21" />
     <constant name="gestalt_SoundMusic" value="13" />
     <constant name="gestalt_SoundNotify" value="10" />
     <constant name="gestalt_SoundVolume" value="9" />
@@ -56,32 +58,32 @@
     <constant name="imagealign_MarginLeft" value="4" />
     <constant name="imagealign_MarginRight" value="5" />
     <constant name="imagealign_InlineUp" value="1" />
-    <constant name="keycode_Delete" value="-7" />
-    <constant name="keycode_Down" value="-5" />
-    <constant name="keycode_End" value="-13" />
-    <constant name="keycode_Escape" value="-8" />
-    <constant name="keycode_Func1" value="-17" />
-    <constant name="keycode_Func10" value="-26" />
-    <constant name="keycode_Func11" value="-27" />
-    <constant name="keycode_Func12" value="-28" />
-    <constant name="keycode_Func2" value="-18" />
-    <constant name="keycode_Func3" value="-19" />
-    <constant name="keycode_Func4" value="-20" />
-    <constant name="keycode_Func5" value="-21" />
-    <constant name="keycode_Func6" value="-22" />
-    <constant name="keycode_Func7" value="-23" />
-    <constant name="keycode_Func8" value="-24" />
-    <constant name="keycode_Func9" value="-25" />
-    <constant name="keycode_Home" value="-12" />
-    <constant name="keycode_Left" value="-2" />
+    <constant name="keycode_Delete" value="4294967289" />
+    <constant name="keycode_Down" value="4294967291" />
+    <constant name="keycode_End" value="4294967283" />
+    <constant name="keycode_Escape" value="4294967288" />
+    <constant name="keycode_Func1" value="4294967279" />
+    <constant name="keycode_Func10" value="4294967270" />
+    <constant name="keycode_Func11" value="4294967269" />
+    <constant name="keycode_Func12" value="4294967268" />
+    <constant name="keycode_Func2" value="4294967278" />
+    <constant name="keycode_Func3" value="4294967277" />
+    <constant name="keycode_Func4" value="4294967276" />
+    <constant name="keycode_Func5" value="4294967275" />
+    <constant name="keycode_Func6" value="4294967274" />
+    <constant name="keycode_Func7" value="4294967273" />
+    <constant name="keycode_Func8" value="4294967272" />
+    <constant name="keycode_Func9" value="4294967271" />
+    <constant name="keycode_Home" value="4294967284" />
+    <constant name="keycode_Left" value="4294967294" />
     <constant name="keycode_MAXVAL" value="28" />
-    <constant name="keycode_PageDown" value="-11" />
-    <constant name="keycode_PageUp" value="-10" />
-    <constant name="keycode_Return" value="-6" />
-    <constant name="keycode_Right" value="-3" />
-    <constant name="keycode_Tab" value="-9" />
-    <constant name="keycode_Unknown" value="-1" />
-    <constant name="keycode_Up" value="-4" />
+    <constant name="keycode_PageDown" value="4294967285" />
+    <constant name="keycode_PageUp" value="4294967286" />
+    <constant name="keycode_Return" value="4294967290" />
+    <constant name="keycode_Right" value="4294967293" />
+    <constant name="keycode_Tab" value="4294967287" />
+    <constant name="keycode_Unknown" value="4294967295" />
+    <constant name="keycode_Up" value="4294967292" />
     <constant name="seekmode_Current" value="1" />
     <constant name="seekmode_End" value="2" />
     <constant name="seekmode_Start" value="0" />
@@ -131,7 +133,7 @@
     <constant name="wintype_TextGrid" value="4" />
   </constants>
 
-  <functions count="116">
+  <functions count="121">
     <function id="1" name="exit" proto="0:" />
     <function id="2" name="set_interrupt_handler" proto="_" />
     <function id="3" name="tick" proto="0:" />
@@ -214,6 +216,11 @@
     <function id="250" name="schannel_stop" proto="1Qd:" />
     <function id="251" name="schannel_set_volume" proto="2QdIu:" />
     <function id="252" name="sound_load_hint" proto="2IuIu:" />
+    <function id="244" name="schannel_create_ext" proto="3IuIu:Qd" />
+    <function id="247" name="schannel_play_multi" proto="4&gt;+#Qd&gt;+#IuIu:Iu" />
+    <function id="253" name="schannel_set_volume_ext" proto="4QdIuIuIu:" />
+    <function id="254" name="schannel_pause" proto="1Qd:" />
+    <function id="255" name="schannel_unpause" proto="1Qd:" />
     <function id="256" name="set_hyperlink" proto="1Iu:" />
     <function id="257" name="set_hyperlink_stream" proto="2QbIu:" />
     <function id="258" name="request_hyperlink_event" proto="1Qa:" />
