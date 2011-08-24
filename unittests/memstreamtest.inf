@@ -1,6 +1,6 @@
 Constant Story "MemStreamTest";
 Constant Headline "^Not a game.^";
-Release 2;
+Release 3;
 
 ! Unit test for the glk_stream_open_memory() and glk_stream_open_memory_uni()
 ! calls.
@@ -20,6 +20,8 @@ Object Kitchen "Stream Room"
 			description to a byte array (glk_stream_open_memory).
 			Try ~streamuni OBJECT~ to send its description to
 			a Unicode character array (glk_stream_open_memory_uni).
+			~nullstream OBJECT~ and ~uninullstream OBJECT~ send to
+			a null stream, which gets the description's length.
 			~pos~ and ~unipos~ test positioning in byte/Unicode
 			streams. ~read~ and ~uniread~ test reading from byte/Unicode
 			streams.^";
@@ -83,6 +85,12 @@ Extend 'read' replace
 Verb 'readuni' 'uniread'
 	* -> ReadTestUni;
 	
+Verb 'nullstream' 'null' 'streamnull'
+	* noun -> Null;
+
+Verb 'nullunistream' 'nulluni' 'uninull' 'uninullstream'
+	* noun -> NullUni;
+
 [ StreamSub;
 	DescToStream(noun);
 ];
@@ -92,6 +100,17 @@ Verb 'readuni' 'uniread'
 	if (res == 0)
 		"This interpreter does not support Unicode Glk calls!";
 	DescToStreamUni(noun);
+];
+
+[ NullSub;
+	DescToNullStream(noun);
+];
+
+[ NullUniSub  res;
+	res = glk($0004, 15, 0); ! gestalt
+	if (res == 0)
+		"This interpreter does not support Unicode Glk calls!";
+	DescToNullStreamUni(noun);
 ];
 
 [ PosTestSub;
@@ -187,7 +206,6 @@ Global errorcount;
 		print "ERROR: Positions were wrong during printing!^";
 ];
 
-
 [ DescToStreamUni obj  str oldstr ix ch;
 	errorcount = 0;
 	
@@ -249,6 +267,57 @@ Global errorcount;
 	if (errorcount)
 		print "ERROR: Positions were wrong during printing!^";
 ];
+
+[ DescToNullStream obj  str oldstr;
+	errorcount = 0;
+	
+	oldstr = glk($0048); ! stream_get_current
+	str = glk($0043, 0, BUFLEN, 1, 0); ! stream_open_memory
+	if (str == 0) {
+		"Unable to open memory stream.";
+	}
+
+	glk($0047, str); ! stream_set_current
+	if (obj ofclass Object)
+		obj.description();
+	else if (obj ofclass Routine)
+		obj(str);
+	else
+		print "???";
+	glk($0047, oldstr); ! stream_set_current
+	glk($0044, str, closeresult); ! stream_close
+
+	if (closeresult-->0 ~= 0)
+		print "ERROR: Stream records ", closeresult-->0, " chars read --
+			should be zero.^";
+	print "(Sent to char stream: ", closeresult-->1, " chars)^";
+];
+
+[ DescToNullStreamUni obj  str oldstr;
+	errorcount = 0;
+	
+	oldstr = glk($0048); ! stream_get_current
+	str = glk($0139, 0, 0, 1, 0); ! stream_open_memory_uni
+	if (str == 0) {
+		"Unable to open memory stream.";
+	}
+
+	glk($0047, str); ! stream_set_current
+	if (obj ofclass Object)
+		obj.description();
+	else if (obj ofclass Routine)
+		obj(str);
+	else
+		print "???";
+	glk($0047, oldstr); ! stream_set_current
+	glk($0044, str, closeresult); ! stream_close
+
+	if (closeresult-->0 ~= 0)
+		print "ERROR: Stream records ", closeresult-->0, " chars read --
+			should be zero.^";
+	print "(Sent to unicode char stream: ", closeresult-->1, " chars)^";
+];
+
 
 [ perform_pos_test str   pos;
 	print "                        piecx";
