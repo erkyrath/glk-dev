@@ -159,7 +159,7 @@
     <function id="64" name="stream_iterate" proto="3Qb&lt;Iu:Qb" />
     <function id="65" name="stream_get_rock" proto="2Qb:Iu" />
     <function id="66" name="stream_open_file" proto="4QcIuIu:Qb" />
-    <function id="67" name="stream_open_memory" proto="4&amp;+#!CnIuIu:Qb" />
+    <function id="67" name="stream_open_memory" proto="4&amp;#!CnIuIu:Qb" />
     <function id="68" name="stream_close" proto="2Qb&lt;[2IuIu]:" />
     <function id="69" name="stream_set_position" proto="3QbIsIu:" />
     <function id="70" name="stream_get_position" proto="2Qb:Iu" />
@@ -238,7 +238,7 @@
     <function id="305" name="get_buffer_stream_uni" proto="3Qb&lt;+#Iu:Iu" />
     <function id="306" name="get_line_stream_uni" proto="3Qb&lt;+#Iu:Iu" />
     <function id="312" name="stream_open_file_uni" proto="4QcIuIu:Qb" />
-    <function id="313" name="stream_open_memory_uni" proto="4&amp;+#!IuIuIu:Qb" />
+    <function id="313" name="stream_open_memory_uni" proto="4&amp;#!IuIuIu:Qb" />
     <function id="320" name="request_char_event_uni" proto="1Qa:" />
     <function id="321" name="request_line_event_uni" proto="3Qa&amp;+#!IuIu:" />
     <function id="291" name="buffer_canon_decompose_uni" proto="3&amp;+#IuIu:Iu" />

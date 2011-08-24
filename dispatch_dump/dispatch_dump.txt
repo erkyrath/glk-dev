@@ -156,7 +156,7 @@ wintype_TextGrid 4
 64 stream_iterate 3Qb<Iu:Qb
 65 stream_get_rock 2Qb:Iu
 66 stream_open_file 4QcIuIu:Qb
-67 stream_open_memory 4&+#!CnIuIu:Qb
+67 stream_open_memory 4&#!CnIuIu:Qb
 68 stream_close 2Qb<[2IuIu]:
 69 stream_set_position 3QbIsIu:
 70 stream_get_position 2Qb:Iu
@@ -235,7 +235,7 @@ wintype_TextGrid 4
 305 get_buffer_stream_uni 3Qb<+#Iu:Iu
 306 get_line_stream_uni 3Qb<+#Iu:Iu
 312 stream_open_file_uni 4QcIuIu:Qb
-313 stream_open_memory_uni 4&+#!IuIuIu:Qb
+313 stream_open_memory_uni 4&#!IuIuIu:Qb
 320 request_char_event_uni 1Qa:
 321 request_line_event_uni 3Qa&+#!IuIu:
 291 buffer_canon_decompose_uni 3&+#IuIu:Iu
