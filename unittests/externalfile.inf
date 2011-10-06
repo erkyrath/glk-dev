@@ -1,7 +1,7 @@
 Constant Story "ExternalFile";
 Constant Headline "Not a game.^";
 
-Release 4;
+Release 5;
 
 Global mainwin = 0;
 Constant BUFLEN = 80;
@@ -27,6 +27,8 @@ Constant ROM_GAMESERIAL    $36;     ! six ASCII characters
   RoomDesc();
 
   RunReadWriteFuncTest();
+  
+  RunTerminalNullTest();
   
   RunOpenModeTest();
   print "This test should have created a set of files, named ~testfile1~
@@ -210,6 +212,7 @@ Constant filemode_ReadWrite = 3;
 Constant filemode_WriteAppend = 5;
 
 [ RunReadWriteFuncTest name fref str len ch cx ix jx kx;
+    print "* RunReadWriteFuncTest^";
     name = "testfile0";
     fref = make_fref(name);
     delete_if_exists(fref, name);
@@ -307,7 +310,73 @@ Constant filemode_WriteAppend = 5;
     }
 ];
 
+[ RunTerminalNullTest name fref str len ix jx;
+    print "* RunTerminalNullTest^";
+    name = "testfile0";
+    fref = make_fref(name);
+    delete_if_exists(fref, name);
+
+    for (ix=0 : ix<2 : ix++) {
+        ! byte or unicode file
+        if (ix == 0)
+            print "byte file";
+        else
+            print "unicode file";
+        print ", ";
+            
+        if (ix == 0)
+            str = open_file(fref, name, filemode_Write);
+        else
+            str = open_file_uni(fref, name, filemode_Write);
+        write_chars_stream(str, "01234567");
+        glk($0044, str, gg_result); ! stream_close
+        check_result_counts(0, 8);
+        
+        if (ix == 0)
+            str = open_file(fref, name, filemode_Read);
+        else
+            str = open_file_uni(fref, name, filemode_Read);
+
+        for (jx=0 : jx<12 : jx++)
+            buffer->jx = '#';
+        len = glk($0091, str, buffer, BUFLEN); ! get_line_stream
+        
+        compare_string(buffer, len, "01234567");
+        if (buffer->8 ~= 0) {
+            print "ERROR: no terminal null^";
+            errorcount++;
+        }
+        
+        glk($0044, str, gg_result); ! stream_close
+        check_result_counts(8, 0);
+
+        print "char read.^";
+
+        if (ix == 0)
+            str = open_file(fref, name, filemode_Read);
+        else
+            str = open_file_uni(fref, name, filemode_Read);
+
+        for (jx=0 : jx<12 : jx++)
+            (buffer2+0)-->jx = '#';
+        len = glk($0132, str, buffer2, BUFLEN/4); ! get_line_stream_uni
+        
+        if ((buffer2+0)-->8 ~= 0) {
+            print "ERROR: no terminal null^";
+            errorcount++;
+        }
+        
+        glk($0044, str, gg_result); ! stream_close
+        check_result_counts(8, 0);
+
+        print "uni read.^";
+
+        glk($0066, fref); ! fileref_delete_file
+    }
+];
+
 [ RunOpenModeTest name fref str len;
+    print "* RunOpenModeTest^";
 
     ! Write once, close, then read.
     
