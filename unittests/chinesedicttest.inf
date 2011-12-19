@@ -1,0 +1,304 @@
+!%$DICT_CHAR_SIZE=4
+!%$MAX_UNICODE_CHARS=4000
+
+! Adapted from UniDictTest by minus273
+
+Constant Story "ChineseDictTest";
+Constant Headline "Not a game.^";
+
+Release 2;
+
+Global mainwin;
+Array gg_event --> 4;
+Constant BUFLEN = 80;
+Array input_buffer --> 4+BUFLEN;
+Array gg_tokenbuf --> DICT_WORD_SIZE;
+Constant MAX_BUFFER_WORDS = 20;
+Constant PARSE_BUFFER_LEN = 244;    ! 4 + MAX_BUFFER_WORDS*4;
+Array parse_buffer --> PARSE_BUFFER_LEN/WORDSIZE;
+
+Constant HDR_GLULXVERSION  $04;     ! long word
+Constant ROM_GAMERELEASE   $34;     ! short word
+Constant ROM_GAMESERIAL    $36;     ! six ASCII characters
+
+! Some words for the dictionary.
+Array extra_words --> 
+  'word' 'show'
+  '@:a@:e@:i@:o@:u'                  ! aeiou with umlauts
+  '@{3B1}@{3B2}@{3B3}@{3B4}@{3B5}'   ! Greek abgde
+  'λαμβάνω'                          ! Polytonic Greek "I take"
+  '@{5D0}@{5D1}@{5D2}@{5D3}@{5DE}'   ! Hebrew abgdm... aleph is on the right
+  'おすも'                           ! Hirigana O SU MO
+  '东西'                             ! Chinese East West
+  'DOWNCASE'                         ! compiler will lowercase this
+  'tenletters';
+
+! Some grammar, to add verbs and adjectives to the dictionary.
+Verb 'examine' 'x//' * -> Fake;
+Verb 'verb' * -> Fake;
+Verb 'verb2' * 'adj' 'adjective' -> Fake;
+Verb meta 'meta' * -> Fake;
+! Try a Russian verb.
+Verb '@{431}@{440}@{430}@{442}@{44c}' * -> Fake;
+
+[ Main;
+  @setiosys 2 0; ! select Glk I/O system
+  mainwin = glk($0023, 0, 0, 0, 3, 0); ! glk_window_open
+  glk($002F, mainwin); ! glk_set_window
+
+  #ifndef DICT_IS_UNICODE;
+  print "This test was compiled without the Unicode dictionary option
+    ($DICT_CHAR_SIZE=4). It will not work.^";
+  quit;
+  #endif;
+
+  new_line;
+  Banner();
+  new_line;
+
+  RoomDesc();
+
+  print "^NOTE: This test will only display correctly if compiled with the new ~inform -Cu~ switch. If you try to compile it with any other source-text encoding, you will get a big pile of broken UTF8 output.^";
+
+  mainloop();
+];
+
+[ mainloop numwords wd wordpos wordlen ix jx;
+
+  ix = extra_words-->0; ! shut up compiler warning
+
+  while (true) {
+    print "^>";
+    readline();
+
+    if (input_buffer-->0 == 0) {
+      print "Cat got your tongue?^";
+      continue;
+    }
+
+    tokenise(input_buffer, parse_buffer);
+    numwords = parse_buffer-->0;
+    if (numwords == 0) {
+      print "That was all whitespace.^";
+      continue;
+    }
+
+    wd = parse_buffer-->1;  ! the first word
+    if (wd == 'look' or 'l//' or 'help' or '帮助' or '?//') {
+      RoomDesc();
+    }
+    if (wd == 'tablet') {
+      QianZiwen();
+    }
+    else if (wd == 'version') {
+      Banner();
+    }
+    else if (wd == 'dict') {
+      PrintDict();
+    }
+    else if (wd == 'quit' or 'q//') {
+      print "Goodbye!^";
+      quit;
+    }
+    else {
+      print "Divided up:";
+      for (ix=0 : ix<numwords : ix++) {
+        print " ";
+        wordpos = parse_buffer-->(ix*3+3);
+        wordlen = parse_buffer-->(ix*3+2);
+        for (jx=0 : jx<wordlen : jx++)
+          print (char) input_buffer-->(wordpos+jx);
+      }
+      new_line;
+      print "Tokenized:";
+      for (ix=0 : ix<numwords : ix++) {
+        wd = parse_buffer-->(ix*3+1);
+        print " ";
+        if (wd) print "'", (address) wd, "'";
+        else print "(???)";
+      }
+      new_line;
+    }
+  }
+];
+
+! Read a line of Unicode input. This imitates the I6 library format for
+! the input buffer: the first word is the number of characters read,
+! and the actual characters follow after that.
+
+[ readline count;
+  glk($0141, mainwin, input_buffer+4, BUFLEN, 0); ! request_line_event_uni
+  while (true) {
+    glk($00C0, gg_event); ! select
+    if (gg_event-->0 == 3 && gg_event-->1 == mainwin) {
+      count = gg_event-->2;
+      break;
+    }
+  }
+  input_buffer-->0 = count;
+];
+
+! Tokenise the input line, using the dictionary. This behaves the same
+! as the standard I6 library, except that the input line and the
+! dictionary are unicode chars rather than bytes.
+!
+! One caveat: input characters beyond $FF are not lower-cased; they
+! are compared to the dictionary in whatever case they are entered.
+! This matches the behavior of the Inform compiler, which does not
+! (currently) lowercase characters beyond $FF in the dictionary.
+! It's not ideal but it's consistent.
+
+[ tokenise buf tab
+    cx numwords len bx ix wx wpos wlen val res dictlen wordbytes ch;
+    len = buf-->0;
+    buf = buf+WORDSIZE;
+
+    wordbytes = WORDSIZE * DICT_WORD_SIZE;
+
+    ! First, split the buffer up into words. We use the standard Infocom
+    ! list of word separators (comma, period, double-quote).
+
+    cx = 0;
+    numwords = 0;
+    while (cx < len) {
+        while (cx < len && buf-->cx == ' ') cx++;
+        if (cx >= len) break;
+        bx = cx;
+        if (buf-->cx == '.' or ',' or '"' or '。' or '，') cx++;
+        else {
+            while (cx < len && buf-->cx ~= ' ' or '.' or ',' or '"' or '。' or '，') cx++;
+        }
+        tab-->(numwords*3+2) = (cx-bx);
+        tab-->(numwords*3+3) = 1+bx;
+        numwords++;
+        if (numwords >= MAX_BUFFER_WORDS) break;
+    }
+    tab-->0 = numwords;
+
+    ! Now we look each word up in the dictionary.
+
+    dictlen = #dictionary_table-->0;
+
+    for (wx=0 : wx<numwords : wx++) {
+        wlen = tab-->(wx*3+2);
+        wpos = tab-->(wx*3+3);
+
+        ! Copy the word into the gg_tokenbuf array, clipping to DICT_WORD_SIZE
+        ! characters and lower case.
+        if (wlen > DICT_WORD_SIZE) wlen = DICT_WORD_SIZE;
+        cx = wpos - 1;
+        for (ix=0 : ix<wlen : ix++) {
+          ch = buf-->(cx+ix);
+          if (ch < 256) ch = glk($00A0, ch);
+          gg_tokenbuf-->ix = ch;
+        }
+        for (: ix<DICT_WORD_SIZE : ix++) gg_tokenbuf-->ix = 0;
+
+        val = #dictionary_table + WORDSIZE;
+        @binarysearch gg_tokenbuf wordbytes val DICT_ENTRY_BYTES dictlen 4 1 res;
+        tab-->(wx*3+1) = res;
+    }
+];
+
+[ PrintDict count ix wd;
+  count = #dictionary_table-->0;
+  print "The dictionary contains ", count, " words, and begins at address ",
+    #dictionary_table, ".^";
+  print "Each entry is ", DICT_ENTRY_BYTES, " bytes long, including ",
+    DICT_WORD_SIZE, " (", DICT_CHAR_SIZE, "-byte) characters.^^";
+
+  for (ix=0 : ix<count : ix++) {
+    wd = (#dictionary_table + WORDSIZE) + ix*DICT_ENTRY_BYTES;
+    print "    '", (address) wd, "'";
+    if ((wd->#dict_par1) & 1)
+      print " (verb)";
+    if ((wd->#dict_par1) & 2)
+      print " (meta)";
+    if ((wd->#dict_par1) & 8)
+      print " (adj)";
+    if (wd->#dict_par2)
+      print " (action ", wd->#dict_par2, ")";
+    new_line;
+  }
+];
+
+[ Banner  i ix;
+   if (Story ~= 0) {
+    glk($0086, 3); ! set header style
+    print (string) Story;
+    glk($0086, 0); ! set normal style
+  }
+  if (Headline ~= 0) print ": ", (string) Headline;
+  print "Release ";
+  @aloads ROM_GAMERELEASE 0 i;
+  print i;
+  print " / Serial number ";
+  for (i=0 : i<6 : i++) print (char) ROM_GAMESERIAL->i;
+  print " / Inform v"; inversion;
+  print ", compiler options ";
+  i = false;
+  #Ifdef STRICT_MODE;
+  print "S"; i++;
+  #Endif; ! STRICT_MODE
+  #Ifdef INFIX;
+  print "X"; i++;
+  #Ifnot;
+  #Ifdef DEBUG;
+  print "D"; i++;
+  #Endif; ! DEBUG
+  #Endif; ! INFIX
+  if (~~i) print "(none)";
+  new_line;
+
+  @gestalt 1 0 ix;
+  print "Interpreter version ", ix / $10000, ".", (ix & $FF00) / $100,
+  ".", ix & $FF, " / ";
+  @gestalt 0 0 ix;
+  print "VM ", ix / $10000, ".", (ix & $FF00) / $100, ".", ix & $FF, " / ";
+  ix = HDR_GLULXVERSION-->0;
+  print "game file format ", ix / $10000, ".", (ix & $FF00) / $100, ".", ix & $FF, "^";
+];
+
+[ RoomDesc;
+  print "A voice booooms out: Welcome to the test chamber.^^";
+  print "Type ~help~ or ~帮助~ to repeat this message, ~quit~ to exit,
+    ~dict~ to print out the game dictionary, ~tablet~ to view an ancient
+    tablet full of Chinese-language nonsense. Any other input will be
+    tokenized, and you will get a list of the dictionary
+    words found in it.^";
+];
+
+[ QianZiwen;
+  print "天地玄黄　宇宙洪荒　日月盈昃　辰宿列张　寒来暑往　秋收冬藏^
+         闰馀成岁　律吕调阳　云腾致雨　露结为霜　金生丽水　玉出昆冈^
+	 剑号巨阙　珠称夜光　果珍李柰　菜重芥姜　海咸河淡　鳞潜羽翔^
+	 龙师火帝　鸟官人皇　始制文字　乃服衣裳　推位让国　有虞陶唐^
+	 吊民伐罪　周发殷汤　坐朝问道　垂拱平章　爱育黎首　臣伏戎羌^
+	 遐迩一体　率宾归王　鸣凤在竹　白驹食场　化被草木　赖及万方^
+	 盖此身发　四大五常　恭惟鞠养　岂敢毁伤　女慕贞洁　男效才良^
+	 知过必改　得能莫忘　罔谈彼短　靡恃己长　信使可复　器欲难量^
+	 墨悲丝染　诗赞羔羊　景行维贤　克念作圣　德建名立　形端表正^
+	 空谷传声　虚堂习听　祸因恶积　福缘善庆　尺璧非宝　寸阴是竞^
+	 资父事君　曰严与敬　孝当竭力　忠则尽命　临深履薄　夙兴温熬^
+	 似兰斯馨　如松之盛　川流不息　渊澄取映　容止若思　言辞安定^
+	 笃初诚美　慎终宜令　荣业所基　籍甚无竟　学优登仕　摄职从政^
+	 存以甘棠　去而益咏　乐殊贵贱　礼别尊卑　上和下睦　夫唱妇随^
+	 外受傅训　入奉母仪　诸姑伯叔　犹子比儿　孔怀兄弟　同气连枝^
+	 交友投分　切磨箴规　仁慈隐恻　造次弗离　节义廉退　颠沛匪亏^
+	 性静情逸　心动神疲　守真志满　逐物意移　坚持雅操　好爵自縻^
+	 都邑华夏　东西二京　背邙面洛　浮渭据泾　宫殿盘郁　楼观飞惊^
+	 图写禽兽　画彩仙灵　丙舍傍启　甲帐对楹　肆筵设席　鼓瑟吹笙^
+	 升阶纳陛　弁转疑星　右通广内　左达承明　既集坟典　亦聚群英^
+	 杜稿钟隶　漆书壁经　府罗将相　路侠槐卿　户封八县　家给千兵^
+	 高冠陪辇　驱毂振缨　世禄侈富　车驾肥轻　策功茂实　勒碑刻铭^
+	 熬溪伊尹　佐时阿衡　奄宅曲阜　微旦孰营　桓公匡合　济弱扶倾^
+	 绮回汉惠　说感武丁　俊熬密勿　多士熬宁　晋楚更霸　赵魏困横^
+	 假途灭虢　践土会盟　何遵约法　韩弊烦刑　起翦颇牧　用军最精^
+	 宣威沙漠　驰誉丹青　九州禹迹　百郡秦并　岳宗泰岱　禅主云亭^
+	 雁门紫塞　鸡田赤城　昆池碣石　巨野洞庭　旷远绵邈　岩岫杳冥^
+	 治本于农　务资稼穑　熬载南亩　我艺黍稷　税熟贡新　劝赏黜陟^
+	 孟轲敦素　史鱼秉直　庶几中庸　劳谦谨敕　聆音察理　鉴貌辨色";
+];
+
+[ FakeSub;
+];

@@ -1,0 +1,191 @@
+Constant Story "UniSourceTest";
+Constant Headline "Not a game.^";
+
+Release 1;
+
+Global mainwin;
+Global errorcount;
+
+Constant HDR_GLULXVERSION  $04;     ! long word
+Constant ROM_GAMERELEASE   $34;     ! short word
+Constant ROM_GAMESERIAL    $36;     ! six ASCII characters
+
+
+[ Main;
+  @setiosys 2 0; ! select Glk I/O system
+  mainwin = glk($0023, 0, 0, 0, 3, 0); ! glk_window_open
+  glk($002F, mainwin); ! glk_set_window
+
+  new_line;
+  Banner();
+  new_line;
+
+  print "NOTE: This test will only pass if compiled with the new ~inform -Cu~ switch. If you try to compile it with any other source-text encoding, you will get a big pile of test failures.^^";
+
+  run_tests();
+];
+
+[ Banner  i ix;
+   if (Story ~= 0) {
+    glk($0086, 3); ! set header style
+    print (string) Story;
+    glk($0086, 0); ! set normal style
+  }
+  if (Headline ~= 0) print ": ", (string) Headline;
+  print "Release ";
+  @aloads ROM_GAMERELEASE 0 i;
+  print i;
+  print " / Serial number ";
+  for (i=0 : i<6 : i++) print (char) ROM_GAMESERIAL->i;
+  print " / Inform v"; inversion;
+  print ", compiler options ";
+  i = false;
+  #Ifdef STRICT_MODE;
+  print "S"; i++;
+  #Endif; ! STRICT_MODE
+  #Ifdef INFIX;
+  print "X"; i++;
+  #Ifnot;
+  #Ifdef DEBUG;
+  print "D"; i++;
+  #Endif; ! DEBUG
+  #Endif; ! INFIX
+  if (~~i) print "(none)";
+  new_line;
+
+  @gestalt 1 0 ix;
+  print "Interpreter version ", ix / $10000, ".", (ix & $FF00) / $100,
+  ".", ix & $FF, " / ";
+  @gestalt 0 0 ix;
+  print "VM ", ix / $10000, ".", (ix & $FF00) / $100, ".", ix & $FF, " / ";
+  ix = HDR_GLULXVERSION-->0;
+  print "game file format ", ix / $10000, ".", (ix & $FF00) / $100, ".", ix & $FF, "^";
+];
+
+Constant BUFLEN 128;
+
+Array testarray --> BUFLEN;
+Array targetarray --> BUFLEN;
+
+[ uni_to_buffer arr val  len str oldstr;
+    oldstr = glk($0048); ! stream_get_current
+    str = glk($0139, arr, BUFLEN, 1, 0); ! stream_open_memory_uni
+    if (str == 0) return 0;
+
+    glk($0047, str); ! stream_set_current
+
+    if (val->0 == $c0 or $c1)
+        val();
+    else
+        @streamstr val;
+
+    glk($0047, oldstr); ! stream_set_current
+    @copy $ffffffff sp;
+    @copy str sp;
+    @glk $0044 2 0; ! stream_close
+    @copy sp len;
+    @copy sp 0;
+
+    return len;
+];
+
+[ print_buffer arr len;
+    print "~";
+    glk($012a, arr, len); ! put_buffer_uni
+    print "~ (", len, " chars)";
+];
+
+[ run_tests ix jx val newlen targetlen newwd targetwd;
+    errorcount = 0;
+
+    print "String literals:^^";
+    
+    for (ix=0 : string_literals-->ix : ix=ix+2) {
+        newlen = uni_to_buffer(testarray, string_literals-->ix);
+        print_buffer(testarray, newlen);
+        
+        targetlen = uni_to_buffer(targetarray, string_literals-->(ix+1));
+        
+        if (newlen ~= targetlen) {
+            errorcount++;
+            print "  FAILED -- wrong length^";
+        }
+        else {
+            for (jx=0 : jx<newlen : jx++) {
+                if (targetarray-->jx ~= testarray-->jx) {
+                    errorcount++;
+                    print "  FAILED -- different at char ", jx, ": ";
+                    val = testarray-->jx;
+                    @streamunichar val;
+                    print " should be ";
+                    val = targetarray-->jx;
+                    @streamunichar val;
+                    print "^";
+                    break;
+                }
+            }
+        }
+        new_line;
+    }
+
+    new_line;
+    print "Dict literals:^^";
+
+    for (ix=0 : dict_literals-->ix : ix=ix+2) {
+        newwd = dict_literals-->ix;
+        print "'", (address) newwd, "'";
+        targetwd = dict_literals-->(ix+1);
+        for (jx=0 : jx<DICT_WORD_SIZE : jx++) {
+            if (newwd->jx ~= targetwd->jx) {
+                errorcount++;
+                print "  FAILED -- different at char ", jx, ": ";
+                val = newwd->jx;
+                @streamunichar val;
+                print " should be ";
+                val = targetwd->jx;
+                @streamunichar val;
+                print "^";
+                break;
+            }
+        }
+        new_line;
+    }
+    
+    if (errorcount) {
+        print "^FAILED with ", errorcount, " errors.^";
+    }
+    else {
+        print "^All tests passed.^";
+    }
+];
+
+Array string_literals -->
+    "Simple ASCII"
+    "Simple ASCII"
+    "AEIOU with umlauts: äëïöü ÄËÏÖÜ"
+    "AEIOU with umlauts: @:a@:e@:i@:o@:u @:A@:E@:I@:O@:U"
+    "Greek: αβγδε (abgde)"
+    "Greek: @{3B1}@{3B2}@{3B3}@{3B4}@{3B5} (abgde)"
+    "Hebrew: אבגדמ (abgdm)"
+    "Hebrew: @{5D0}@{5D1}@{5D2}@{5D3}@{5DE} (abgdm)"
+    "Punctuation: ‘single curly quotes’ “double curly quotes”"
+    "Punctuation: @{2018}single curly quotes@{2019} @{201C}double curly quotes@{201D}"
+    "Ligatures: æ (ae) œ (oe) ŋ (nj) ﬀ (ff) ﬁ (fi) ﬃ (ffi) ﬄ (ffl)"
+    "Ligatures: @{E6} (ae) @{153} (oe) @{14B} (nj) @{FB00} (ff) @{FB01} (fi) @{FB03} (ffi) @{FB04} (ffl)"
+    "Hirigana: おすも (O SU MO)"
+    "Hirigana: @{304A}@{3059}@{3082} (O SU MO)"
+    "Katakana: オスモ (O SU MO)"
+    "Katakana: @{30AA}@{30B9}@{30E2} (O SU MO)"
+    "CJK ideographs: 丂倀惿矢腄饧"
+    "CJK ideographs: @{4E02}@{5000}@{60FF}@{77E2}@{8144}@{9967}"
+    0 0;
+
+! I'm not including any characters beyond $FF here. If I did, I'd have to
+! rewrite the test to use $DICT_CHAR_SIZE=4.
+
+Array dict_literals -->
+    'ascii'
+    'ascii'
+    'hwæt'
+    'hw@{E6}t'
+    0 0;
