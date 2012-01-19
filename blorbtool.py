@@ -50,16 +50,86 @@ class BlorbChunk:
         return self.blorbfile.formchunk.read(toread)
     def display(self):
         print '* %s (%d bytes, start %d)' % (repr(self.type), self.len, self.start)
-        if (self.type == 'IFmd'):
+        if (self.type == 'RIdx'):
+            # Index chunk
+            dat = self.data()
+            (subdat, dat) = (dat[:4], dat[4:])
+            num = struct.unpack('>I', subdat)[0]
+            print '%d resources:' % (num,)
+            while (dat):
+                (subdat, dat) = (dat[:12], dat[12:])
+                subls = struct.unpack('>4c2I', subdat)
+                print '  \'%c%c%c%c\' %d: starts at %d' % subls
+        elif (self.type == 'IFmd'):
+            # Metadata chunk
             dat = self.data()
             print dat
         elif (self.type == 'Fspc'):
-            dat = self.data();
+            # Frontispiece chunk
+            dat = self.data()
             if (len(dat) != 4):
                 print 'Warning: invalid contents!'
             else:
                 num = struct.unpack('>I', dat[0:4])[0]
-                print 'Frontispiece is PICT number', num
+                print 'Frontispiece is pict number', num
+        elif (self.type == 'APal'):
+            # Adaptive palette
+            dat = self.data()
+            if (len(dat) % 4 != 0):
+                print 'Warning: invalid contents!'
+            else:
+                ls = []
+                while (dat):
+                    (subdat, dat) = (dat[:4], dat[4:])
+                    num = struct.unpack('>I', subdat)[0]
+                    ls.append(str(num))
+                print 'Picts using adaptive palette:', ' '.join(ls)
+        elif (self.type == 'Loop'):
+            # Looping
+            dat = self.data()
+            if (len(dat) % 8 != 0):
+                print 'Warning: invalid contents!'
+            else:
+                while (dat):
+                    (subdat, dat) = (dat[:8], dat[8:])
+                    (num, count) = struct.unpack('>II', subdat)
+                    print 'Sound %d repeats %d times' % (num, count)
+        elif (self.type == 'RelN'):
+            # Release number
+            dat = self.data()
+            if (len(dat) != 2):
+                print 'Warning: invalid contents!'
+            else:
+                num = struct.unpack('>H', dat)[0]
+                print 'Release number', num
+        elif (self.type == 'SNam'):
+            # Story name (obsolete)
+            dat = self.data()
+            if (len(dat) % 2 != 0):
+                print 'Warning: invalid contents!'
+            else:
+                ls = []
+                while (dat):
+                    (subdat, dat) = (dat[:2], dat[2:])
+                    num = struct.unpack('>H', subdat)[0]
+                    ls.append(chr(num))
+                print 'Story name:', ''.join(ls)
+        elif (self.type in ('ANNO', 'AUTH', '(c) ')):
+            dat = self.data()
+            print dat
+        elif (self.type == 'Reso'):
+            # Resolution chunk
+            dat = self.data()
+            if (len(dat)-24) % 28 != 0:
+                print 'Warning: invalid contents!'
+            else:
+                (subdat, dat) = (dat[:24], dat[24:])
+                subls = struct.unpack('>6I', subdat)
+                print 'Standard window size %dx%d, min %dx%d, max %dx%d' % subls
+                while (dat):
+                    (subdat, dat) = (dat[:28], dat[28:])
+                    subls = struct.unpack('>7I', subdat)
+                    print 'Pict %d: standard ratio: %d/%d, min %d/%d, max %d/%d' % subls
         else:
             dat = self.data(16)
             if (len(dat) == self.len):
