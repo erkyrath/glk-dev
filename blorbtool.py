@@ -40,9 +40,32 @@ class BlorbChunk:
         self.type = typ
         self.start = start
         self.len = len
-    def data(self):
+    def __repr__(self):
+        return '<BlorbChunk %s at %d, len %d>' % (repr(self.type), self.start, self.len)
+    def data(self, max=None):
         self.blorbfile.formchunk.seek(self.start)
-        return self.blorbfile.formchunk.read(self.len)
+        toread = self.len
+        if (max is not None):
+            toread = min(self.len, max)
+        return self.blorbfile.formchunk.read(toread)
+    def display(self):
+        print '* %s (%d bytes, start %d)' % (repr(self.type), self.len, self.start)
+        if (self.type == 'IFmd'):
+            dat = self.data()
+            print dat
+        elif (self.type == 'Fspc'):
+            dat = self.data();
+            if (len(dat) != 4):
+                print 'Warning: invalid contents!'
+            else:
+                num = struct.unpack('>I', dat[0:4])[0]
+                print 'Frontispiece is PICT number', num
+        else:
+            dat = self.data(16)
+            if (len(dat) == self.len):
+                print 'contents: %s' % (repr(dat,))
+            else:
+                print 'beginning: %s' % (repr(dat,))
 
 class BlorbFile:
     def __init__(self, filename):
@@ -161,31 +184,66 @@ class BlorbTool:
             # Unexpected exception: print it.
             print ex.__class__.__name__+':', str(ex)
 
+    def parse_int(self, val, label=''):
+        if (label):
+            label = label+': '
+        try:
+            return int(val)
+        except:
+            raise CommandError(label+'integer required')
+
+    def parse_chunk_type(self, val, label=''):
+        if (label):
+            label = label+': '
+        if len(val) > 4:
+            raise CommandError(label+'chunk type must be 1-4 characters')
+        return val.ljust(4)
+
     aliasmap = { '?':'help', 'q':'quit' }
 
     def cmd_quit(self, args):
         if (args):
-            raise CommandError('Command usage: quit')
+            raise CommandError('usage: quit')
         self.has_quit = True
 
     def cmd_help(self, args):
         if (args):
-            raise CommandError('Command usage: help')
+            raise CommandError('usage: help')
         self.show_commands()
 
     def cmd_list(self, args):
         if (args):
-            raise CommandError('Command usage: list')
+            raise CommandError('usage: list')
         print len(blorbfile.chunks), 'chunks:'
         for chunk in blorbfile.chunks:
             print '  %s (%d bytes)' % (repr(chunk.type), chunk.len)
 
     def cmd_index(self, args):
         if (args):
-            raise CommandError('Command usage: index')
+            raise CommandError('usage: index')
         print len(blorbfile.usages), 'resources:'
         for (use, num, chunk) in blorbfile.usages:
             print '  %s %d: %s (%d bytes)' % (repr(use), num, repr(chunk.type), chunk.len)
+
+    def cmd_display(self, args):
+        if (not args):
+            ls = blorbfile.chunks
+        elif (len(args) == 1):
+            typ = self.parse_chunk_type(args[0], 'display')
+            ls = [ chunk for chunk in blorbfile.chunks if chunk.type == typ ]
+            if (not ls):
+                raise CommandError('No chunks of type %s' % (repr(typ),))
+        elif (len(args) == 2):
+            use = self.parse_chunk_type(args[0], 'display')
+            num = self.parse_int(args[1], 'display (second argument)')
+            chunk = blorbfile.usagemap.get( (use, num) )
+            if (not chunk):
+                raise CommandError('No resource with usage %s, number %d' % (repr(use), num))
+            ls = [ chunk ]
+        else:
+            raise CommandError('usage: display | display TYPE | display USE NUM')
+        for chunk in ls:
+            chunk.display()
 
 # Actual work begins here.
 
