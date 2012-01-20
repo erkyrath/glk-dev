@@ -295,7 +295,7 @@ class BlorbFile:
         fl.close()
         os.rename(tmpfilename, self.outfilename)
         print 'Wrote file:', self.outfilename
-        self.changed = False
+        return self.outfilename
 
     def delete_chunk(self, delchunk):
         self.chunks = [ chunk for chunk in self.chunks if (chunk is not delchunk) ]
@@ -490,13 +490,20 @@ class BlorbTool:
         print 'Reloaded %s.' % (filename,)
         
     def cmd_save(self, args):
+        global blorbfile
         if (len(args) == 0):
             outfilename = None
         elif (len(args) == 1):
             outfilename = args[0]
         else:
             raise CommandError('usage: save | save FILENAME')
-        blorbfile.save(outfilename)
+        filename = blorbfile.save(outfilename)
+        if (filename):
+            # Reload, so that the blorbfile's Chunk (and its chunks)
+            # refer to the new file. (The reloaded blorbfile will have
+            # changed == False, too.)
+            blorbfile.close()
+            blorbfile = BlorbFile(filename)
 
     def cmd_dump(self, args):
         print '### chunks:', blorbfile.chunks
