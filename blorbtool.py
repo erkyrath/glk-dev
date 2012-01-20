@@ -249,6 +249,12 @@ class BlorbFile:
         if (len(self.chunks) != len(self.chunkatpos)):
             print 'Warning: internal mismatch (chunks)!'
 
+    def chunk_position(self, chunk):
+        try:
+            return self.chunks.index(chunk)
+        except:
+            return None
+
     def save_if_needed(self):
         if self.changed:
             try:
@@ -265,15 +271,15 @@ class BlorbFile:
         indexchunk.len = 4 + 12*len(self.usages)
         pos = 12
         for chunk in self.chunks:
-            chunk.start = pos
+            chunk.savestart = pos
             pos = pos + 8 + chunk.len
             if (pos % 2):
                 pos = pos+1
-        self.usages.sort(key=lambda tup:tup[2].start)
+        self.usages.sort(key=lambda tup:tup[2].savestart)
         ls = []
         ls.append(struct.pack('>I', len(self.usages)))
         for (typ, num, chunk) in self.usages:
-            ls.append(struct.pack('>4cII', typ[0], typ[1], typ[2], typ[3], num, chunk.start))
+            ls.append(struct.pack('>4cII', typ[0], typ[1], typ[2], typ[3], num, chunk.savestart))
         dat = ''.join(ls)
         if (len(dat) != indexchunk.len):
             print 'Warning: index chunk length does not match!'
@@ -324,6 +330,18 @@ class BlorbFile:
         for key in ls:
             self.usagemap.pop(key)
         self.changed = True
+
+    def add_chunk(self, chunk, use=None, num=None, pos=None):
+        if (pos is None):
+            self.chunks.append(chunk)
+        else:
+            self.chunks.insert(pos, chunk)
+        self.chunkatpos[chunk.start] = chunk
+        dict_append(self.chunkmap, chunk.type, chunk)
+        if (use is not None):
+            self.usages.append( (use, num, chunk) )
+            self.usagemap[(use,num)] = chunk
+        self.changed = True
                                
 class CommandError(Exception):
     pass
@@ -339,6 +357,8 @@ class BlorbTool:
         print 'display USE NUM -- contents of chunk by use and number (e.g., "display Exec 0")'
         print 'export TYPE FILENAME -- export the chunk of that type to a file'
         print 'export USE NUM FILENAME -- export a chunk by use and number'
+        print 'import TYPE FILENAME -- import a file as a chunk of that type'
+        print 'import USE NUM TYPE FILENAME -- import a file as a resource of that use, number, and type'
         print 'delete TYPE -- delete chunk(s) of that type'
         print 'delete USE NUM -- delete chunk by use and number'
         print 'save -- write out changes'
@@ -480,6 +500,44 @@ class BlorbTool:
         outfl.close()
         print 'Wrote %d bytes to %s.' % (finallen, outfilename)
 
+    def cmd_import(self, args):
+        origchunk = None
+        if (len(args) == 2):
+            typ = self.parse_chunk_type(args[0], 'import')
+            use = None
+            num = None
+            ls = [ chunk for chunk in blorbfile.chunks if chunk.type == typ ]
+            if (ls):
+                origchunk = ls[0]
+        elif (len(args) == 4):
+            use = self.parse_chunk_type(args[0], 'import')
+            num = self.parse_int(args[1], 'import (second argument)')
+            typ = self.parse_chunk_type(args[2], 'import (third argument)')
+            origchunk = blorbfile.usagemap.get( (use, num) )
+        else:
+            raise CommandError('usage: import TYPE FILENAME | import USE NUM TYPE FILENAME')
+        infilename = args[-1]
+        if (infilename == blorbfile.filename):
+            raise CommandError('You can\'t import the original blorb file as a chunk!')
+        fl = open(infilename)
+        fl.seek(0, 2)
+        filelen = fl.tell()
+        fl.close()
+        fakestart = min(blorbfile.chunkatpos.keys() + [0]) - 1
+        if origchunk:
+            # Replace existing chunk
+            pos = blorbfile.chunk_position(origchunk)
+            blorbfile.delete_chunk(origchunk)
+        else:
+            pos = None
+        chunk = BlorbChunk(blorbfile, typ, fakestart, filelen)
+        chunk.filedata = infilename
+        blorbfile.add_chunk(chunk, use, num, pos)
+        if pos is None:
+            print 'Added chunk, length %d' % (filelen,)
+        else:
+            print 'Replaced chunk, new length %d' % (filelen,)
+            
     def cmd_delete(self, args):
         if (len(args) == 1):
             typ = self.parse_chunk_type(args[0], 'delete')
