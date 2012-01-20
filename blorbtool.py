@@ -22,6 +22,9 @@ popt.add_option('-o', '--output',
 popt.add_option('-f', '--force',
                 action='store_true', dest='force',
                 help='overwrite files without confirming')
+popt.add_option('-v', '--verbose',
+                action='store_true', dest='verbose',
+                help='verbose stack traces on error')
 popt.add_option('-l', '--commands',
                 action='store_true', dest='listcommands',
                 help='list all commands (and exit)')
@@ -49,6 +52,7 @@ class BlorbChunk:
         self.formtype = formtype
         self.literaldata = None
         self.filedata = None
+        self.filestart = None
         
     def __repr__(self):
         return '<BlorbChunk %s at %d, len %d>' % (repr(self.type), self.start, self.len)
@@ -61,6 +65,8 @@ class BlorbChunk:
                 return self.literaldata
         if (self.filedata):
             fl = open(self.filedata)
+            if (self.filestart is not None):
+                fl.seek(self.filestart)
             if (max is not None):
                 dat = fl.read(max)
             else:
@@ -403,6 +409,8 @@ class BlorbTool:
         except Exception, ex:
             # Unexpected exception: print it.
             print ex.__class__.__name__+':', str(ex)
+            if (opts.verbose):
+                raise
 
     def parse_int(self, val, label=''):
         if (label):
@@ -520,9 +528,16 @@ class BlorbTool:
         if (infilename == blorbfile.filename):
             raise CommandError('You can\'t import the original blorb file as a chunk!')
         fl = open(infilename)
+        filestart = None
+        dat = fl.read(5)
+        if (dat[0:4] == 'FORM' and ord(dat[4]) < 0x20):
+            # This is an AIFF file, and must be embedded
+            filestart = 8
         fl.seek(0, 2)
         filelen = fl.tell()
         fl.close()
+        if (filestart):
+            filelen = filelen - 8
         fakestart = min(blorbfile.chunkatpos.keys() + [0]) - 1
         if origchunk:
             # Replace existing chunk
@@ -532,6 +547,8 @@ class BlorbTool:
             pos = None
         chunk = BlorbChunk(blorbfile, typ, fakestart, filelen)
         chunk.filedata = infilename
+        if (filestart):
+            chunk.filestart = filestart
         blorbfile.add_chunk(chunk, use, num, pos)
         if pos is None:
             print 'Added chunk, length %d' % (filelen,)
@@ -604,6 +621,8 @@ try:
     blorbfile = BlorbFile(filename, opts.output)
 except Exception, ex:
     print ex.__class__.__name__+':', str(ex)
+    if (opts.verbose):
+        raise
     sys.exit(-1)
     
 # If args exist, execute them as a command. If not, loop grabbing and
