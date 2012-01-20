@@ -41,11 +41,12 @@ def confirm_input(prompt):
         return True
 
 class BlorbChunk:
-    def __init__(self, blorbfile, typ, start, len):
+    def __init__(self, blorbfile, typ, start, len, formtype=None):
         self.blorbfile = blorbfile
         self.type = typ
         self.start = start
         self.len = len
+        self.formtype = formtype
         self.literaldata = None
         self.filedata = None
         
@@ -71,9 +72,15 @@ class BlorbChunk:
         if (max is not None):
             toread = min(self.len, max)
         return self.blorbfile.formchunk.read(toread)
+
+    def describe(self):
+        if (not self.formtype):
+            return '%s (%d bytes, start %d)' % (repr(self.type), self.len, self.start)
+        else:
+            return '%s/%s (%d bytes, start %d)' % (repr(self.type), repr(self.formtype), self.len, self.start)
     
     def display(self):
-        print '* %s (%d bytes, start %d)' % (repr(self.type), self.len, self.start)
+        print '* %s' % (self.describe(),)
         if (self.type == 'RIdx'):
             # Index chunk
             dat = self.data()
@@ -183,7 +190,13 @@ class BlorbFile:
         formlen = formchunk.getsize()
         while formchunk.tell() < formlen:
             chunk = Chunk(formchunk)
-            self.chunks.append(BlorbChunk(self, chunk.getname(), formchunk.tell(), chunk.getsize()))
+            start = formchunk.tell()
+            size = chunk.getsize()
+            formtype = None
+            if chunk.getname() == 'FORM':
+                formtype = chunk.read(4)
+            subchunk = BlorbChunk(self, chunk.getname(), start, size, formtype)
+            self.chunks.append(subchunk)
             chunk.skip()
             chunk.close()
 
@@ -403,14 +416,14 @@ class BlorbTool:
             raise CommandError('usage: list')
         print len(blorbfile.chunks), 'chunks:'
         for chunk in blorbfile.chunks:
-            print '  %s (%d bytes, start %d)' % (repr(chunk.type), chunk.len, chunk.start)
+            print '  %s' % (chunk.describe(),)
 
     def cmd_index(self, args):
         if (args):
             raise CommandError('usage: index')
         print len(blorbfile.usages), 'resources:'
         for (use, num, chunk) in blorbfile.usages:
-            print '  %s %d: %s (%d bytes)' % (repr(use), num, repr(chunk.type), chunk.len)
+            print '  %s %d: %s' % (repr(use), num, chunk.describe())
 
     def cmd_display(self, args):
         if (not args):
@@ -456,10 +469,16 @@ class BlorbTool:
             if (not confirm_input('File %s exists. Overwrite?' % (outfilename,))):
                 print 'Cancelled.'
                 return
-        print 'Writing %d bytes to %s...' % (chunk.len, outfilename)
         outfl = open(outfilename, 'w')
+        if (chunk.formtype and chunk.formtype != 'FORM'):
+            # For an AIFF file, we must include the FORM/length header.
+            # (Unless it's an overly nested AIFF.)
+            outfl.write('FORM')
+            outfl.write(struct.pack('>I', chunk.len))
         outfl.write(chunk.data())
+        finallen = outfl.tell()
         outfl.close()
+        print 'Wrote %d bytes to %s.' % (finallen, outfilename)
 
     def cmd_delete(self, args):
         if (len(args) == 1):
