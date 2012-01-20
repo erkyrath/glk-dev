@@ -5,6 +5,7 @@
 # This script is in the public domain.
 
 import sys
+import os
 import optparse
 import struct
 from chunk import Chunk
@@ -34,20 +35,43 @@ def dict_append(map, key, val):
         map[key] = ls
     ls.append(val)
 
+def confirm_input(prompt):
+    ln = raw_input(prompt+' >')
+    if (ln.lower().startswith('y')):
+        return True
+
 class BlorbChunk:
     def __init__(self, blorbfile, typ, start, len):
         self.blorbfile = blorbfile
         self.type = typ
         self.start = start
         self.len = len
+        self.literaldata = None
+        self.filedata = None
+        
     def __repr__(self):
         return '<BlorbChunk %s at %d, len %d>' % (repr(self.type), self.start, self.len)
+    
     def data(self, max=None):
+        if (self.literaldata):
+            if (max is not None):
+                return self.literaldata[0:max]
+            else:
+                return self.literaldata
+        if (self.filedata):
+            fl = open(self.filedata)
+            if (max is not None):
+                dat = fl.read(max)
+            else:
+                dat = fl.read()
+            fl.close()
+            return dat
         self.blorbfile.formchunk.seek(self.start)
         toread = self.len
         if (max is not None):
             toread = min(self.len, max)
         return self.blorbfile.formchunk.read(toread)
+    
     def display(self):
         print '* %s (%d bytes, start %d)' % (repr(self.type), self.len, self.start)
         if (self.type == 'RIdx'):
@@ -138,13 +162,18 @@ class BlorbChunk:
                 print 'beginning: %s' % (repr(dat,))
 
 class BlorbFile:
-    def __init__(self, filename):
-        self.chunks = []
+    def __init__(self, filename, outfilename=None):
         self.filename = filename
+        self.outfilename = outfilename
+        if (not self.outfilename):
+            self.outfilename = self.filename
+            
+        self.changed = False
 
         self.file = open(filename)
         formchunk = Chunk(self.file)
         self.formchunk = formchunk
+        self.chunks = []
         
         if (formchunk.getname() != 'FORM'):
             raise Exception('This does not appear to be a Blorb file.')
@@ -189,7 +218,7 @@ class BlorbFile:
                 start = struct.unpack('>I', subdat[8:12])[0]
                 subchunk = self.chunkatpos.get(start)
                 if (not subchunk):
-                    print 'Warning: resource (%s, %d) refers to a nonexistent chunk!' % (typ, num)
+                    print 'Warning: resource (%s, %d) refers to a nonexistent chunk!' % (repr(typ), num)
                 self.usages.append( (typ, num, subchunk) )
                 self.usagemap[(typ, num)] = subchunk
 
@@ -200,19 +229,107 @@ class BlorbFile:
         if (self.file):
             self.file.close()
             self.file = None
+
+    def sanity_check(self):
+        if (len(self.usages) != len(self.usagemap)):
+            print 'Warning: internal mismatch (usages)!'
+        if (len(self.chunks) != len(self.chunkatpos)):
+            print 'Warning: internal mismatch (chunks)!'
+
+    def save_if_needed(self):
+        if self.changed:
+            try:
+                self.save()
+            except CommandError, ex:
+                print str(ex)
+
+    def canonicalize(self):
+        self.sanity_check()
+        try:
+            indexchunk = self.chunkmap['RIdx'][0]
+        except:
+            raise CommandError('There is no index chunk, so this cannot be a legal blorb file.')
+        indexchunk.len = 4 + 12*len(self.usages)
+        pos = 12
+        for chunk in self.chunks:
+            chunk.start = pos
+            pos = pos + 8 + chunk.len
+            if (pos % 2):
+                pos = pos+1
+        self.usages.sort(key=lambda tup:tup[2].start)
+        ls = []
+        ls.append(struct.pack('>I', len(self.usages)))
+        for (typ, num, chunk) in self.usages:
+            ls.append(struct.pack('>4cII', typ[0], typ[1], typ[2], typ[3], num, chunk.start))
+        dat = ''.join(ls)
+        if (len(dat) != indexchunk.len):
+            print 'Warning: index chunk length does not match!'
+        indexchunk.literaldata = dat
+
+    def save(self, outfilename=None):
+        if (outfilename):
+            self.outfilename = outfilename
+        if (not self.changed and (self.outfilename == self.filename)):
+            raise CommandError('No changes need saving.')
+        if (os.path.exists(self.outfilename) and not opts.force):
+            if (not confirm_input('File %s exists. Rewrite?' % (self.outfilename,))):
+                print 'Cancelled.'
+                return
+        self.canonicalize()
+        tmpfilename = self.outfilename + '~TEMP'
+        fl = open(tmpfilename, 'w')
+        fl.write('FORM----IFRS')
+        pos = 12
+        for chunk in self.chunks:
+            typ = chunk.type
+            fl.write(struct.pack('>4cI', typ[0], typ[1], typ[2], typ[3], chunk.len))
+            pos = pos+8
+            dat = chunk.data()
+            fl.write(dat)
+            pos = pos+len(dat)
+            if (pos % 2):
+                fl.write('\0')
+                pos = pos+1
+        fl.seek(4)
+        fl.write(struct.pack('>I', pos-8))
+        fl.close()
+        os.rename(tmpfilename, self.outfilename)
+        print 'Wrote file:', self.outfilename
+        self.changed = False
+
+    def delete_chunk(self, delchunk):
+        self.chunks = [ chunk for chunk in self.chunks if (chunk is not delchunk) ]
+        ls = self.chunkmap[delchunk.type]
+        ls = [ chunk for chunk in ls if (chunk is not delchunk) ]
+        if (ls):
+            self.chunkmap[delchunk.type] = ls
+        else:
+            self.chunkmap.pop(delchunk.type)
+        self.chunkatpos.pop(delchunk.start)
+        self.usages = [ tup for tup in self.usages if (tup[2] is not delchunk) ]
+        ls = [ key for (key,val) in self.usagemap.items() if (val is delchunk) ]
+        for key in ls:
+            self.usagemap.pop(key)
+        self.changed = True
                                
 class CommandError(Exception):
     pass
 
 class BlorbTool:
     def show_commands():
-        print 'list'
-        print 'index'
-        #  display (verbose output)
-        #  display TYPE (display all chunks with this type)
-        #  display USAGE N (display the chunk with the given usage/num)
-        #  export TYPE (write out chunk contents -- at most one)
-        #  export USAGE N (write out chunk contents -- at most one)
+        print 'blorbtool commands:'
+        print
+        print 'list -- list all chunks'
+        print 'index -- list all resources in the index chunk'
+        print 'display -- display contents of all chunks'
+        print 'display TYPE -- contents of chunk(s) of that type'
+        print 'display USE NUM -- contents of chunk by use and number (e.g., "display Exec 0")'
+        print 'export TYPE FILENAME -- export the chunk of that type to a file'
+        print 'export USE NUM FILENAME -- export a chunk by use and number'
+        print 'delete TYPE -- delete chunk(s) of that type'
+        print 'delete USE NUM -- delete chunk by use and number'
+        print 'save -- write out changes'
+        print 'reload -- discard changes and reload existing blorb file'
         #  import FILE2 TYPE (add new chunk with given type; check format if known)
         #  import FILE2 TYPE USAGE N
 
@@ -269,7 +386,7 @@ class BlorbTool:
             raise CommandError(label+'chunk type must be 1-4 characters')
         return val.ljust(4)
 
-    aliasmap = { '?':'help', 'q':'quit' }
+    aliasmap = { '?':'help', 'q':'quit', 'write':'save', 'restart':'reload', 'restore':'reload' }
 
     def cmd_quit(self, args):
         if (args):
@@ -286,7 +403,7 @@ class BlorbTool:
             raise CommandError('usage: list')
         print len(blorbfile.chunks), 'chunks:'
         for chunk in blorbfile.chunks:
-            print '  %s (%d bytes)' % (repr(chunk.type), chunk.len)
+            print '  %s (%d bytes, start %d)' % (repr(chunk.type), chunk.len, chunk.start)
 
     def cmd_index(self, args):
         if (args):
@@ -315,19 +432,92 @@ class BlorbTool:
         for chunk in ls:
             chunk.display()
 
-# Actual work begins here.
+    def cmd_export(self, args):
+        if (len(args) == 2):
+            typ = self.parse_chunk_type(args[0], 'export')
+            ls = [ chunk for chunk in blorbfile.chunks if chunk.type == typ ]
+            if (not ls):
+                raise CommandError('No chunks of type %s' % (repr(typ),))
+            if (len(ls) != 1):
+                raise CommandError('%d chunks of type %s' % (len(ls), repr(typ),))
+            chunk = ls[0]
+        elif (len(args) == 3):
+            use = self.parse_chunk_type(args[0], 'export')
+            num = self.parse_int(args[1], 'export (second argument)')
+            chunk = blorbfile.usagemap.get( (use, num) )
+            if (not chunk):
+                raise CommandError('No resource with usage %s, number %d' % (repr(use), num))
+        else:
+            raise CommandError('usage: export TYPE FILENAME | export USE NUM FILENAME')
+        outfilename = args[-1]
+        if (outfilename == blorbfile.filename):
+            raise CommandError('You can\'t export a chunk over the original blorb file!')
+        if (os.path.exists(outfilename) and not opts.force):
+            if (not confirm_input('File %s exists. Overwrite?' % (outfilename,))):
+                print 'Cancelled.'
+                return
+        print 'Writing %d bytes to %s...' % (chunk.len, outfilename)
+        outfl = open(outfilename, 'w')
+        outfl.write(chunk.data())
+        outfl.close()
 
-if (not args):
-    popt.print_help()
-    sys.exit(-1)
+    def cmd_delete(self, args):
+        if (len(args) == 1):
+            typ = self.parse_chunk_type(args[0], 'delete')
+            ls = [ chunk for chunk in blorbfile.chunks if chunk.type == typ ]
+            if (not ls):
+                raise CommandError('No chunks of type %s' % (repr(typ),))
+        elif (len(args) == 2):
+            use = self.parse_chunk_type(args[0], 'delete')
+            num = self.parse_int(args[1], 'delete (second argument)')
+            chunk = blorbfile.usagemap.get( (use, num) )
+            if (not chunk):
+                raise CommandError('No resource with usage %s, number %d' % (repr(use), num))
+            ls = [ chunk ]
+        else:
+            raise CommandError('usage: delete TYPE | delete USE NUM')
+        for chunk in ls:
+            blorbfile.delete_chunk(chunk)
+        print 'Deleted %d chunk%s' % (len(ls), ('' if len(ls)==1 else 's'))
+
+    def cmd_reload(self, args):
+        global blorbfile
+        if (args):
+            raise CommandError('usage: reload')
+        filename = blorbfile.filename
+        blorbfile.close()
+        blorbfile = BlorbFile(filename)
+        print 'Reloaded %s.' % (filename,)
+        
+    def cmd_save(self, args):
+        if (len(args) == 0):
+            outfilename = None
+        elif (len(args) == 1):
+            outfilename = args[0]
+        else:
+            raise CommandError('usage: save | save FILENAME')
+        blorbfile.save(outfilename)
+
+    def cmd_dump(self, args):
+        print '### chunks:', blorbfile.chunks
+        print '### chunkmap:', blorbfile.chunkmap
+        print '### chunkatpos:', blorbfile.chunkatpos
+        print '### usages:', blorbfile.usages
+        print '### usagemap:', blorbfile.usagemap
+
+# Actual work begins here.
 
 if (opts.listcommands):
     BlorbTool.show_commands()
     sys.exit(-1)
     
+if (not args):
+    popt.print_help()
+    sys.exit(-1)
+
 filename = args.pop(0)
 try:
-    blorbfile = BlorbFile(filename)
+    blorbfile = BlorbFile(filename, opts.output)
 except Exception, ex:
     print ex.__class__.__name__+':', str(ex)
     sys.exit(-1)
@@ -340,10 +530,14 @@ try:
     if (args):
         tool.set_interactive(False)
         tool.handle(args)
+        blorbfile.sanity_check()
+        blorbfile.save_if_needed()
     else:
         tool.set_interactive(True)
         while (not tool.quit_yet()):
             tool.handle()
+            blorbfile.sanity_check()
+        blorbfile.save_if_needed()
         print '<exiting>'
 except KeyboardInterrupt:
     print '<interrupted>'
