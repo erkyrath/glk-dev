@@ -151,7 +151,7 @@ class BlorbChunk:
                     num = struct.unpack('>H', subdat)[0]
                     ls.append(chr(num))
                 print 'Story name:', ''.join(ls)
-        elif (self.type in ('ANNO', 'AUTH', '(c) ')):
+        elif (self.type in ('TEXT', 'ANNO', 'AUTH', '(c) ')):
             dat = self.data()
             print dat
         elif (self.type == 'Reso'):
