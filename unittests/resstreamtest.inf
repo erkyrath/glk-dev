@@ -13,6 +13,8 @@ Global mainwin = 0;
 Constant BUFLEN = 80;
 Array buffer -> BUFLEN+4;
 Array buffer2 -> BUFLEN+4;
+Array ubuffer --> BUFLEN+4;
+Array ubuffer2 --> BUFLEN+4;
 Array gg_result --> 2;
 Array gg_arguments --> 8;
 
@@ -86,6 +88,28 @@ Constant ROM_GAMESERIAL    $36;     ! six ASCII characters
     print "A voice booooms out: Welcome to the test chamber.^^";
 ];
 
+[ uni_to_buffer arr val  len str oldstr;
+    oldstr = glk($0048); ! stream_get_current
+    str = glk($0139, arr, BUFLEN, 1, 0); ! stream_open_memory_uni
+    if (str == 0) return 0;
+
+    glk($0047, str); ! stream_set_current
+
+    if (val->0 == $c0 or $c1)
+        val();
+    else
+        @streamstr val;
+
+    glk($0047, oldstr); ! stream_set_current
+    @copy $ffffffff sp;
+    @copy str sp;
+    @glk $0044 2 0; ! stream_close
+    @copy sp len;
+    @copy sp 0;
+
+    return len;
+];
+
 [ compare_string buf blen val   len ix;
     len = val.print_to_array(buffer2, BUFLEN);
     if (len ~= blen) {
@@ -96,6 +120,22 @@ Constant ROM_GAMESERIAL    $36;     ! six ASCII characters
     for (ix=0 : ix<len : ix++) {
         if (buf->ix ~= buffer2->(4+ix)) {
             print "ERROR: String does not match -- character ", ix, " is ", (char) buf->ix, ", not ", (char) buffer2->(4+ix), "^";
+            errorcount++;
+            return;
+        }
+    }
+];
+
+[ compare_unistring ubuf blen val   len ix;
+    len = uni_to_buffer(ubuffer2, val);
+    if (len ~= blen) {
+        print "ERROR: String does not match -- wrong length: ", len, ", not ", blen, "^";
+        errorcount++;
+        return;
+    }
+    for (ix=0 : ix<len : ix++) {
+        if (ubuf-->ix ~= ubuffer2-->(ix)) {
+            print "ERROR: String does not match -- character ", ix, " is ", (char) ubuf-->ix, ", not ", (char) ubuffer2-->(ix), "^";
             errorcount++;
             return;
         }
@@ -162,6 +202,9 @@ Constant ROM_GAMESERIAL    $36;     ! six ASCII characters
         errorcount++;
         print "Error: resource stream multiply-visible in iteration.^";
     }
+
+    
+    ! byte stream, byte read calls
     
     print "Opening Data 1 for get_buffer_stream:^";
     str = glk($0049, 1, 11); ! stream_open_resource
@@ -243,5 +286,92 @@ Constant ROM_GAMESERIAL    $36;     ! six ASCII characters
     glk($0044, str, gg_result); ! stream_close
     check_result_counts(3, 0);
     new_line;
+
     
+    ! byte stream, unicode read calls
+    
+    buffer->0 = 'x';
+    ubuffer-->0 = 'x';
+    
+    print "Opening Data 1 for get_buffer_stream_uni:^";
+    str = glk($0049, 1, 11); ! stream_open_resource
+    len = glk($0131, str, ubuffer, BUFLEN); ! get_buffer_stream_uni
+    compare_unistring(ubuffer, len, "Magic purple people eater.");
+    glk($0044, str, gg_result); ! stream_close
+    check_result_counts(26, 0);
+    print "got: ";
+    glk($012A, ubuffer, len); ! glk_put_buffer_uni
+    new_line;
+    
+    print "Opening Data 2 for short get_buffer_stream_uni:^";
+    str = glk($0049, 2, 11); ! stream_open_resource
+    len = glk($0131, str, ubuffer, 10); ! get_buffer_stream_uni
+    print "First read: "; check_value(len, 10); new_line;
+    len2 = glk($0131, str, ubuffer+4*len, 40); ! get_buffer_stream_uni
+    len = len+len2;
+    compare_unistring(ubuffer, len, "Orange bucket.^Lavender socks.^");
+    glk($0044, str, gg_result); ! stream_close
+    check_result_counts(31, 0);
+    print "got: ";
+    glk($012A, ubuffer, len); ! glk_put_buffer_uni
+    new_line;
+    
+    print "Opening Data 1 for get_line_stream_uni:^";
+    str = glk($0049, 1, 11); ! stream_open_resource
+    len = glk($0132, str, ubuffer, BUFLEN); ! get_line_stream_uni
+    compare_unistring(ubuffer, len, "Magic purple people eater.");
+    glk($0044, str, gg_result); ! stream_close
+    check_result_counts(26, 0);
+    print "got: ";
+    glk($012A, ubuffer, len); ! glk_put_buffer_uni
+    new_line;
+    
+    print "Opening Data 2 for get_line_stream_uni:^";
+    str = glk($0049, 2, 11); ! stream_open_resource
+    len = glk($0132, str, ubuffer, BUFLEN); ! get_line_stream_uni
+    compare_unistring(ubuffer, len, "Orange bucket.^");
+    print "got: ";
+    glk($012A, ubuffer, len); ! glk_put_buffer_uni
+    len = glk($0132, str, ubuffer, BUFLEN); ! get_line_stream_uni
+    compare_unistring(ubuffer, len, "Lavender socks.^");
+    print "got: ";
+    glk($012A, ubuffer, len); ! glk_put_buffer_uni
+    glk($0044, str, gg_result); ! stream_close
+    check_result_counts(31, 0);
+    new_line;
+    
+    print "Opening Data 2 for get_char_stream_uni:^";
+    str = glk($0049, 2, 12); ! stream_open_resource
+    len = 0;
+    while (1) {
+        val = glk($0130, str); ! get_char_stream_uni
+        if (val == -1)
+            break;
+        ubuffer-->len = val;
+        len++;
+    }
+    compare_unistring(ubuffer, len, "Orange bucket.^Lavender socks.^");
+    glk($0044, str, gg_result); ! stream_close
+    check_result_counts(31, 0);
+    print "got: ";
+    glk($012A, ubuffer, len); ! glk_put_buffer_uni
+    new_line;
+
+    print "Opening Data 1 for get/set position:^";
+    str = glk($0049, 1, 11); ! stream_open_resource
+    glk($0045, str, 4, 0); ! stream_set_position
+    val = glk($0130, str); ! get_char_stream_uni
+    print "Got "; check_value(val, 'c'); new_line;
+    glk($0045, str, -2, 1); ! stream_set_position
+    val = glk($0130, str); ! get_char_stream_uni
+    print "Got "; check_value(val, 'i'); new_line;
+    val = glk($0046, str);
+    print "Now at "; check_value(val, 4); new_line;
+    glk($0045, str, -2, 2); ! stream_set_position
+    val = glk($0130, str); ! get_char_stream_uni
+    print "Got "; check_value(val, 'r'); new_line;
+    glk($0044, str, gg_result); ! stream_close
+    check_result_counts(3, 0);
+    new_line;
+
 ];
