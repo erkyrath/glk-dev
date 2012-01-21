@@ -3,9 +3,12 @@ Constant Headline "Not a game.^";
 
 ! To run properly, the compiled game file for this test must be embedded in
 ! a blorb file with the following Data chunks:
+! (No quotes. Newlines only where marked as "\n". "\xFF" represents a byte
+! with value 255.)
 !
 ! Data 1, TEXT: "Magic purple people eater."
 ! Data 2, TEXT: "Orange bucket.\nLavender socks.\n"
+! Data 3, BINA: "Az\xE1l\xEB\xE5\xDF.\n"
 
 Release 1;
 
@@ -204,7 +207,7 @@ Constant ROM_GAMESERIAL    $36;     ! six ASCII characters
     }
 
     
-    ! byte stream, byte read calls
+    ! text byte stream, byte read calls
     
     print "Opening Data 1 for get_buffer_stream:^";
     str = glk($0049, 1, 11); ! stream_open_resource
@@ -288,7 +291,7 @@ Constant ROM_GAMESERIAL    $36;     ! six ASCII characters
     new_line;
 
     
-    ! byte stream, unicode read calls
+    ! text byte stream, unicode read calls
     
     buffer->0 = 'x';
     ubuffer-->0 = 'x';
@@ -374,4 +377,86 @@ Constant ROM_GAMESERIAL    $36;     ! six ASCII characters
     check_result_counts(3, 0);
     new_line;
 
+	
+    ! binary byte stream, byte read calls
+    
+    print "Opening Data 3 for get_buffer_stream:^";
+    str = glk($0049, 3, 11); ! stream_open_resource
+    len = glk($0092, str, buffer, BUFLEN); ! get_buffer_stream
+    compare_string(buffer, len, "Az@{E1}l@{EB}@{E5}@{DF}.^");
+    glk($0044, str, gg_result); ! stream_close
+    check_result_counts(9, 0);
+    print "got: ";
+    glk($0084, buffer, len); ! put_buffer_stream
+    new_line;
+    
+    print "Opening Data 3 for get_line_stream:^";
+    str = glk($0049, 3, 11); ! stream_open_resource
+    len = glk($0091, str, buffer+1, BUFLEN); ! get_line_stream
+    compare_string(buffer, len+1, "AAz@{E1}l@{EB}@{E5}@{DF}.^");
+    glk($0044, str, gg_result); ! stream_close
+    check_result_counts(9, 0);
+    print "got: ";
+    glk($0084, buffer, len); ! put_buffer_stream
+    new_line;
+    
+    print "Opening Data 3 for get_char_stream:^";
+    str = glk($0049, 3, 12); ! stream_open_resource
+    len = 0;
+    while (1) {
+        val = glk($0090, str); ! get_char_stream
+        if (val == -1)
+            break;
+        buffer->len = val;
+        len++;
+    }
+    compare_string(buffer, len, "Az@{E1}l@{EB}@{E5}@{DF}.^");
+    glk($0044, str, gg_result); ! stream_close
+    check_result_counts(9, 0);
+    print "got: ";
+    glk($0084, buffer, len); ! put_buffer_stream
+    new_line;
+
+	
+    ! binary byte stream, unicode read calls
+    
+    buffer->0 = 'x';
+    ubuffer-->0 = 'x';
+    
+    print "Opening Data 3 for get_buffer_stream_uni:^";
+    str = glk($0049, 3, 11); ! stream_open_resource
+    len = glk($0131, str, ubuffer, BUFLEN); ! get_buffer_stream_uni
+    compare_unistring(ubuffer, len, "Az@{E1}l@{EB}@{E5}@{DF}.^");
+    glk($0044, str, gg_result); ! stream_close
+    check_result_counts(9, 0);
+    print "got: ";
+    glk($012A, ubuffer, len); ! glk_put_buffer_uni
+    new_line;
+    
+    print "Opening Data 3 for get_line_stream_uni:^";
+    str = glk($0049, 3, 11); ! stream_open_resource
+    len = glk($0132, str, ubuffer+8, BUFLEN); ! get_line_stream_uni
+    compare_unistring(ubuffer, len+2, "AzAz@{E1}l@{EB}@{E5}@{DF}.^");
+    glk($0044, str, gg_result); ! stream_close
+    check_result_counts(9, 0);
+    print "got: ";
+    glk($012A, ubuffer, len); ! glk_put_buffer_uni
+    new_line;
+    
+    print "Opening Data 3 for get_char_stream_uni:^";
+    str = glk($0049, 3, 12); ! stream_open_resource
+    len = 0;
+    while (1) {
+        val = glk($0130, str); ! get_char_stream_uni
+        if (val == -1)
+            break;
+        ubuffer-->len = val;
+        len++;
+    }
+    compare_unistring(ubuffer, len, "Az@{E1}l@{EB}@{E5}@{DF}.^");
+    glk($0044, str, gg_result); ! stream_close
+    check_result_counts(9, 0);
+    print "got: ";
+    glk($012A, ubuffer, len); ! glk_put_buffer_uni
+    new_line;
 ];
