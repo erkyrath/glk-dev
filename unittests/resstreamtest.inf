@@ -1,0 +1,247 @@
+Constant Story "ResStream";
+Constant Headline "Not a game.^";
+
+! To run properly, the compiled game file for this test must be embedded in
+! a blorb file with the following Data chunks:
+!
+! Data 1, TEXT: "Magic purple people eater."
+! Data 2, TEXT: "Orange bucket.\nLavender socks.\n"
+
+Release 1;
+
+Global mainwin = 0;
+Constant BUFLEN = 80;
+Array buffer -> BUFLEN+4;
+Array buffer2 -> BUFLEN+4;
+Array gg_result --> 2;
+Array gg_arguments --> 8;
+
+Global errorcount = 0;
+
+Constant HDR_GLULXVERSION  $04;     ! long word
+Constant ROM_GAMERELEASE   $34;     ! short word
+Constant ROM_GAMESERIAL    $36;     ! six ASCII characters
+
+[ Main val;
+  @setiosys 2 0; ! select Glk I/O system
+  mainwin = glk($0023, 0, 0, 0, 3, 0); ! glk_window_open
+  glk($002F, mainwin); ! glk_set_window
+
+  new_line;
+  Banner();
+  new_line;
+
+  RoomDesc();
+
+  val = glk($0004, 22, 0); ! gestalt_ResourceStream
+  if (~~val) {
+    print "This interpreter does not support resource streams.^";
+    return;
+  }
+  
+  ResStreamTest();
+
+  if (errorcount)
+    print "^", errorcount, " tests failed.^";
+];
+
+[ Banner  i ix;
+   if (Story ~= 0) {
+    glk($0086, 3); ! set header style
+    print (string) Story;
+    glk($0086, 0); ! set normal style
+  }
+  if (Headline ~= 0) print ": ", (string) Headline;
+  print "Release ";
+  @aloads ROM_GAMERELEASE 0 i;
+  print i;
+  print " / Serial number ";
+  for (i=0 : i<6 : i++) print (char) ROM_GAMESERIAL->i;
+  print " / Inform v"; inversion;
+  print ", compiler options ";
+  i = false;
+  #Ifdef STRICT_MODE;
+  print "S"; i++;
+  #Endif; ! STRICT_MODE
+  #Ifdef INFIX;
+  print "X"; i++;
+  #Ifnot;
+  #Ifdef DEBUG;
+  print "D"; i++;
+  #Endif; ! DEBUG
+  #Endif; ! INFIX
+  if (~~i) print "(none)";
+  new_line;
+
+  @gestalt 1 0 ix;
+  print "Interpreter version ", ix / $10000, ".", (ix & $FF00) / $100,
+  ".", ix & $FF, " / ";
+  @gestalt 0 0 ix;
+  print "VM ", ix / $10000, ".", (ix & $FF00) / $100, ".", ix & $FF, " / ";
+  ix = HDR_GLULXVERSION-->0;
+  print "game file format ", ix / $10000, ".", (ix & $FF00) / $100, ".", ix & $FF, "^";
+];
+
+[ RoomDesc;
+    print "A voice booooms out: Welcome to the test chamber.^^";
+];
+
+[ compare_string buf blen val   len ix;
+    len = val.print_to_array(buffer2, BUFLEN);
+    if (len ~= blen) {
+        print "ERROR: String does not match -- wrong length: ", len, ", not ", blen, "^";
+        errorcount++;
+        return;
+    }
+    for (ix=0 : ix<len : ix++) {
+        if (buf->ix ~= buffer2->(4+ix)) {
+            print "ERROR: String does not match -- character ", ix, " is ", (char) buf->ix, ", not ", (char) buffer2->(4+ix), "^";
+            errorcount++;
+            return;
+        }
+    }
+];
+
+[ check_value val wanted;
+    print val;
+    if (val ~= wanted) {
+        print " (ERROR, wanted ", wanted, ")";
+        errorcount++;
+    }
+];
+
+[ check_result_counts readcount writecount;
+    if (gg_result-->0 ~= readcount) {
+        print "ERROR: Read count was wrong: ", gg_result-->0, ", not ", readcount, "^";
+        errorcount++;
+    }
+    if (gg_result-->1 ~= writecount) {
+        print "ERROR: Read count was wrong: ", gg_result-->1, ", not ", writecount, "^";
+        errorcount++;
+    }
+];
+
+[ ResStreamTest str len len2 id count val;
+    str = glk($0049, 999, 999); ! stream_open_resource
+    if (str) {
+        errorcount++;
+        print "Error: opening stream for a nonexistent resource should fail.^";
+    }
+    str = glk($013A, 999, 999); ! stream_open_resource_uni
+    if (str) {
+        errorcount++;
+        print "Error: opening uni stream for a nonexistent resource should fail.^";
+    }
+
+    print "Opening Data 1 for iteration:^";
+    str = glk($0049, 1, 11); ! stream_open_resource
+    if (~~str) {
+        errorcount++;
+        print "Error: unable to open Data 1.^";
+        return;
+    }
+    count = 0;
+    id = glk($0040, 0, gg_arguments); ! stream_iterate
+    while (id) {
+        if (id == str) {
+            count++;
+            if (gg_arguments-->0 ~= 11) {
+                errorcount++;
+                print "Error: wrong rock in iteration.^";
+            }
+        }
+        id = glk($0040, id, gg_arguments); ! stream_iterate
+    }
+    glk($0044, str, gg_result); ! stream_close
+    check_result_counts(0, 0);
+    if (count == 0) {
+        errorcount++;
+        print "Error: resource stream not visible in iteration.^";
+    }
+    if (count > 1) {
+        errorcount++;
+        print "Error: resource stream multiply-visible in iteration.^";
+    }
+    
+    print "Opening Data 1 for get_buffer_stream:^";
+    str = glk($0049, 1, 11); ! stream_open_resource
+    len = glk($0092, str, buffer, BUFLEN); ! get_buffer_stream
+    compare_string(buffer, len, "Magic purple people eater.");
+    glk($0044, str, gg_result); ! stream_close
+    check_result_counts(26, 0);
+    print "got: ";
+    glk($0084, buffer, len); ! put_buffer_stream
+    new_line;
+    
+    print "Opening Data 2 for short get_buffer_stream:^";
+    str = glk($0049, 2, 11); ! stream_open_resource
+    len = glk($0092, str, buffer, 10); ! get_buffer_stream
+    print "First read: "; check_value(len, 10); new_line;
+    len2 = glk($0092, str, buffer+len, 40); ! get_buffer_stream
+    len = len+len2;
+    compare_string(buffer, len, "Orange bucket.^Lavender socks.^");
+    glk($0044, str, gg_result); ! stream_close
+    check_result_counts(31, 0);
+    print "got: ";
+    glk($0084, buffer, len); ! put_buffer_stream
+    new_line;
+    
+    print "Opening Data 1 for get_line_stream:^";
+    str = glk($0049, 1, 11); ! stream_open_resource
+    len = glk($0091, str, buffer, BUFLEN); ! get_line_stream
+    compare_string(buffer, len, "Magic purple people eater.");
+    glk($0044, str, gg_result); ! stream_close
+    check_result_counts(26, 0);
+    print "got: ";
+    glk($0084, buffer, len); ! put_buffer_stream
+    new_line;
+    
+    print "Opening Data 2 for get_line_stream:^";
+    str = glk($0049, 2, 11); ! stream_open_resource
+    len = glk($0091, str, buffer, BUFLEN); ! get_line_stream
+    compare_string(buffer, len, "Orange bucket.^");
+    print "got: ";
+    glk($0084, buffer, len); ! put_buffer_stream
+    len = glk($0091, str, buffer, BUFLEN); ! get_line_stream
+    compare_string(buffer, len, "Lavender socks.^");
+    print "got: ";
+    glk($0084, buffer, len); ! put_buffer_stream
+    glk($0044, str, gg_result); ! stream_close
+    check_result_counts(31, 0);
+    new_line;
+    
+    print "Opening Data 2 for get_char_stream:^";
+    str = glk($0049, 2, 12); ! stream_open_resource
+    len = 0;
+    while (1) {
+        val = glk($0090, str); ! get_char_stream
+        if (val == -1)
+            break;
+        buffer->len = val;
+        len++;
+    }
+    compare_string(buffer, len, "Orange bucket.^Lavender socks.^");
+    glk($0044, str, gg_result); ! stream_close
+    check_result_counts(31, 0);
+    print "got: ";
+    glk($0084, buffer, len); ! put_buffer_stream
+    new_line;
+
+    print "Opening Data 1 for get/set position:^";
+    str = glk($0049, 1, 11); ! stream_open_resource
+    glk($0045, str, 4, 0); ! stream_set_position
+    val = glk($0090, str); ! get_char_stream
+    print "Got "; check_value(val, 'c'); new_line;
+    glk($0045, str, 2, 1); ! stream_set_position
+    val = glk($0090, str); ! get_char_stream
+    print "Got "; check_value(val, 'u'); new_line;
+    val = glk($0046, str);
+    print "Now at "; check_value(val, 8); new_line;
+    glk($0045, str, -2, 2); ! stream_set_position
+    val = glk($0090, str); ! get_char_stream
+    print "Got "; check_value(val, 'r'); new_line;
+    glk($0044, str, gg_result); ! stream_close
+    check_result_counts(3, 0);
+    new_line;
+    
+];
