@@ -16,6 +16,9 @@ except:
 
 popt = optparse.OptionParser(usage='blorbtool.py BLORBFILE [ command ]')
 
+popt.add_option('-n', '--new',
+                action='store_true', dest='newfile',
+                help='create a new blorb file instead of loading one in')
 popt.add_option('-o', '--output',
                 action='store', dest='output', metavar='BLORBFILE',
                 help='blorb file to write to (if requested)')
@@ -176,17 +179,32 @@ class BlorbChunk:
 
 class BlorbFile:
     def __init__(self, filename, outfilename=None):
+        self.chunks = []
+        self.chunkmap = {}
+        self.chunkatpos = {}
+        self.usages = []
+        self.usagemap = {}
+        
         self.filename = filename
         self.outfilename = outfilename
         if (not self.outfilename):
             self.outfilename = self.filename
+
+        if (not self.filename):
+            # No loading; create an empty file.
+            self.file = None
+            self.formchunk = None
+            self.changed = True
+            chunk = BlorbChunk(self, 'RIdx', -1, 4)
+            chunk.literaldata = struct.pack('>I', 0)
+            self.add_chunk(chunk, None, None, 0)
+            return
             
         self.changed = False
 
         self.file = open(filename)
         formchunk = Chunk(self.file)
         self.formchunk = formchunk
-        self.chunks = []
         
         if (formchunk.getname() != 'FORM'):
             raise Exception('This does not appear to be a Blorb file.')
@@ -206,15 +224,11 @@ class BlorbFile:
             chunk.skip()
             chunk.close()
 
-        self.chunkmap = {}
-        self.chunkatpos = {}
         for chunk in self.chunks:
             self.chunkatpos[chunk.start] = chunk
             dict_append(self.chunkmap, chunk.type, chunk)
 
         # Sanity checks. Also get the usage list.
-        self.usages = []
-        self.usagemap = {}
         
         ls = self.chunkmap.get('RIdx')
         if (not ls):
@@ -612,11 +626,17 @@ if (opts.listcommands):
     BlorbTool.show_commands()
     sys.exit(-1)
     
-if (not args):
+if (not args and not opts.newfile):
     popt.print_help()
     sys.exit(-1)
 
-filename = args.pop(0)
+filename = None
+if (args):
+    filename = args.pop(0)
+    if (opts.newfile and not opts.output):
+        opts.output = filename
+        filename = None
+        
 try:
     blorbfile = BlorbFile(filename, opts.output)
 except Exception, ex:
