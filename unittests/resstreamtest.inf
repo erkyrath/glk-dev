@@ -3,12 +3,15 @@ Constant Headline "Not a game.^";
 
 ! To run properly, the compiled game file for this test must be embedded in
 ! a blorb file with the following Data chunks:
-! (No quotes. Newlines only where marked as "\n". "\xFF" represents a byte
-! with value 255.)
+! (No quotes. Newlines only where marked as "\n". "\0" represents a null
+! byte. "\xFF" represents a byte with value 255.)
 !
 ! Data 1, TEXT: "Magic purple people eater."
 ! Data 2, TEXT: "Orange bucket.\nLavender socks.\n"
 ! Data 3, BINA: "Az\xE1l\xEB\xE5\xDF.\n"
+! Data 4, BINA: "\0\0\0C\0\0\0h\0\0\0e\0\0\0e\0\0\0s\0\0\0e\0\0\0\n
+!                \0\0\0b\0\0\0u\0\0\0c\0\0\0k\0\0\0e\0\0\0t\0\0\0.\0\0\0\n"
+!               ("Cheese\nbucket.\n" as a sequence of big-endian 4-byte values)
 
 Release 1;
 
@@ -207,7 +210,7 @@ Constant ROM_GAMESERIAL    $36;     ! six ASCII characters
     }
 
     
-    ! text byte stream, byte read calls
+    print "* text byte stream, byte read calls^";
     
     print "Opening Data 1 for get_buffer_stream:^";
     str = glk($0049, 1, 11); ! stream_open_resource
@@ -291,7 +294,7 @@ Constant ROM_GAMESERIAL    $36;     ! six ASCII characters
     new_line;
 
     
-    ! text byte stream, unicode read calls
+    print "* text byte stream, unicode read calls^";
     
     buffer->0 = 'x';
     ubuffer-->0 = 'x';
@@ -377,8 +380,8 @@ Constant ROM_GAMESERIAL    $36;     ! six ASCII characters
     check_result_counts(3, 0);
     new_line;
 
-	
-    ! binary byte stream, byte read calls
+    
+    print "* binary byte stream, byte read calls^";
     
     print "Opening Data 3 for get_buffer_stream:^";
     str = glk($0049, 3, 11); ! stream_open_resource
@@ -417,8 +420,8 @@ Constant ROM_GAMESERIAL    $36;     ! six ASCII characters
     glk($0084, buffer, len); ! put_buffer_stream
     new_line;
 
-	
-    ! binary byte stream, unicode read calls
+    
+    print "* binary byte stream, unicode read calls^";
     
     buffer->0 = 'x';
     ubuffer-->0 = 'x';
@@ -459,4 +462,146 @@ Constant ROM_GAMESERIAL    $36;     ! six ASCII characters
     print "got: ";
     glk($012A, ubuffer, len); ! glk_put_buffer_uni
     new_line;
+
+    
+    print "* text unicode stream, byte read calls^";
+    
+    ! We treat an ASCII text resource as UTF-8, which is safe, because
+    ! they're the same for the 0-7F range.
+    
+    print "Opening Data 1 for get_buffer_stream:^";
+    str = glk($013A, 1, 11); ! stream_open_resource_uni
+    len = glk($0092, str, buffer, BUFLEN); ! get_buffer_stream
+    compare_string(buffer, len, "Magic purple people eater.");
+    glk($0044, str, gg_result); ! stream_close
+    check_result_counts(26, 0);
+    print "got: ";
+    glk($0084, buffer, len); ! put_buffer_stream
+    new_line;
+    
+    print "Opening Data 2 for short get_buffer_stream:^";
+    str = glk($013A, 2, 11); ! stream_open_resource_uni
+    len = glk($0092, str, buffer, 10); ! get_buffer_stream
+    print "First read: "; check_value(len, 10); new_line;
+    len2 = glk($0092, str, buffer+len, 40); ! get_buffer_stream
+    len = len+len2;
+    compare_string(buffer, len, "Orange bucket.^Lavender socks.^");
+    glk($0044, str, gg_result); ! stream_close
+    check_result_counts(31, 0);
+    print "got: ";
+    glk($0084, buffer, len); ! put_buffer_stream
+    new_line;
+    
+    print "Opening Data 1 for get_line_stream:^";
+    str = glk($013A, 1, 11); ! stream_open_resource_uni
+    len = glk($0091, str, buffer, BUFLEN); ! get_line_stream
+    compare_string(buffer, len, "Magic purple people eater.");
+    glk($0044, str, gg_result); ! stream_close
+    check_result_counts(26, 0);
+    print "got: ";
+    glk($0084, buffer, len); ! put_buffer_stream
+    new_line;
+    
+    print "Opening Data 2 for get_line_stream:^";
+    str = glk($013A, 2, 11); ! stream_open_resource_uni
+    len = glk($0091, str, buffer, BUFLEN); ! get_line_stream
+    compare_string(buffer, len, "Orange bucket.^");
+    print "got: ";
+    glk($0084, buffer, len); ! put_buffer_stream
+    len = glk($0091, str, buffer, BUFLEN); ! get_line_stream
+    compare_string(buffer, len, "Lavender socks.^");
+    print "got: ";
+    glk($0084, buffer, len); ! put_buffer_stream
+    glk($0044, str, gg_result); ! stream_close
+    check_result_counts(31, 0);
+    new_line;
+    
+    print "Opening Data 2 for get_char_stream:^";
+    str = glk($013A, 2, 12); ! stream_open_resource_uni
+    len = 0;
+    while (1) {
+        val = glk($0090, str); ! get_char_stream
+        if (val == -1)
+            break;
+        buffer->len = val;
+        len++;
+    }
+    compare_string(buffer, len, "Orange bucket.^Lavender socks.^");
+    glk($0044, str, gg_result); ! stream_close
+    check_result_counts(31, 0);
+    print "got: ";
+    glk($0084, buffer, len); ! put_buffer_stream
+    new_line;
+
+    print "Opening Data 1 for get/set position:^";
+    str = glk($013A, 1, 11); ! stream_open_resource_uni
+    glk($0045, str, 4, 0); ! stream_set_position
+    val = glk($0090, str); ! get_char_stream
+    print "Got "; check_value(val, 'c'); new_line;
+    glk($0045, str, 2, 1); ! stream_set_position
+    val = glk($0090, str); ! get_char_stream
+    print "Got "; check_value(val, 'u'); new_line;
+    val = glk($0046, str);
+    print "Now at "; check_value(val, 8); new_line;
+    glk($0045, str, -2, 2); ! stream_set_position
+    val = glk($0090, str); ! get_char_stream
+    print "Got "; check_value(val, 'r'); new_line;
+    glk($0044, str, gg_result); ! stream_close
+    check_result_counts(3, 0);
+    new_line;
+
+	
+    print "* text unicode stream, unicode read calls^";
+    !### UTF8 TEXT resource (two of them, all call variants)
+    
+    print "* binary unicode stream, byte read calls^";
+
+    print "Opening Data 4 for get_buffer_stream_uni:^";
+    str = glk($013A, 4, 11); ! stream_open_resource_uni
+    len = glk($0131, str, ubuffer, BUFLEN); ! get_buffer_stream_uni
+    compare_unistring(ubuffer, len, "Cheese^bucket.^");
+    glk($0044, str, gg_result); ! stream_close
+    check_result_counts(15, 0);
+    print "got: ";
+    glk($012A, ubuffer, len); ! glk_put_buffer_uni
+    new_line;
+
+	ubuffer-->0 = '$';
+	
+    print "Opening Data 4 for get_line_stream_uni:^";
+    str = glk($013A, 4, 11); ! stream_open_resource_uni
+    len = glk($0132, str, ubuffer+4, BUFLEN); ! get_line_stream_uni
+    compare_unistring(ubuffer, len+1, "$Cheese^");
+    print "got: ";
+    glk($012A, ubuffer, len); ! glk_put_buffer_uni
+	new_line;
+    len = glk($0132, str, ubuffer, BUFLEN); ! get_line_stream_uni
+    compare_unistring(ubuffer, len, "bucket.^");
+    print "got: ";
+    glk($012A, ubuffer, len); ! glk_put_buffer_uni
+    glk($0044, str, gg_result); ! stream_close
+    check_result_counts(15, 0);
+    new_line;
+    
+    print "Opening Data 4 for get_char_stream_uni:^";
+    str = glk($013A, 4, 12); ! stream_open_resource_uni
+    len = 0;
+    while (1) {
+        val = glk($0130, str); ! get_char_stream_uni
+        if (val == -1)
+            break;
+        ubuffer-->len = val;
+        len++;
+    }
+    compare_unistring(ubuffer, len, "Cheese^bucket.^");
+    glk($0044, str, gg_result); ! stream_close
+    check_result_counts(15, 0);
+    print "got: ";
+    glk($012A, ubuffer, len); ! glk_put_buffer_uni
+    new_line;
+
+    
+    print "* binary unicode stream, unicode read calls^";
+	!###
+    
 ];
