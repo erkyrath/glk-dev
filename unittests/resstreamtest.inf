@@ -21,6 +21,10 @@ Constant Headline "Not a game.^";
 !               ("@{201C}Bob@{201D} Z@{F6}r@{F1}en@{010D}ek\n
 !                The @{0427}@{0435}@{043b}@{043e}@{0432}@{0435}@{043a}\n",
 !                encoded in bytes as UTF-8)
+! Data 7, BINA: "\0\0\0C\0\0\0\xE1\0\0\0t\0\0\0\n
+!                \0\0\x01f\0\0\x03\xA9\0\0\x1E\x8E\0\0 \x19\0\0\0s\0\0N\x08\0\0\0!"
+!               ("C@{E1}t\n@{0166}@{03A9}@{1E8E}@{2019}s@{4E08}!",
+!                as a sequence of big-endian 4-byte values)
 
 Release 1;
 
@@ -559,10 +563,10 @@ Constant ROM_GAMESERIAL    $36;     ! six ASCII characters
     check_result_counts(3, 0);
     new_line;
 
-	
+    
     print "* text unicode stream, unicode read calls^";
     
-	print "Opening Data 5 for get_buffer_stream_uni:^";
+    print "Opening Data 5 for get_buffer_stream_uni:^";
     str = glk($013A, 5, 11); ! stream_open_resource_uni
     len = glk($0131, str, ubuffer, BUFLEN); ! get_buffer_stream_uni
     compare_unistring(ubuffer, len, "A @{E5}@{3C9} @{5D0}@{5EA} @{201C}@{201D} @{304A}@{3059}@{3082}.^");
@@ -572,12 +576,12 @@ Constant ROM_GAMESERIAL    $36;     ! six ASCII characters
     glk($012A, ubuffer, len); ! glk_put_buffer_uni
     new_line;
 
-	print "Opening Data 6 for short get_buffer_stream_uni:^";
+    print "Opening Data 6 for short get_buffer_stream_uni:^";
     str = glk($013A, 6, 11); ! stream_open_resource_uni
     len = glk($0131, str, ubuffer, 10); ! get_buffer_stream_uni
     print "got ", len, " first: ";
     glk($012A, ubuffer, len); ! glk_put_buffer_uni
-	new_line;
+    new_line;
     len2 = glk($0131, str, ubuffer+4*len, 64); ! get_buffer_stream_uni
     print "got ", len2, " second: ";
     glk($012A, ubuffer+4*len, len2); ! glk_put_buffer_uni
@@ -592,7 +596,7 @@ Constant ROM_GAMESERIAL    $36;     ! six ASCII characters
     compare_unistring(ubuffer, len, "A @{E5}@{3C9} @{5D0}@{5EA} @{201C}@{201D} @{304A}@{3059}@{3082}.^");
     print "got: ";
     glk($012A, ubuffer, len); ! glk_put_buffer_uni
-	new_line;
+    new_line;
     glk($0044, str, gg_result); ! stream_close
     check_result_counts(16, 0);
     new_line;
@@ -603,7 +607,7 @@ Constant ROM_GAMESERIAL    $36;     ! six ASCII characters
     compare_unistring(ubuffer, len, "@{201C}Bob@{201D} Z@{F6}r@{F1}en@{010D}ek^");
     print "got: ";
     glk($012A, ubuffer, len); ! glk_put_buffer_uni
-	new_line;
+    new_line;
     len = glk($0132, str, ubuffer, BUFLEN); ! get_line_stream_uni
     compare_unistring(ubuffer, len, "The @{0427}@{0435}@{043b}@{043e}@{0432}@{0435}@{043a}^");
     print "got: ";
@@ -642,15 +646,15 @@ Constant ROM_GAMESERIAL    $36;     ! six ASCII characters
     glk($012A, ubuffer, len); ! glk_put_buffer_uni
     new_line;
 
-	ubuffer-->0 = '$';
-	
+    ubuffer-->0 = '$';
+    
     print "Opening Data 4 for get_line_stream_uni:^";
     str = glk($013A, 4, 11); ! stream_open_resource_uni
     len = glk($0132, str, ubuffer+4, BUFLEN); ! get_line_stream_uni
     compare_unistring(ubuffer, len+1, "$Cheese^");
     print "got: ";
     glk($012A, ubuffer, len); ! glk_put_buffer_uni
-	new_line;
+    new_line;
     len = glk($0132, str, ubuffer, BUFLEN); ! get_line_stream_uni
     compare_unistring(ubuffer, len, "bucket.^");
     print "got: ";
@@ -678,6 +682,6 @@ Constant ROM_GAMESERIAL    $36;     ! six ASCII characters
 
     
     print "* binary unicode stream, unicode read calls^";
-	!###
+    !###
     
 ];
