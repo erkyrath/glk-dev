@@ -12,6 +12,15 @@ Constant Headline "Not a game.^";
 ! Data 4, BINA: "\0\0\0C\0\0\0h\0\0\0e\0\0\0e\0\0\0s\0\0\0e\0\0\0\n
 !                \0\0\0b\0\0\0u\0\0\0c\0\0\0k\0\0\0e\0\0\0t\0\0\0.\0\0\0\n"
 !               ("Cheese\nbucket.\n" as a sequence of big-endian 4-byte values)
+! Data 5, TEXT: "A \xC3\xA5\xCF\x89 \xD7\x90\xD7\xAA \xE2\x80\x9C\xE2\x80\x9D
+!                \xE3\x81\x8A\xE3\x81\x99\xE3\x82\x82.\n"
+!               ("A @{E5}@{3C9} @{5D0}@{5EA} @{201C}@{201D} @{304A}@{3059}@{3082}.\n",
+!                encoded in bytes as UTF-8)
+! Data 6, TEXT: "\xE2\x80\x9CBob\xE2\x80\x9D Z\xC3\xB6r\xC3\xB1en\xC4\x8Dek\n
+!                The \xD0\xA7\xD0\xB5\xD0\xBB\xD0\xBE\xD0\xB2\xD0\xB5\xD0\xBA\n"
+!               ("@{201C}Bob@{201D} Z@{F6}r@{F1}en@{010D}ek\n
+!                The @{0427}@{0435}@{043b}@{043e}@{0432}@{0435}@{043a}\n",
+!                encoded in bytes as UTF-8)
 
 Release 1;
 
@@ -552,7 +561,74 @@ Constant ROM_GAMESERIAL    $36;     ! six ASCII characters
 
 	
     print "* text unicode stream, unicode read calls^";
-    !### UTF8 TEXT resource (two of them, all call variants)
+    
+	print "Opening Data 5 for get_buffer_stream_uni:^";
+    str = glk($013A, 5, 11); ! stream_open_resource_uni
+    len = glk($0131, str, ubuffer, BUFLEN); ! get_buffer_stream_uni
+    compare_unistring(ubuffer, len, "A @{E5}@{3C9} @{5D0}@{5EA} @{201C}@{201D} @{304A}@{3059}@{3082}.^");
+    glk($0044, str, gg_result); ! stream_close
+    check_result_counts(16, 0);
+    print "got: ";
+    glk($012A, ubuffer, len); ! glk_put_buffer_uni
+    new_line;
+
+	print "Opening Data 6 for short get_buffer_stream_uni:^";
+    str = glk($013A, 6, 11); ! stream_open_resource_uni
+    len = glk($0131, str, ubuffer, 10); ! get_buffer_stream_uni
+    print "got ", len, " first: ";
+    glk($012A, ubuffer, len); ! glk_put_buffer_uni
+	new_line;
+    len2 = glk($0131, str, ubuffer+4*len, 64); ! get_buffer_stream_uni
+    print "got ", len2, " second: ";
+    glk($012A, ubuffer+4*len, len2); ! glk_put_buffer_uni
+    glk($0044, str, gg_result); ! stream_close
+    check_result_counts(28, 0);
+    compare_unistring(ubuffer, len+len2, "@{201C}Bob@{201D} Z@{F6}r@{F1}en@{010D}ek^The @{0427}@{0435}@{043b}@{043e}@{0432}@{0435}@{043a}^");
+    new_line;
+
+    print "Opening Data 5 for get_line_stream_uni:^";
+    str = glk($013A, 5, 11); ! stream_open_resource_uni
+    len = glk($0132, str, ubuffer, BUFLEN); ! get_line_stream_uni
+    compare_unistring(ubuffer, len, "A @{E5}@{3C9} @{5D0}@{5EA} @{201C}@{201D} @{304A}@{3059}@{3082}.^");
+    print "got: ";
+    glk($012A, ubuffer, len); ! glk_put_buffer_uni
+	new_line;
+    glk($0044, str, gg_result); ! stream_close
+    check_result_counts(16, 0);
+    new_line;
+    
+    print "Opening Data 6 for get_line_stream_uni:^";
+    str = glk($013A, 6, 11); ! stream_open_resource_uni
+    len = glk($0132, str, ubuffer, BUFLEN); ! get_line_stream_uni
+    compare_unistring(ubuffer, len, "@{201C}Bob@{201D} Z@{F6}r@{F1}en@{010D}ek^");
+    print "got: ";
+    glk($012A, ubuffer, len); ! glk_put_buffer_uni
+	new_line;
+    len = glk($0132, str, ubuffer, BUFLEN); ! get_line_stream_uni
+    compare_unistring(ubuffer, len, "The @{0427}@{0435}@{043b}@{043e}@{0432}@{0435}@{043a}^");
+    print "got: ";
+    glk($012A, ubuffer, len); ! glk_put_buffer_uni
+    glk($0044, str, gg_result); ! stream_close
+    check_result_counts(28, 0);
+    new_line;
+    
+    print "Opening Data 5 for get_char_stream_uni:^";
+    str = glk($013A, 5, 12); ! stream_open_resource_uni
+    len = 0;
+    while (1) {
+        val = glk($0130, str); ! get_char_stream_uni
+        if (val == -1)
+            break;
+        ubuffer-->len = val;
+        len++;
+    }
+    compare_unistring(ubuffer, len, "A @{E5}@{3C9} @{5D0}@{5EA} @{201C}@{201D} @{304A}@{3059}@{3082}.^");
+    glk($0044, str, gg_result); ! stream_close
+    check_result_counts(16, 0);
+    print "got: ";
+    glk($012A, ubuffer, len); ! glk_put_buffer_uni
+    new_line;
+
     
     print "* binary unicode stream, byte read calls^";
 
