@@ -1,7 +1,7 @@
 Constant Story "ExternalFile";
 Constant Headline "Not a game.^";
 
-Release 5;
+Release 6;
 
 Global mainwin = 0;
 Constant BUFLEN = 80;
@@ -29,13 +29,17 @@ Constant ROM_GAMESERIAL    $36;     ! six ASCII characters
   RunReadWriteFuncTest();
   
   RunTerminalNullTest();
-  
-  RunOpenModeTest();
-  print "This test should have created a set of files, named ~testfile1~
-    to ~testfile14~. These files should be identical -- each 26 bytes
-    long, containing the string ~Purple monkey dishwasher.~ followed
-    by a Unix newline (ctrl-J).^";
 
+  RunOpenModeTest();
+  print "This test should have created a set of files, named
+    ~testfile1.glkdata~ to ~testfile14.glkdata~.
+    (The file suffixes might be different, but ~.glkdata~ is recommended
+    by the current Glk spec.)
+    These files should be identical -- each 26 bytes long, containing the
+    string ~Purple monkey dishwasher.~ followed by a Unix newline (ctrl-J).^^";
+
+  RunInvalidCharacterTest();
+  
   if (errorcount)
     print "^", errorcount, " tests failed.^";
 ];
@@ -647,4 +651,32 @@ Constant filemode_WriteAppend = 5;
         print "^FAILED: ", errorcount, " errors occurred.^^";
     else
         print "^All files created.^^";
+];
+
+[ RunInvalidCharacterTest  name name2 fref fref2 str val;
+    print "* RunInvalidCharacterTest^";
+    
+    name = "testx/@@92<>:~|?*y.fake";
+    print "Creating: ", (string) name, "^";
+    fref = make_fref(name);
+    delete_if_exists(fref, name);
+    str = open_file(fref, name, filemode_Write);
+    glk($0044, str, gg_result); ! stream_close
+
+    name2 = "testxy";
+    print "Checking: ", (string) name2, "^";
+    fref2 = make_fref(name2);
+    val = glk($0067, fref2); ! fileref_does_file_exist
+    if (val) {
+        print "File exists, with standard name simplification.^";
+    }
+    else {
+        print "The file ~", (string) name2, "~ does not exist; ~",
+            (string) name, "~ should have been simplified to that.
+            This is not an error, because this sort of simplification
+            is not a spec requirement. However, it is recommended so
+            that Glk implementations can exchange files more easily.^";
+    }
+    
+    delete_if_exists(fref, name);
 ];
