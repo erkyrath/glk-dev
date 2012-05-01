@@ -2,7 +2,7 @@
 
 Constant Story "Glulxercise";
 Constant Headline "A Glulx interpreter unit test^";
-Release 4;
+Release 5;
 ! Written by Andrew Plotkin (erkyrath@eblong.com).
 ! This unit test suite, and its functions, are in the public domain.
 
@@ -3976,7 +3976,6 @@ TestClass StringsTest
 		count_failures();
 	];
 
-
 [ tablestring val len;
 	@setstringtbl encoding_table;
 	len = string_to_array(val, bigbuffer, BIGBUFSIZE);
@@ -4028,6 +4027,39 @@ TestClass StringsTest
 	@streamchar 32;
 	@streamstr hello_str;
 ];
+
+Constant RAMSTRINGBUFLEN 16;
+Array ramstringbuf -> RAMSTRINGBUFLEN;
+
+TestClass RamStringsTest
+	with name 'ramstrings' 'ramstring',
+	testfunc [ val str ix;
+		print "String table decoding in RAM:^^";
+
+		str = "Decode test.";
+		val = string_to_array(str, bigbuffer, BIGBUFSIZE);
+		check_str(str, val); print "^";
+
+		str = "Another test.";
+		for (ix=0 : ix<RAMSTRINGBUFLEN : ix++)
+			ramstringbuf->ix = str->ix;
+		val = string_to_array(ramstringbuf, bigbuffer, BIGBUFSIZE);
+		check_str(str, val); print "^";
+
+		str = "Third test.";
+		for (ix=0 : ix<RAMSTRINGBUFLEN : ix++)
+			ramstringbuf->ix = str->ix;
+		val = string_to_array(ramstringbuf, bigbuffer, BIGBUFSIZE);
+		check_str(str, val); print "^";
+		
+		str = "";
+		for (ix=0 : ix<RAMSTRINGBUFLEN : ix++)
+			ramstringbuf->ix = str->ix;
+		val = string_to_array(ramstringbuf, bigbuffer, BIGBUFSIZE);
+		check_str(str, val); print "^";
+		
+		count_failures();
+	];
 
 TestClass IOSysTest
 	with name 'iosys',
