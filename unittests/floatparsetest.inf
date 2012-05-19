@@ -59,6 +59,10 @@ Object -> chart "chart"
 ! but it can return FLOAT_INFINITY or FLOAT_NINFINITY if the exponent is too
 ! large.
 !
+! This routine relies on floating-point math. Therefore, the same string
+! may parse to slightly different results on different interpreters! Be
+! warned.
+!
 ! If useall is true, this insists on using all len characters from the buffer.
 ! (It returns FLOAT_NAN if any unrecognized characters are left over.)
 ! Contrariwise, if useall is false, unused characters at the end of the buffer
@@ -464,6 +468,7 @@ Array parsetestlist -->
 	"-1234.5" $-1234.5
 	"0123456.5" $+0123456.5
 	"+9876543210.5" $+9876543210.5
+	"0.0125" $+0.0125
 	"1e0" $+1
 	"1e1" $+10
 	"1e+1" $+10
@@ -478,10 +483,9 @@ Array parsetestlist -->
 	"+1.234E3" $+1234
 	"0.25e1" $+2.5
 	"0.25e-1" $+0.025
+	"-0.0125e1" $-0.125
 	"-100e1" $-1000
 	"-125e-2" $-1.25
-	"0.0000000000000000000002" $+2e-22
-	"-0.0000000000000000000004" $-4e-22
 	"+3.4e38" $+3.4e38  ! close to the largest representable number
 	"-3.4e38" $-3.4e38  ! same thing, minus-side
 	"+3.5e38" FLOAT_INFINITY  ! too large; overflow to infinity
