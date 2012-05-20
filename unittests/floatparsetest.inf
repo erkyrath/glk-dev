@@ -32,7 +32,7 @@ Object Kitchen "Floating Room"
 
 Object -> tkeyboard "keyboard"
   with
-	name 'keyboard' 'teletype',
+	name 'keyboard' 'teletype' 'key' 'keys',
 	initial "A teletype keyboard is set up nearby.",
 	description "Try ~type NUM~ or ~type NUM on keyboard~ to test
 		floating-point parsing.",
@@ -183,15 +183,67 @@ Global float_understood;
 
 ! An I6 grammar routine (GPR) for floats. On success, this returns
 ! GPR_PREPOSITION and stores a value in the global float_understood.
-[ FloatToken buf len;
+!
+! This is quite a nuisance, actually, because "." is a word separator.
+! Also, we want to accept command sequences like "type 4. x me"! So we
+! need to collect a set of words made up of digits, signs, periods, and
+! the letter "e", but without any intervening whitespace, and excluding
+! a trailing period.
+!
+! (This will fail to correctly parse "type 4.e", but I think that is a
+! small flaw. A player would more likely try "type 4. e" or, really,
+! not concatenate commands at all. It will also parse "type 4. on keyboard"
+! as two commands, even though "4." is a legitimate float literal.
+! Again, I don't care.)
+
+[ FloatToken buf bufend ix ch firstwd newstart newlen lastwasdot;
 	if (wn > num_words)
 		return GPR_FAIL;
+
+	! We're going to collect a set of words. Start with zero words.
+	firstwd = wn;
 	buf = WordAddress(wn);
-	len = WordLength(wn);
-	float_understood = FloatParse(buf, len, true);
+	bufend = buf;
+
+	while (wn <= num_words) {
+		newstart = WordAddress(wn);
+		if (newstart ~= bufend) {
+			! There's whitespace between the previous word and this one.
+			! Don't include the new word.
+			break;
+		}
+		newlen = WordLength(wn);
+		for (ix=0 : ix<newlen : ix++) {
+			ch = newstart->ix;
+			if (~~((ch >= '0' && ch <= '9')
+				|| (ch == '-' or '+' or 'E' or 'e' or '.')))
+				break;
+		}
+		if (ix < newlen) {
+			! This word contains an invalid character.
+			! Don't include the new word.
+			break;
+		}
+		! Okay, include it.
+		bufend = bufend + newlen;
+		wn++;
+		lastwasdot = (newlen == 1 && (bufend-1)->0 == '.');
+	}
+
+	if (wn > firstwd && lastwasdot) {
+		! Exclude a trailing period.
+		wn--;
+		bufend--;
+	}
+
+	if (wn == firstwd) {
+		! No words accepted.
+		return GPR_FAIL;
+	}
+
+	float_understood = FloatParse(buf, bufend-buf, true);
 	if (float_understood == FLOAT_NAN)
 		return GPR_FAIL;
-	wn++;
 	return GPR_PREPOSITION;
 ];
 
