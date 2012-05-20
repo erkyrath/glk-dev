@@ -23,8 +23,10 @@ Include "VerbLib";
 
 Object Kitchen "Floating Room"
   with
-	description "You stand in Digitopolis. A voice booooms out:
-		Try ~type NUM~ to parse a floating-point number!
+	description "You stand in a floating room in Digitopolis.
+		A voice booooms out:
+		Try ~type NUM~ or ~type NUM on keyboard~ to parse a
+		floating-point number!
 		Read the chart to run through a unit test!",
   has light;
 
@@ -32,7 +34,8 @@ Object -> tkeyboard "keyboard"
   with
 	name 'keyboard' 'teletype',
 	initial "A teletype keyboard is set up nearby.",
-	description "~type NUM~ to test floating-point parsing.",
+	description "Try ~type NUM~ or ~type NUM on keyboard~ to test
+		floating-point parsing.",
   has static;
   
 Object -> chart "chart"
@@ -51,7 +54,7 @@ Object -> chart "chart"
 ! no value was understood.
 !
 ! The recognized format, if you'll pardon a slightly bastardized regexp
-! syntax, is "S?D+(PD*)?(ES?D+)?" where S is a sign character "+" or "-",
+! syntax, is "S?D*(PD*)?(ES?D+)?" where S is a sign character "+" or "-",
 ! D is a decimal digit "0" to "9", P is a decimal point ".",
 ! and E is the exponential modifier "E" or "e".
 !
@@ -60,8 +63,8 @@ Object -> chart "chart"
 ! large.
 !
 ! This routine relies on floating-point math. Therefore, the same string
-! may parse to slightly different results on different interpreters! Be
-! warned.
+! may parse to slightly different float values on different interpreters!
+! Be warned.
 !
 ! If useall is true, this insists on using all len characters from the buffer.
 ! (It returns FLOAT_NAN if any unrecognized characters are left over.)
@@ -411,31 +414,45 @@ Array PowersOfTen --> 1 10 100 1000 10000 100000 1000000 10000000 100000000 1000
 Include "Grammar";
 
 
-Verb 'type' * FloatToken -> Type;
+Verb 'type' * FloatToken -> TypeVague
+	* FloatToken 'on' noun -> TypeOn;
 
-[ TypeSub sign expon mant;
-	@jisnan float_understood ?IsNaN;
-	@jisinf float_understood ?IsInf;
-	print "You type the number ", (Float) float_understood;
+[ TypeVagueSub;
+	ReportTyping(float_understood, tkeyboard);
+];
+
+[ TypeOnSub;
+	ReportTyping(float_understood, noun);
+];
+
+[ ReportTyping float dest
+	sign expon mant;
+
+	if (dest ~= tkeyboard)
+		print "(typing on ", (the) dest, " makes no sense; I'll just use the keyboard)^";
+	
+	@jisnan float ?IsNaN;
+	@jisinf float ?IsInf;
+	print "You type the number ", (Float) float;
 
 	! We could break the number down to its IEEE float fields, but that's
 	! just confusing.
 	if (false) {
-		if (float_understood & $80000000)
+		if (float & $80000000)
 			sign = "-";
 		else
 			sign = "+";
-		expon = float_understood;
+		expon = float;
 		@ushiftr expon 23 expon;
 		expon = expon & $FF;
-		mant = (float_understood & $7FFFFF);
+		mant = (float & $7FFFFF);
 		print " (sign ", (string) sign, ", exponent ", expon, ", mantissa ", mant, ")";
 	}
 	
 	print_ret ".";
 
 	.IsInf;
-	if (float_understood & $80000000)
+	if (float & $80000000)
 		sign = "Negative";
 	else
 		sign = "Positive";
@@ -523,11 +540,15 @@ Array parsebadlist -->
 	0;
 
 Array tempbuffer -> 256;
-	
+
+! This test calls FloatParse() and then checks the result with exact
+! comparison. This is generally a bad idea! It works here because I've
+! chosen test cases that have exact float representation, or that happen
+! to work out correctly on all my interpreters.
 [ RunParseTest ix str wanted got len errors;
 	print "You begin reading numbers from the chart...^";
 	errors = 0;
-
+	
 	ix = 0;
 	while (true) {
 		str = parsetestlist-->ix;
