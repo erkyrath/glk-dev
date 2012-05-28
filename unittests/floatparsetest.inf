@@ -35,7 +35,12 @@ Object -> tkeyboard "keyboard"
 	name 'keyboard' 'teletype' 'key' 'keys',
 	initial "A teletype keyboard is set up nearby.",
 	description "Try ~type NUM~ or ~type NUM on keyboard~ to test
-		floating-point parsing.",
+		floating-point parsing. All of the following should work,
+		and many other variations:^^
+TYPE 1.5e1^
+TYPE 1 * 10@{5E}2^
+TYPE 1.0x10@{5E}-1^
+TYPE -1.0 @{D7} 10@{5E}+1",
   has static;
   
 Object -> tape "paper tape"
@@ -225,7 +230,7 @@ Global float_understood;
 ! GPR_PREPOSITION and stores a value in the global float_understood.
 !
 ! This is quite a nuisance, actually, because "." is a word separator.
-! Also, we want to accept command sequences like "type 4. x me"! So we
+! Also, we want to accept command sequences like "type 4. look"! So we
 ! need to collect a set of words made up of digits, signs, periods, and
 ! the letter "e", but without any intervening whitespace, and excluding
 ! a trailing period.
@@ -234,9 +239,11 @@ Global float_understood;
 ! small flaw. A player would more likely try "type 4. e" or, really,
 ! not concatenate commands at all. It will also parse "type 4. on keyboard"
 ! as two commands, even though "4." is a legitimate float literal.
-! Again, I don't care.)
+! Contrariwise, "type 4. x me" will be taken as one command. (Because the "x"
+! *could* be a continuation of the float, and I don't back up when it turns
+! out not to be.) I don't plan to worry about these cases.)
 
-[ FloatToken buf bufend ix ch firstwd newstart newlen lastwasdot;
+[ FloatToken buf bufend ix ch firstwd newstart newlen lastchar lastwasdot;
 	if (wn > num_words)
 		return GPR_FAIL;
 
@@ -244,19 +251,25 @@ Global float_understood;
 	firstwd = wn;
 	buf = WordAddress(wn);
 	bufend = buf;
+	lastchar = 0;
 
 	while (wn <= num_words) {
 		newstart = WordAddress(wn);
 		if (newstart ~= bufend) {
 			! There's whitespace between the previous word and this one.
-			! Don't include the new word.
-			break;
+			! Whitespace is okay around an asterisk...
+			if ((lastchar ~= '*' or 'x' or 'X' or $D7)
+				&& (newstart->0 ~= '*' or 'x' or 'X' or $D7)) {
+				! But around any other character, it's not.
+				! Don't include the new word.
+				break;
+			}
 		}
 		newlen = WordLength(wn);
 		for (ix=0 : ix<newlen : ix++) {
 			ch = newstart->ix;
 			if (~~((ch >= '0' && ch <= '9')
-				|| (ch == '-' or '+' or 'E' or 'e' or '.')))
+				|| (ch == '-' or '+' or 'E' or 'e' or '.' or 'x' or 'X' or '*' or $D7 or $5E)))
 				break;
 		}
 		if (ix < newlen) {
@@ -265,9 +278,10 @@ Global float_understood;
 			break;
 		}
 		! Okay, include it.
-		bufend = bufend + newlen;
+		bufend = newstart + newlen;
 		wn++;
-		lastwasdot = (newlen == 1 && (bufend-1)->0 == '.');
+		lastchar = (bufend-1)->0;
+		lastwasdot = (newlen == 1 && lastchar == '.');
 	}
 
 	if (wn > firstwd && lastwasdot) {
