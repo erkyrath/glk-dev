@@ -364,18 +364,27 @@ Array PowersOfTen --> 1 10 100 1000 10000 100000 1000000 10000000 100000000 1000
 		@div pow10 10 pow10;
 	}
 
-	! Print the exponent. Convention is to use at least two digits.
-	@streamchar 'e';
-	if (expo < 0) {
-		@streamchar '-';
-		@neg expo expo;
-	}
-	else {
-		@streamchar '+';
-	}
-	if (expo < 10)
-		@streamchar '0';
-	@streamnum expo;
+	! Print the exponent. There are two conventions coded here: the
+	! programmatic ("1.0e+00") and the literary ("1.0 * 10^0").
+	#ifndef FLOAT_PROGRAMMING_EXPONENTS;
+		@streamstr " * 10";
+		@streamchar $5E;
+		@streamnum expo;
+	#ifnot;
+		! Convention is to use at least two digits.
+		@streamchar 'e';
+		if (expo < 0) {
+			@streamchar '-';
+			@neg expo expo;
+		}
+		else {
+			@streamchar '+';
+		}
+		if (expo < 10)
+			@streamchar '0';
+		@streamnum expo;
+	#endif; ! FLOAT_PROGRAMMING_EXPONENTS
+	
 	rtrue;
 
 	.IsNan;
@@ -782,69 +791,72 @@ Array bigbuffer2 -> BUFFERSIZE;
 !   return hex(a[0] & 0xFFFFFFFF)
 
 [ RunPrintTest val;
-	print "You look at a list of printed-out numbers... first, scientific notation:^^";
-	
+	print "You look at a list of printed-out numbers...^^";
 	failures = 0;
+
+	print "First, scientific notation:^^";
+	! This part of the text assumes literary, rather than programmatic,
+	! exponents. Note that "@{5E}" is just a ^ sign.
 	
 	val = func_to_array(tempbuffer, BUFFERSIZE, FloatExp, $0);
-	check_str("0.0e+00", val); print ", ";
+	check_str("0.0 * 10@{5E}0", val); print ", ";
 	val = func_to_array(tempbuffer, BUFFERSIZE, FloatExp, $80000000);
-	check_str("-0.0e+00", val); print ", ";
+	check_str("-0.0 * 10@{5E}0", val); print ", ";
 	val = func_to_array(tempbuffer, BUFFERSIZE, FloatExp, $3F800000);
-	check_str("1.0e+00", val); print ", ";
+	check_str("1.0 * 10@{5E}0", val); print ", ";
 	val = func_to_array(tempbuffer, BUFFERSIZE, FloatExp, $BF800000);
-	check_str("-1.0e+00", val); print "^";
+	check_str("-1.0 * 10@{5E}0", val); print "^";
 	
 	val = func_to_array(tempbuffer, BUFFERSIZE, FloatExp, $3DCCCCCD);
-	check_str("1.0e-01", val); print ", ";
+	check_str("1.0 * 10@{5E}-1", val); print ", ";
 	val = func_to_array(tempbuffer, BUFFERSIZE, FloatExp, $3D088889);
-	check_str("3.33333e-02", val); print ", ";
+	check_str("3.33333 * 10@{5E}-2", val); print ", ";
 	val = func_to_array(tempbuffer, BUFFERSIZE, FloatExp, $40000000);
-	check_str("2.0e+00", val); print ", ";
+	check_str("2.0 * 10@{5E}0", val); print ", ";
 	val = func_to_array(tempbuffer, BUFFERSIZE, FloatExp, $42C80000);
-	check_str("1.0e+02", val); print ", ";
+	check_str("1.0 * 10@{5E}2", val); print ", ";
 	val = func_to_array(tempbuffer, BUFFERSIZE, FloatExp, $42C7FFFE);
-	check_str("1.0e+02", val); print ", ";
+	check_str("1.0 * 10@{5E}2", val); print ", ";
 	val = func_to_array(tempbuffer, BUFFERSIZE, FloatExp, $42C7FFFD);
-	check_str("1.0e+02", val); print ", ";
+	check_str("1.0 * 10@{5E}2", val); print ", ";
 	val = func_to_array(tempbuffer, BUFFERSIZE, FloatExp, $42C7FFF0);
-	check_str("9.99999e+01", val); print ", ";
+	check_str("9.99999 * 10@{5E}1", val); print ", ";
 	val = func_to_array(tempbuffer, BUFFERSIZE, FloatExp, $42FA0000);
-	check_str("1.25e+02", val); print "^";
+	check_str("1.25 * 10@{5E}2", val); print "^";
 	
 	val = func_to_array(tempbuffer, BUFFERSIZE, FloatExp, $0E736390);
-	check_str("3.0e-30", val); print ", ";
+	check_str("3.0 * 10@{5E}-30", val); print ", ";
 	val = func_to_array(tempbuffer, BUFFERSIZE, FloatExp, $72B0B471);
-	check_str("6.99998e+30", val); print ", ";
+	check_str("6.99998 * 10@{5E}30", val); print ", ";
 	val = func_to_array(tempbuffer, BUFFERSIZE, FloatExp, $0003444A);
-	check_str("3.00004e-40", val); print ", ";
+	check_str("3.00004 * 10@{5E}-40", val); print ", ";
 	val = func_to_array(tempbuffer, BUFFERSIZE, FloatExp, $7957B443);
-	check_str("6.99998e+34", val); print "^";
+	check_str("6.99998 * 10@{5E}34", val); print "^";
 	
 	val = func_to_array(tempbuffer, BUFFERSIZE, FloatExp, $3F800000, 1);
-	check_str("1.0e+00", val); print ", ";
+	check_str("1.0 * 10@{5E}0", val); print ", ";
 	val = func_to_array(tempbuffer, BUFFERSIZE, FloatExp, $3F800000, 4);
-	check_str("1.0e+00", val); print ", ";
+	check_str("1.0 * 10@{5E}0", val); print ", ";
 	val = func_to_array(tempbuffer, BUFFERSIZE, FloatExp, $3F800000, 8);
-	check_str("1.00000024e+00", val); print "^";
+	check_str("1.00000024 * 10@{5E}0", val); print "^";
 	val = func_to_array(tempbuffer, BUFFERSIZE, FloatExp, $C0100000, 1);
-	check_str("-2.3e+00", val); print ", ";
+	check_str("-2.3 * 10@{5E}0", val); print ", ";
 	val = func_to_array(tempbuffer, BUFFERSIZE, FloatExp, $C0100000, 2);
-	check_str("-2.25e+00", val); print ", ";
+	check_str("-2.25 * 10@{5E}0", val); print ", ";
 	val = func_to_array(tempbuffer, BUFFERSIZE, FloatExp, $C0100000, 3);
-	check_str("-2.25e+00", val); print ", ";
+	check_str("-2.25 * 10@{5E}0", val); print ", ";
 	val = func_to_array(tempbuffer, BUFFERSIZE, FloatExp, $C0100000, 4);
-	check_str("-2.25e+00", val); print "^";
+	check_str("-2.25 * 10@{5E}0", val); print "^";
 	val = func_to_array(tempbuffer, BUFFERSIZE, FloatExp, $40D945F4, 1);
-	check_str("6.8e+00", val); print ", ";
+	check_str("6.8 * 10@{5E}0", val); print ", ";
 	val = func_to_array(tempbuffer, BUFFERSIZE, FloatExp, $40D945F4, 3);
-	check_str("6.79e+00", val); print ", ";
+	check_str("6.79 * 10@{5E}0", val); print ", ";
 	val = func_to_array(tempbuffer, BUFFERSIZE, FloatExp, $40D945F4, 4);
-	check_str("6.7898e+00", val); print ", ";
+	check_str("6.7898 * 10@{5E}0", val); print ", ";
 	val = func_to_array(tempbuffer, BUFFERSIZE, FloatExp, $40D945F4, 6);
-	check_str("6.789789e+00", val); print ", ";
+	check_str("6.789789 * 10@{5E}0", val); print ", ";
 	val = func_to_array(tempbuffer, BUFFERSIZE, FloatExp, $40D945F4, 8);
-	check_str("6.7897952e+00", val); print "^";
+	check_str("6.7897952 * 10@{5E}0", val); print "^";
 	
 	val = func_to_array(tempbuffer, BUFFERSIZE, FloatExp, FLOAT_INFINITY);
 	check_str("Inf", val); print ", ";
@@ -945,9 +957,9 @@ Array bigbuffer2 -> BUFFERSIZE;
 	val = func_to_array(tempbuffer, BUFFERSIZE, Float, $C97423F0);
 	check_str("-999999.0", val); print ", ";
 	val = func_to_array(tempbuffer, BUFFERSIZE, Float, $497424A0);
-	check_str("1.00001e+06", val); print ", ";
+	check_str("1.00001 * 10@{5E}6", val); print ", ";
 	val = func_to_array(tempbuffer, BUFFERSIZE, Float, $C97424A0);
-	check_str("-1.00001e+06", val); print "^";
+	check_str("-1.00001 * 10@{5E}6", val); print "^";
 	val = func_to_array(tempbuffer, BUFFERSIZE, Float, $38D1B717);
 	check_str("0.0001", val); print ", ";
 	val = func_to_array(tempbuffer, BUFFERSIZE, Float, $B8D1B717);
@@ -959,9 +971,9 @@ Array bigbuffer2 -> BUFFERSIZE;
 	val = func_to_array(tempbuffer, BUFFERSIZE, Float, $38D1B717, 5);
 	check_str("0.0001", val); print "^";
 	val = func_to_array(tempbuffer, BUFFERSIZE, Float, $38BCBE62, 4);
-	check_str("9.0e-05", val); print ", ";
+	check_str("9.0 * 10@{5E}-5", val); print ", ";
 	val = func_to_array(tempbuffer, BUFFERSIZE, Float, $B8BCBE62, 4);
-	check_str("-9.0e-05", val); print "^";
+	check_str("-9.0 * 10@{5E}-5", val); print "^";
 
 	new_line;
 	if (failures)
