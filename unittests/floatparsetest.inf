@@ -1,7 +1,7 @@
 Constant Story "FloatParseTest";
 Constant Headline "^Not a game.^";
 
-Release 1;
+Release 2;
 
 ! Unit test for printing and parsing floating-point constants.
 
@@ -27,7 +27,7 @@ Object Kitchen "Floating Room"
 		A voice booooms out:
 		Try ~type NUM~ or ~type NUM on keyboard~ to parse a
 		floating-point number!
-		Read the chart to run through a unit test!",
+		Read the chart and the paper tape to run through unit tests!",
   has light;
 
 Object -> tkeyboard "keyboard"
@@ -38,6 +38,15 @@ Object -> tkeyboard "keyboard"
 		floating-point parsing.",
   has static;
   
+Object -> tape "paper tape"
+  with
+	name 'paper' 'tape' 'pile',
+	initial "A pile of paper tape spills out from beneath the teletype.",
+	description [;
+		RunPrintTest();
+	],
+  has static;
+
 Object -> chart "chart"
   with
 	name 'chart' 'long' 'tedious' 'figure' 'figures',
@@ -247,7 +256,8 @@ Global float_understood;
 	return GPR_PREPOSITION;
 ];
 
-! Floating-point printing routines. (These are copied from Glulxercise.inf.)
+! Floating-point printing routines. (These are based on code in
+! Glulxercise.inf, but modified.)
   
 ! Print a float. This uses exponential notation ("[-]N.NNNe[+-]NN") if
 ! the exponent is not between 6 and -4. If it is (that is, if the
@@ -256,6 +266,7 @@ Global float_understood;
 ! (at least one, no more than eight). The default is five, because
 ! beyond that rounding errors creep in, and even exactly-represented
 ! float values are printed with trailing fudgy digits.
+! Trailing zeroes are trimmed.
 [ Float val prec   pval;
 	pval = val & $7FFFFFFF;
 
@@ -276,6 +287,7 @@ Array PowersOfTen --> 1 10 100 1000 10000 100000 1000000 10000000 100000000 1000
 ! (at least one, no more than eight). The default is five, because
 ! beyond that rounding errors creep in, and even exactly-represented
 ! float values are printed with trailing fudgy digits.
+! Trailing zeroes are trimmed.
 [ FloatExp val prec   log10val expo fexpo idig ix pow10;
 	if (prec == 0)
 		prec = 5;
@@ -331,6 +343,18 @@ Array PowersOfTen --> 1 10 100 1000 10000 100000 1000000 10000000 100000000 1000
 		@div idig 10 idig;
 	}
 	
+	! Trim off trailing zeroes, as long as there's at least one digit
+	! after the decimal point. (Delete this stanza if you want to
+	! keep the trailing zeroes.)
+	while (prec > 1) {
+		@mod idig 10 sp;
+		@jnz sp ?DoneTrimming;
+		@div pow10 10 pow10;
+		@div idig 10 idig;
+		prec--;
+	}
+	.DoneTrimming;
+	
 	for (ix=0 : ix<=prec : ix++) {
 		@div idig pow10 sp;
 		@mod sp 10 sp;
@@ -368,6 +392,7 @@ Array PowersOfTen --> 1 10 100 1000 10000 100000 1000000 10000000 100000000 1000
 ! (at least one, no more than eight). The default is five, because
 ! beyond that rounding errors creep in, and even exactly-represented
 ! float values are printed with trailing fudgy digits.
+! Trailing zeroes are trimmed.
 [ FloatDec val prec   log10val int fint extra0 frac idig ix pow10;
 	if (prec == 0)
 		prec = 5;
@@ -444,6 +469,18 @@ Array PowersOfTen --> 1 10 100 1000 10000 100000 1000000 10000000 100000000 1000
 		! actually, but we'll just adjust downward.
 		idig = pow10 - 1;
 	}
+
+	! Trim off trailing zeroes, as long as there's at least one digit
+	! after the decimal point. (Delete this stanza if you want to
+	! keep the trailing zeroes.)
+	while (prec > 1) {
+		@mod idig 10 sp;
+		@jnz sp ?DoneTrimming;
+		@div pow10 10 pow10;
+		@div idig 10 idig;
+		prec--;
+	}
+	.DoneTrimming;
 	
 	@div pow10 10 pow10;
 	for (ix=0 : ix<prec : ix++) {
@@ -591,15 +628,93 @@ Array parsebadlist -->
 	"1.2e-3."
 	0;
 
-Array tempbuffer -> 256;
+Global failures;
+Constant BUFFERSIZE 256;
+Array tempbuffer -> BUFFERSIZE;
+Array bigbuffer2 -> BUFFERSIZE;
+
+[ check_str str len  newlen ix good ch;
+	good = true;
+	newlen = string_to_array(str, bigbuffer2, BUFFERSIZE);
+	if (newlen ~= len) {
+		good = false;
+	}
+	else {
+		for (ix=0 : ix<len : ix++) {
+			if (tempbuffer->ix ~= bigbuffer2->ix)
+				good = false;
+		}
+	}
+	print "~";
+	for (ix=0 : ix<len : ix++) {
+		ch = tempbuffer->ix;
+		@streamchar ch;
+	}
+	print "~";
+	if (~~good) {
+		failures++;
+		print " (should be ~";
+		for (ix=0 : ix<newlen : ix++) {
+			ch = bigbuffer2->ix;
+			@streamchar ch;
+		}
+		print "~ len ", newlen, ", FAIL)";
+	}
+];
+
+[ string_to_array val arr arrlen    str oldstr len;
+	oldstr = glk($0048); ! stream_get_current
+	str = glk($0043, arr, arrlen, 1, 0); ! stream_open_memory
+	if (str == 0) return 0;
+
+	glk($0047, str); ! stream_set_current
+
+	if (val->0 == $c0 or $c1)
+		val();
+	else
+		@streamstr val;
+
+	glk($0047, oldstr); ! stream_set_current
+	@copy $ffffffff sp;
+	@copy str sp;
+	@glk $0044 2 0; ! stream_close
+	@copy sp len;
+	@copy sp 0;
+
+	return len;
+];
+
+[ func_to_array _vararg_count arr arrlen func    str oldstr len;
+	@copy sp arr;
+	@copy sp arrlen;
+	@copy sp func;
+	_vararg_count = _vararg_count-3;
+	
+	oldstr = glk($0048); ! stream_get_current
+	str = glk($0043, arr, arrlen, 1, 0); ! stream_open_memory
+	if (str == 0) return 0;
+
+	glk($0047, str); ! stream_set_current
+
+	@call func _vararg_count 0;
+
+	glk($0047, oldstr); ! stream_set_current
+	@copy $ffffffff sp;
+	@copy str sp;
+	@glk $0044 2 0; ! stream_close
+	@copy sp len;
+	@copy sp 0;
+
+	return len;
+];
 
 ! This test calls FloatParse() and then checks the result with exact
 ! comparison. This is generally a bad idea! It works here because I've
 ! chosen test cases that have exact float representation, or that happen
 ! to work out correctly on all my interpreters.
-[ RunParseTest ix str wanted got len errors;
-	print "You begin reading numbers from the chart...^";
-	errors = 0;
+[ RunParseTest ix str wanted got len;
+	print "You begin reading numbers from the chart...^^";
+	failures = 0;
 	
 	ix = 0;
 	while (true) {
@@ -612,17 +727,19 @@ Array tempbuffer -> 256;
 
 		print "~", (string) str, "~: ";
 		
-		len = PrintAnyToArray(tempbuffer, 256, str);
+		len = PrintAnyToArray(tempbuffer, BUFFERSIZE, str);
 		got = FloatParse(tempbuffer, len, true);
 		print (Float) got;
 
 		if (wanted ~= got) {
-			errors++;
+			failures++;
 			print " (ERROR: wanted ", (Float) wanted, ")";
 		}
 		
 		new_line;
 	}
+
+	print "^Then some numbers which should be invalid:^^";
 
 	ix = 0;
 	while (true) {
@@ -633,14 +750,14 @@ Array tempbuffer -> 256;
 
 		print "~", (string) str, "~: ";
 		
-		len = PrintAnyToArray(tempbuffer, 256, str);
+		len = PrintAnyToArray(tempbuffer, BUFFERSIZE, str);
 		got = FloatParse(tempbuffer, len, true);
 
 		if (got == FLOAT_NAN) {
 			print "invalid";
 		}
 		else {
-			errors++;
+			failures++;
 			print (Float) got, " (ERROR: should not parse)";		
 		}
 
@@ -648,8 +765,207 @@ Array tempbuffer -> 256;
 	}
 
 	new_line;
-	if (errors)
-		print errors, " errors found!^";
+	if (failures)
+		print failures, " errors found!^";
+	else
+		print "All tests passed.^";
+];
+
+! For future reference, a Python function to convert float to hex:
+! (This assumes a 64-bit environment)
+!
+! import array
+! def conv(val):
+!   s = array.array('f', [val]).tostring()
+!   a = array.array('i')
+!   a.fromstring(s)
+!   return hex(a[0] & 0xFFFFFFFF)
+
+[ RunPrintTest val;
+	print "You look at a list of printed-out numbers... first, scientific notation:^^";
+	
+	failures = 0;
+	
+	val = func_to_array(tempbuffer, BUFFERSIZE, FloatExp, $0);
+	check_str("0.0e+00", val); print ", ";
+	val = func_to_array(tempbuffer, BUFFERSIZE, FloatExp, $80000000);
+	check_str("-0.0e+00", val); print ", ";
+	val = func_to_array(tempbuffer, BUFFERSIZE, FloatExp, $3F800000);
+	check_str("1.0e+00", val); print ", ";
+	val = func_to_array(tempbuffer, BUFFERSIZE, FloatExp, $BF800000);
+	check_str("-1.0e+00", val); print "^";
+	
+	val = func_to_array(tempbuffer, BUFFERSIZE, FloatExp, $3DCCCCCD);
+	check_str("1.0e-01", val); print ", ";
+	val = func_to_array(tempbuffer, BUFFERSIZE, FloatExp, $3D088889);
+	check_str("3.33333e-02", val); print ", ";
+	val = func_to_array(tempbuffer, BUFFERSIZE, FloatExp, $40000000);
+	check_str("2.0e+00", val); print ", ";
+	val = func_to_array(tempbuffer, BUFFERSIZE, FloatExp, $42C80000);
+	check_str("1.0e+02", val); print ", ";
+	val = func_to_array(tempbuffer, BUFFERSIZE, FloatExp, $42C7FFFE);
+	check_str("1.0e+02", val); print ", ";
+	val = func_to_array(tempbuffer, BUFFERSIZE, FloatExp, $42C7FFFD);
+	check_str("1.0e+02", val); print ", ";
+	val = func_to_array(tempbuffer, BUFFERSIZE, FloatExp, $42C7FFF0);
+	check_str("9.99999e+01", val); print ", ";
+	val = func_to_array(tempbuffer, BUFFERSIZE, FloatExp, $42FA0000);
+	check_str("1.25e+02", val); print "^";
+	
+	val = func_to_array(tempbuffer, BUFFERSIZE, FloatExp, $0E736390);
+	check_str("3.0e-30", val); print ", ";
+	val = func_to_array(tempbuffer, BUFFERSIZE, FloatExp, $72B0B471);
+	check_str("6.99998e+30", val); print ", ";
+	val = func_to_array(tempbuffer, BUFFERSIZE, FloatExp, $0003444A);
+	check_str("3.00004e-40", val); print ", ";
+	val = func_to_array(tempbuffer, BUFFERSIZE, FloatExp, $7957B443);
+	check_str("6.99998e+34", val); print "^";
+	
+	val = func_to_array(tempbuffer, BUFFERSIZE, FloatExp, $3F800000, 1);
+	check_str("1.0e+00", val); print ", ";
+	val = func_to_array(tempbuffer, BUFFERSIZE, FloatExp, $3F800000, 4);
+	check_str("1.0e+00", val); print ", ";
+	val = func_to_array(tempbuffer, BUFFERSIZE, FloatExp, $3F800000, 8);
+	check_str("1.00000024e+00", val); print "^";
+	val = func_to_array(tempbuffer, BUFFERSIZE, FloatExp, $C0100000, 1);
+	check_str("-2.3e+00", val); print ", ";
+	val = func_to_array(tempbuffer, BUFFERSIZE, FloatExp, $C0100000, 2);
+	check_str("-2.25e+00", val); print ", ";
+	val = func_to_array(tempbuffer, BUFFERSIZE, FloatExp, $C0100000, 3);
+	check_str("-2.25e+00", val); print ", ";
+	val = func_to_array(tempbuffer, BUFFERSIZE, FloatExp, $C0100000, 4);
+	check_str("-2.25e+00", val); print "^";
+	val = func_to_array(tempbuffer, BUFFERSIZE, FloatExp, $40D945F4, 1);
+	check_str("6.8e+00", val); print ", ";
+	val = func_to_array(tempbuffer, BUFFERSIZE, FloatExp, $40D945F4, 3);
+	check_str("6.79e+00", val); print ", ";
+	val = func_to_array(tempbuffer, BUFFERSIZE, FloatExp, $40D945F4, 4);
+	check_str("6.7898e+00", val); print ", ";
+	val = func_to_array(tempbuffer, BUFFERSIZE, FloatExp, $40D945F4, 6);
+	check_str("6.789789e+00", val); print ", ";
+	val = func_to_array(tempbuffer, BUFFERSIZE, FloatExp, $40D945F4, 8);
+	check_str("6.7897952e+00", val); print "^";
+	
+	val = func_to_array(tempbuffer, BUFFERSIZE, FloatExp, FLOAT_INFINITY);
+	check_str("Inf", val); print ", ";
+	val = func_to_array(tempbuffer, BUFFERSIZE, FloatExp, FLOAT_NINFINITY);
+	check_str("-Inf", val); print ", ";
+	val = func_to_array(tempbuffer, BUFFERSIZE, FloatExp, FLOAT_NAN);
+	check_str("NaN", val); print ", ";
+	val = func_to_array(tempbuffer, BUFFERSIZE, FloatExp, $FFFFFFFF);
+	check_str("-NaN", val); print "^";
+
+	print "^Then, ordinary notation:^^";
+	
+	val = func_to_array(tempbuffer, BUFFERSIZE, FloatDec, $0);
+	check_str("0.0", val); print ", ";
+	val = func_to_array(tempbuffer, BUFFERSIZE, FloatDec, $80000000);
+	check_str("-0.0", val); print ", ";
+	val = func_to_array(tempbuffer, BUFFERSIZE, FloatDec, $3F800000);
+	check_str("1.0", val); print ", ";
+	val = func_to_array(tempbuffer, BUFFERSIZE, FloatDec, $BF800000);
+	check_str("-1.0", val); print "^";
+
+	val = func_to_array(tempbuffer, BUFFERSIZE, FloatDec, $3DCCCCCD);
+	check_str("0.1", val); print ", ";
+	val = func_to_array(tempbuffer, BUFFERSIZE, FloatDec, $3CA3D70A);
+	check_str("0.02", val); print ", ";
+	val = func_to_array(tempbuffer, BUFFERSIZE, FloatDec, $3D088889);
+	check_str("0.03333", val); print ", ";
+	val = func_to_array(tempbuffer, BUFFERSIZE, FloatDec, $414587E7);
+	check_str("12.34568", val); print ", ";
+	val = func_to_array(tempbuffer, BUFFERSIZE, FloatDec, $C2F0B0FD);
+	check_str("-120.34568", val); print ", ";
+	val = func_to_array(tempbuffer, BUFFERSIZE, FloatDec, $47C3502C);
+	check_str("100000.34375", val); print ", ";
+	val = func_to_array(tempbuffer, BUFFERSIZE, FloatDec, $49742406);
+	check_str("1000000.375", val); print ", ";
+	val = func_to_array(tempbuffer, BUFFERSIZE, FloatDec, $4B189680);
+	check_str("10000000.0", val); print "^";
+	
+	val = func_to_array(tempbuffer, BUFFERSIZE, FloatDec, $1E3CE508);
+	check_str("0.0", val); print ", ";
+	val = func_to_array(tempbuffer, BUFFERSIZE, FloatDec, $9E3CE508);
+	check_str("-0.0", val); print ", ";
+	val = func_to_array(tempbuffer, BUFFERSIZE, FloatDec, $4F800000);
+	check_str("4294965440.0", val); print ", ";
+	val = func_to_array(tempbuffer, BUFFERSIZE, FloatDec, $7149F2CA);
+	check_str("1000000240000000000000000000000.0", val); print "^";
+	
+	val = func_to_array(tempbuffer, BUFFERSIZE, FloatDec, $3F800000, 1);
+	check_str("1.0", val); print ", ";
+	val = func_to_array(tempbuffer, BUFFERSIZE, FloatDec, $3F800000, 4);
+	check_str("1.0", val); print ", ";
+	val = func_to_array(tempbuffer, BUFFERSIZE, FloatDec, $3F800000, 8);
+	check_str("1.0", val); print ", ";
+	val = func_to_array(tempbuffer, BUFFERSIZE, FloatDec, $C0100000, 1);
+	check_str("-2.3", val); print ", ";
+	val = func_to_array(tempbuffer, BUFFERSIZE, FloatDec, $C0100000, 2);
+	check_str("-2.25", val); print ", ";
+	val = func_to_array(tempbuffer, BUFFERSIZE, FloatDec, $C0100000, 3);
+	check_str("-2.25", val); print ", ";
+	val = func_to_array(tempbuffer, BUFFERSIZE, FloatDec, $C0100000, 4);
+	check_str("-2.25", val); print "^";
+	val = func_to_array(tempbuffer, BUFFERSIZE, FloatDec, $4120020C, 1);
+	check_str("10.0", val); print ", ";
+	val = func_to_array(tempbuffer, BUFFERSIZE, FloatDec, $4120020C, 3);
+	check_str("10.0", val); print ", ";
+	val = func_to_array(tempbuffer, BUFFERSIZE, FloatDec, $4120020C, 4);
+	check_str("10.0005", val); print ", ";
+	val = func_to_array(tempbuffer, BUFFERSIZE, FloatDec, $4120020C, 5);
+	check_str("10.0005", val); print ", ";
+	val = func_to_array(tempbuffer, BUFFERSIZE, FloatDec, $40D945F4, 1);
+	check_str("6.8", val); print ", ";
+	val = func_to_array(tempbuffer, BUFFERSIZE, FloatDec, $40D945F4, 3);
+	check_str("6.79", val); print ", ";
+	val = func_to_array(tempbuffer, BUFFERSIZE, FloatDec, $40D945F4, 4);
+	check_str("6.7898", val); print ", ";
+	val = func_to_array(tempbuffer, BUFFERSIZE, FloatDec, $40D945F4, 6);
+	check_str("6.789789", val); print ", ";
+	val = func_to_array(tempbuffer, BUFFERSIZE, FloatDec, $40D945F4, 8);
+	check_str("6.78978832", val); print "^";
+	
+	val = func_to_array(tempbuffer, BUFFERSIZE, FloatDec, FLOAT_INFINITY);
+	check_str("Inf", val); print ", ";
+	val = func_to_array(tempbuffer, BUFFERSIZE, FloatDec, FLOAT_NINFINITY);
+	check_str("-Inf", val); print ", ";
+	val = func_to_array(tempbuffer, BUFFERSIZE, FloatDec, FLOAT_NAN);
+	check_str("NaN", val); print ", ";
+	val = func_to_array(tempbuffer, BUFFERSIZE, FloatDec, $FFFFFFFF);
+	check_str("-NaN", val); print "^";
+
+	print "^Finally, a form that selects scientific or normal as appropriate:^^";
+
+	val = func_to_array(tempbuffer, BUFFERSIZE, Float, $3F800000, 2);
+	check_str("1.0", val); print ", ";
+	val = func_to_array(tempbuffer, BUFFERSIZE, Float, $3F800000);
+	check_str("1.0", val); print ", ";
+	val = func_to_array(tempbuffer, BUFFERSIZE, Float, $497423F0);
+	check_str("999999.0", val); print ", ";
+	val = func_to_array(tempbuffer, BUFFERSIZE, Float, $C97423F0);
+	check_str("-999999.0", val); print ", ";
+	val = func_to_array(tempbuffer, BUFFERSIZE, Float, $497424A0);
+	check_str("1.00001e+06", val); print ", ";
+	val = func_to_array(tempbuffer, BUFFERSIZE, Float, $C97424A0);
+	check_str("-1.00001e+06", val); print "^";
+	val = func_to_array(tempbuffer, BUFFERSIZE, Float, $38D1B717);
+	check_str("0.0001", val); print ", ";
+	val = func_to_array(tempbuffer, BUFFERSIZE, Float, $B8D1B717);
+	check_str("-0.0001", val); print ", ";
+	val = func_to_array(tempbuffer, BUFFERSIZE, Float, $38D1B717, 2);
+	check_str("0.0", val); print ", ";
+	val = func_to_array(tempbuffer, BUFFERSIZE, Float, $38D1B717, 4);
+	check_str("0.0001", val); print ", ";
+	val = func_to_array(tempbuffer, BUFFERSIZE, Float, $38D1B717, 5);
+	check_str("0.0001", val); print "^";
+	val = func_to_array(tempbuffer, BUFFERSIZE, Float, $38BCBE62, 4);
+	check_str("9.0e-05", val); print ", ";
+	val = func_to_array(tempbuffer, BUFFERSIZE, Float, $B8BCBE62, 4);
+	check_str("-9.0e-05", val); print "^";
+
+	new_line;
+	if (failures)
+		print failures, " errors found!^";
 	else
 		print "All tests passed.^";
 ];
