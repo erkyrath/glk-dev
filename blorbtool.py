@@ -4,6 +4,17 @@
 # Created by Andrew Plotkin (erkyrath@eblong.com)
 # This script is in the public domain.
 
+# When listing chunks, you'll see output that looks like:
+#   'GLUL' (232192 bytes, start 60)
+# "60" means that the IFF chunk starts at byte 60 in the blorb file. There's
+# always an eight-byte header, so the actual Glulx data file starts at byte
+# 68 (and is then 232192 bytes long).
+#
+# For AIFF chunks, you'll see:
+#   'FORM'/'AIFF' (8536+8 bytes, start 324266)
+# The AIFF data implicitly includes the eight-byte header, which is why the
+# length says "+8". Start at byte 324266 and read 8544 bytes.
+
 import sys
 import os
 import optparse
@@ -86,7 +97,7 @@ class BlorbChunk:
         if (not self.formtype):
             return '%s (%d bytes, start %d)' % (repr(self.type), self.len, self.start)
         else:
-            return '%s/%s (%d bytes, start %d)' % (repr(self.type), repr(self.formtype), self.len, self.start)
+            return '%s/%s (%d+8 bytes, start %d)' % (repr(self.type), repr(self.formtype), self.len, self.start)
     
     def display(self):
         print '* %s' % (self.describe(),)
