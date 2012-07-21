@@ -394,8 +394,6 @@ class BlorbTool:
         print 'delete USE NUM -- delete chunk by use and number'
         print 'save -- write out changes'
         print 'reload -- discard changes and reload existing blorb file'
-        #  import FILE2 TYPE (add new chunk with given type; check format if known)
-        #  import FILE2 TYPE USAGE N
 
     show_commands = staticmethod(show_commands)
         
@@ -554,10 +552,19 @@ class BlorbTool:
             raise CommandError('You can\'t import the original blorb file as a chunk!')
         fl = open(infilename)
         filestart = None
+        formtype = None
         dat = fl.read(5)
         if (dat[0:4] == 'FORM' and ord(dat[4]) < 0x20):
             # This is an AIFF file, and must be embedded
             filestart = 8
+            fl.seek(8, 0)
+            formtype = fl.read(4)
+            if (typ != 'FORM'):
+                # We accept the formtype as a synonym here, if the user
+                # got it right.
+                if (typ != formtype):
+                    raise CommandError('This IFF file has form type \'%s\', not \'%s\'.' % (formtype, typ))
+                typ = 'FORM'
         fl.seek(0, 2)
         filelen = fl.tell()
         fl.close()
@@ -574,6 +581,7 @@ class BlorbTool:
         chunk.filedata = infilename
         if (filestart):
             chunk.filestart = filestart
+            chunk.formtype = formtype
         blorbfile.add_chunk(chunk, use, num, pos)
         if pos is None:
             print 'Added chunk, length %d' % (filelen,)
