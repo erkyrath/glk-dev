@@ -25,8 +25,10 @@ Constant Headline "Not a game.^";
 !                \0\0\x01f\0\0\x03\xA9\0\0\x1E\x8E\0\0 \x19\0\0\0s\0\0N\x08\0\0\0!"
 !               ("C@{E1}t\n@{0166}@{03A9}@{1E8E}@{2019}s@{4E08}!",
 !                as a sequence of big-endian 4-byte values)
+! Data 8, FORM: "FORM\0\0\0\x04TEST"
+!               (A valid IFF file, with formtype TEST, containing no chunks)
 
-Release 1;
+Release 2;
 
 Global mainwin = 0;
 Constant BUFLEN = 80;
@@ -726,5 +728,28 @@ Constant ROM_GAMESERIAL    $36;     ! six ASCII characters
     print "got: ";
     glk($012A, ubuffer, len); ! glk_put_buffer_uni
     new_line;
+    new_line;
 
+    
+    print "* binary FORM byte stream, byte read calls^";
+    
+    print "Opening Data 8 for get_buffer_stream:^";
+    str = glk($0049, 8, 11); ! stream_open_resource
+    if (~~str) {
+        print "ERROR: This interpreter does not appear to support the July 2012
+            spec update for FORM data.^";
+        errorcount++;
+    }
+    else {
+        len = glk($0092, str, buffer, BUFLEN); ! get_buffer_stream
+        print "Read "; check_value(len, 12); print " bytes.^";
+        glk($0044, str, gg_result); ! stream_close
+        check_result_counts(12, 0);
+        print "Contents: ";
+        val = buffer;
+        check_value(val-->0, $464F524D); print ", ";
+        check_value(val-->1, $0004); print ", ";
+        check_value(val-->2, $54455354); new_line;
+    }
+    
 ];
