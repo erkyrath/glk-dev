@@ -1,0 +1,231 @@
+Constant Story "SelectVariantTest";
+Constant Headline "Not a game.^";
+
+
+Global mainwin = 0;
+Global notestream = 0;
+Global noteisuni = false;
+Array gg_event --> 4;
+
+Constant BUFLEN 256;
+Array notebuffer -> BUFLEN;
+Array noteubuffer --> BUFLEN;
+
+Constant HDR_GLULXVERSION  $04;     ! long word
+Constant ROM_GAMERELEASE   $34;     ! short word
+Constant ROM_GAMESERIAL    $36;     ! six ASCII characters
+
+Constant MAINWIN_ROCK 100;
+
+[ Main;
+  @setiosys 2 0; ! select Glk I/O system
+  mainwin = glk($0023, 0, 0, 0, 3, MAINWIN_ROCK); ! glk_window_open
+  glk($002F, mainwin); ! glk_set_window
+
+  new_line;
+  Banner();
+  new_line;
+
+  RoomDesc();
+
+  reopen_notestream(false);
+  mainloop();
+];
+
+[ mainloop val;
+
+  while (true) {
+    print "^>";
+    val = readchar_base();
+
+    add_key_to_notestream(val);
+    
+    if (val == '0') {
+        print "^nostack>";
+        val = readchar_nostack();
+        add_key_to_notestream(val);
+    }
+    else if (val == '2') {
+        print "^twostack>";
+        val = readchar_twostack();
+        add_key_to_notestream(val);
+    }
+    else if (val == 'a') {
+        print "^astack>";
+        val = readchar_astack();
+        add_key_to_notestream(val);
+    }
+    else if (val == 'b') {
+        print "^bstack>";
+        val = readchar_bstack();
+        add_key_to_notestream(val);
+    }
+    else if (val == 'c') {
+        print "^You pressed 'c'.^^";
+        reopen_notestream(false);
+        continue;
+    }
+    else if (val == 'u') {
+        print "^You pressed 'u'.^^";
+        reopen_notestream(true);
+        continue;
+    }
+    
+    switch (val) {
+        -6: print "^You hit Enter.^";
+        ' ': print "^You hit Space.^";
+        default:
+            print "^You pressed '", (char) val, "' (", val, ").^";
+    }
+  }
+];
+
+[ Banner  i ix;
+   if (Story ~= 0) {
+    glk($0086, 3); ! set header style
+    print (string) Story;
+    glk($0086, 0); ! set normal style
+  }
+  if (Headline ~= 0) print ": ", (string) Headline;
+  print "Release ";
+  @aloads ROM_GAMERELEASE 0 i;
+  print i;
+  print " / Serial number ";
+  for (i=0 : i<6 : i++) print (char) ROM_GAMESERIAL->i;
+  print " / Inform v"; inversion;
+  print ", compiler options ";
+  i = false;
+  #Ifdef STRICT_MODE;
+  print "S"; i++;
+  #Endif; ! STRICT_MODE
+  #Ifdef INFIX;
+  print "X"; i++;
+  #Ifnot;
+  #Ifdef DEBUG;
+  print "D"; i++;
+  #Endif; ! DEBUG
+  #Endif; ! INFIX
+  if (~~i) print "(none)";
+  new_line;
+
+  @gestalt 1 0 ix;
+  print "Interpreter version ", ix / $10000, ".", (ix & $FF00) / $100,
+  ".", ix & $FF, " / ";
+  @gestalt 0 0 ix;
+  print "VM ", ix / $10000, ".", (ix & $FF00) / $100, ".", ix & $FF, " / ";
+  ix = HDR_GLULXVERSION-->0;
+  print "game file format ", ix / $10000, ".", (ix & $FF00) / $100, ".", ix & $FF, "^";
+];
+
+[ RoomDesc;
+  print "A voice booooms out: Welcome to the test chamber.^^";
+  print "This test keeps a memory stream open across input events. It
+    also tests some variations of the input event (calling @@64glk select
+    with opcode arguments from the stack instead of local variables).
+    These cases are not difficult for an interpreter to handle, but they
+    get strange if you autosave at input time (as the iOS interpreter
+    does). This test allows me to check that.^^";
+  print "All input is single-key. Most keys are simply echoed. ~0~, ~1~,
+    ~a~, ~b~ set up the next key-read with an unusual opcode structure.
+    ~c~ or ~u~ prints out a log of all keys hit (since the beginning, or
+    the last ~c/u~). The next log is kept as a memory char stream for ~c~,
+    a memory unicode stream for ~u~.^^";
+];
+
+
+[ readchar_base;
+  glk($0140, mainwin); ! request_char_event_uni
+  while (true) {
+    glk($00C0, gg_event); ! select
+    if (gg_event-->0 == 2 && gg_event-->1 == mainwin) {
+      return gg_event-->2;
+    }
+  }
+];
+
+[ readchar_nostack;
+  glk($0140, mainwin); ! request_char_event_uni
+  while (true) {
+    @push gg_event;
+    @glk $00C0 1 0;
+    if (gg_event-->0 == 2 && gg_event-->1 == mainwin) {
+      return gg_event-->2;
+    }
+  }
+];
+
+[ readchar_astack;
+  glk($0140, mainwin); ! request_char_event_uni
+  while (true) {
+    @push gg_event;
+    @push $00C0;
+    @glk sp 1 0;
+    if (gg_event-->0 == 2 && gg_event-->1 == mainwin) {
+      return gg_event-->2;
+    }
+  }
+];
+
+[ readchar_bstack;
+  glk($0140, mainwin); ! request_char_event_uni
+  while (true) {
+    @push gg_event;
+    @push 1;
+    @glk $00C0 sp 0;
+    if (gg_event-->0 == 2 && gg_event-->1 == mainwin) {
+      return gg_event-->2;
+    }
+  }
+];
+
+[ readchar_twostack;
+  glk($0140, mainwin); ! request_char_event_uni
+  while (true) {
+    @push gg_event;
+    @push 1; @push $00C0;
+    @glk sp sp sp;
+    if (gg_event-->0 == 2 && gg_event-->1 == mainwin) {
+      return gg_event-->2;
+    }
+  }
+];
+
+[ reopen_notestream useuni   ix;
+    if (notestream) {
+        glk($0044, notestream, gg_event); ! stream_close
+        notestream = 0;
+        if (~~noteisuni) {
+            print "Logged ", gg_event-->1, " chars written: [";
+            for (ix=0 : ix < gg_event-->1 : ix++) {
+                if (notebuffer->ix == -6)
+                    print "(enter)";
+                else
+                    print (char) notebuffer->ix;
+            }
+        }
+        else {
+            print "Logged ", gg_event-->1, " unichars written: [";
+            for (ix=0 : ix < gg_event-->1 : ix++) {
+                if (noteubuffer-->ix == -6)
+                    print "(enter)";
+                else
+                    print (char) noteubuffer-->ix;
+            }
+        }
+        print "]^";
+    }
+
+    noteisuni = useuni;
+    if (~~noteisuni)
+        notestream = glk($0043, notebuffer, BUFLEN, 1, 0); ! stream_open_memory
+    else
+        notestream = glk($0139, noteubuffer, BUFLEN, 1, 0); ! stream_open_memory_uni
+    print "Notestream dispid: ", notestream, "^";
+];
+
+[ add_key_to_notestream val;
+    if (val == -6)
+        glk($012B, notestream, $5E); ! put_char_stream_uni
+    else
+        glk($012B, notestream, val); ! put_char_stream_uni
+];
