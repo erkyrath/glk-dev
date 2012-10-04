@@ -10,7 +10,7 @@ Release 1;
 
 ! If you want to test only the old syntax, comment out the definition
 ! of TRY_NEW_SYNTAX. (You might want this to verify the correctness of
-! a 6.31 compiler fork, or to test -v4 code generation.)
+! a 6.31 compiler fork.)
 Constant TRY_NEW_SYNTAX;
 
 ! (Even with TRY_NEW_SYNTAX commented out, this does not compile
