@@ -3,17 +3,20 @@ Constant Headline "Not a game.^";
 
 Release 1;
 
-! This is a compiler unit test, testing the new <actor, verb> form of the
-! <...> action statement.
-
-! (This does not compile correctly on -z3, due to an old compiler bug I
-! have not tracked down. I might even be doing something which is illegal
-! in z-code v3.)
+! This is a compiler unit test, testing the new <verb, actor> form of the
+! <...> action statement. Or rather, it exhaustively tests different
+! ways to pass arguments to the <...> statement, covering both the old
+! cases (without the ",actor") and the new cases (with it).
 
 ! If you want to test only the old syntax, comment out the definition
 ! of TRY_NEW_SYNTAX. (You might want this to verify the correctness of
-! a 6.31 compiler fork.)
+! a 6.31 compiler fork, or to test -v4 code generation.)
 Constant TRY_NEW_SYNTAX;
+
+! (Even with TRY_NEW_SYNTAX commented out, this does not compile
+! correctly on -z3. This is a pre-existing compiler bug, which I have
+! not tracked down. I might even be doing something which is illegal
+! in z-code v3.)
 
 #ifdef TARGET_ZCODE;
 Constant HDR_GAMERELEASE      = $02;     ! word
@@ -103,6 +106,9 @@ Global expect_actor;
 	expect_second = second;
 	expect_actor = actor;
 ];
+
+! <...> statements are compiled as calls to R_Process(). This implementation
+! simply checks that the arguments arrived as expected.
 
 [ R_Process verb noun second actor;
 	print "Action <", verb, " ", noun, " ", second;
