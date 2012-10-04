@@ -3,7 +3,8 @@ Constant Headline "Not a game.^";
 
 Release 1;
 
-! This is a compiler unit test.
+! This is a compiler unit test for the feature where the #end directive
+! only ends the current file, when found in an include file.
 
 #ifdef TARGET_ZCODE;
 Constant HDR_GAMERELEASE      = $02;     ! word
