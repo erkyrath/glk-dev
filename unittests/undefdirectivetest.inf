@@ -3,7 +3,8 @@ Constant Headline "Not a game.^";
 
 Release 1;
 
-! This is a compiler unit test.
+! This is a compiler unit test for the Undef directive
+! (remove the definition of a Constant).
 
 #ifdef TARGET_ZCODE;
 Constant HDR_GAMERELEASE      = $02;     ! word
