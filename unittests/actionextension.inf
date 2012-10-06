@@ -92,6 +92,8 @@ Global failures;
     print "VM ", ix / $10000, ".", (ix & $FF00) / $100, ".", ix & $FF, " / ";
     ix = HDR_GLULXVERSION-->0;
     print "game file format ", ix / $10000, ".", (ix & $FF00) / $100, ".", ix & $FF, "^";
+    #ifnot;
+    print "Game file format ", 0->0, ".^";
     #Endif; ! TARGET_GLULX
 ];
 
