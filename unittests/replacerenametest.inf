@@ -101,8 +101,13 @@ Include "replacerename_inc1";
 	return 11;
 ];
 
-[ funcgamma;
+[ funcgamma   val;
 	print "replacement funcgamma.^";
+	
+	print "  Internal call to funcgammaorig: ";
+	val = funcgammaorig();
+	print "  ...returned "; check_value(val, 2); print ".^";
+
 	return 13;
 ];
 
@@ -160,9 +165,13 @@ Include "replacerename_inc2";
 	return 12;
 ];
 
-[ funcdelta;
+[ funcdelta   val;
     print "replacement funcdelta.^";
-	!print "..."; repdong();
+	
+	print "  Internal call to funcdeltaorig: ";
+	val = funcdeltaorig();
+	print "  ...returned "; check_value(val, 4); print ".^";
+
 	return 14;
 ];
 
