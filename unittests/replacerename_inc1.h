@@ -1,5 +1,5 @@
-
-!System_file;
+! This include appears before the functions are called; it is not a system
+! file.
 
 ! Will be replaced (entirely).
 [ funcalpha;

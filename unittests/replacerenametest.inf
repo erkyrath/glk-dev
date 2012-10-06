@@ -91,6 +91,13 @@ Global failures;
 	}
 ];
 
+! We are going to go through eight replacement cases, with four inclusion
+! files:
+! 
+! - System_File or not;
+! - simple replacement or renaming replacement;
+! - forward-declared functions or not.
+
 Replace funcalpha;
 Replace funcgamma funcgammaorig;
 
@@ -111,6 +118,28 @@ Include "replacerename_inc1";
 	return 13;
 ];
 
+
+Replace funcepsilon;
+Replace funceta funcetaorig;
+
+Include "replacerename_inc1sys";
+
+[ funcepsilon;
+	print "replacement funcepsilon.^";
+	return 15;
+];
+
+[ funceta   val;
+	print "replacement funceta.^";
+	
+	print "  Internal call to funcetaorig: ";
+	val = funcetaorig();
+	print "  ...returned "; check_value(val, 6); print ".^";
+
+	return 17;
+];
+
+
 Object kitchen;
 
 Replace child;
@@ -121,7 +150,10 @@ Replace child;
 	return -3;
 ];
 
+
 [ RunTest val;
+
+	print "Non-system-file includes:^";
 
 	print "funcalpha: ";
 	val = funcalpha();
@@ -144,6 +176,31 @@ Replace child;
 	val = funcdeltaorig();
 	print "...returned "; check_value(val, 4); print ".^";
 
+	print "System-file includes:^";
+	
+	print "funcepsilon: ";
+	val = funcepsilon();
+	print "...returned "; check_value(val, 15); print ".^";
+	print "funczeta: ";
+	val = funczeta();
+	print "...returned "; check_value(val, 16); print ".^";
+
+	print "funceta: ";
+	val = funceta();
+	print "...returned "; check_value(val, 17); print ".^";
+	print "funcetaorig: ";
+	val = funcetaorig();
+	print "...returned "; check_value(val, 6); print ".^";
+
+	print "functheta: ";
+	val = functheta();
+	print "...returned "; check_value(val, 18); print ".^";
+	print "functhetaorig: ";
+	val = functhetaorig();
+	print "...returned "; check_value(val, 8); print ".^";
+
+	print "Replacing a system function:^";
+	
 	print "child: ";
 	val = child(kitchen);
 	print "...returned "; check_value(val, -3); print ".^";
@@ -154,6 +211,7 @@ Replace child;
 	else
 		print failures, " errors!^";
 ];
+
 
 Replace funcbeta;
 Replace funcdelta funcdeltaorig;
@@ -173,5 +231,26 @@ Include "replacerename_inc2";
 	print "  ...returned "; check_value(val, 4); print ".^";
 
 	return 14;
+];
+
+
+Replace funczeta;
+Replace functheta functhetaorig;
+
+Include "replacerename_inc2sys";
+
+[ funczeta;
+    print "replacement funczeta.^";
+	return 16;
+];
+
+[ functheta   val;
+    print "replacement functheta.^";
+	
+	print "  Internal call to functhetaorig: ";
+	val = functhetaorig();
+	print "  ...returned "; check_value(val, 8); print ".^";
+
+	return 18;
 ];
 

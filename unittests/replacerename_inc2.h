@@ -1,5 +1,5 @@
-
-!System_file;
+! This include appears after the functions are called (so they are forward
+! definitions); it is not a system file.
 
 ! Will be replaced (entirely).
 [ funcbeta;
