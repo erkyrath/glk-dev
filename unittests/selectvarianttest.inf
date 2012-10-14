@@ -1,6 +1,7 @@
 Constant Story "SelectVariantTest";
 Constant Headline "Not a game.^";
 
+Release 2;
 
 Global mainwin = 0;
 Global notestream = 0;
@@ -32,7 +33,7 @@ Constant MAINWIN_ROCK 100;
   mainloop();
 ];
 
-[ mainloop val;
+[ mainloop val res;
 
   while (true) {
     print "^>";
@@ -68,6 +69,16 @@ Constant MAINWIN_ROCK 100;
     else if (val == 'u') {
         print "^You pressed 'u'.^^";
         reopen_notestream(true);
+        continue;
+    }
+    else if (val == 'm') {
+        print "^You pressed 'm'.^^";
+        @getmemsize val;
+		val = val + 256;
+		print "Increasing memory size to ", val, ".^";
+		@setmemsize val res;
+		if (res)
+			print "...Failed!^";
         continue;
     }
     
@@ -125,8 +136,9 @@ Constant MAINWIN_ROCK 100;
     These cases are not difficult for an interpreter to handle, but they
     get strange if you autosave at input time (as the iOS interpreter
     does). This test allows me to check that.^^";
-  print "All input is single-key. Most keys are simply echoed. ~0~, ~1~,
+  print "All input is single-key. Most keys are simply echoed. ~0~, ~2~,
     ~a~, ~b~ set up the next key-read with an unusual opcode structure.
+	~m~ increases the memory map size.
     ~c~ or ~u~ prints out a log of all keys hit (since the beginning, or
     the last ~c/u~). The next log is kept as a memory char stream for ~c~,
     a memory unicode stream for ~u~.^^";
