@@ -1,0 +1,167 @@
+Constant Story "ResizeMemStreamTest";
+Constant Headline "Not a game.^";
+
+Release 1;
+
+Global gg_mainwin;
+Constant HDR_GLULXVERSION  $04;     ! long word
+Constant ROM_GAMERELEASE   $34;     ! short word
+Constant ROM_GAMESERIAL    $36;     ! six ASCII characters
+
+Array gg_event --> 4;
+
+Global failures;
+
+[ Main;
+	@setiosys 2 0;
+	@push 201; @push 3; @push 0; @push 0; @push 0;
+	@glk $0023 5 gg_mainwin;
+
+	@push gg_mainwin;
+	@glk $002F 1 0;
+
+	Banner();
+	new_line;
+	RoomDesc();
+	RunTest();
+];
+
+[ Banner  ix;
+    if (Story ~= 0) {
+        #ifdef TARGET_ZCODE;
+        #ifV5; style bold; #Endif;
+        print (string) Story;
+        #ifV5; style roman; #Endif;
+        #ifnot; ! TARGET_GLULX;
+        glk($0086, 3); ! set header style
+        print (string) Story;
+        glk($0086, 0); ! set normal style
+        #Endif; ! TARGET_
+    }
+    if (Headline ~= 0) print ": ", (string) Headline;
+    #ifdef TARGET_ZCODE;
+    print "Release ", (HDR_GAMERELEASE-->0) & $03ff, " / Serial number ";
+    for (ix=0 : ix<6 : ix++) print (char) HDR_GAMESERIAL->ix;
+    #ifnot; ! TARGET_GLULX;
+    print "Release ";
+    @aloads ROM_GAMERELEASE 0 ix;
+    print ix;
+    print " / Serial number ";
+    for (ix=0 : ix<6 : ix++) print (char) ROM_GAMESERIAL->ix;
+    #Endif; ! TARGET_
+    print " / Inform v"; inversion;
+    print ", compiler options ";
+    ix = false;
+    #ifdef STRICT_MODE;
+    print "S"; ix++;
+    #Endif; ! STRICT_MODE
+    #ifdef INFIX;
+    print "X"; ix++;
+    #ifnot;
+    #ifdef DEBUG;
+    print "D"; ix++;
+    #Endif; ! DEBUG
+    #Endif; ! INFIX
+    if (~~ix) print "(none)";
+    new_line;
+
+    #ifdef TARGET_GLULX;
+    @gestalt 1 0 ix;
+    print "Interpreter version ", ix / $10000, ".", (ix & $FF00) / $100,
+    ".", ix & $FF, " / ";
+    @gestalt 0 0 ix;
+    print "VM ", ix / $10000, ".", (ix & $FF00) / $100, ".", ix & $FF, " / ";
+    ix = HDR_GLULXVERSION-->0;
+    print "game file format ", ix / $10000, ".", (ix & $FF00) / $100, ".", ix & $FF, "^";
+    #Endif; ! TARGET_GLULX
+];
+
+[ check_value val1 val2;
+	print val1;
+	if (val1 ~= val2) {
+		failures++;
+		print " (ERROR, should be ", val2, ")";
+	}
+];
+
+Constant BUFLEN 256;
+Array ubuffer --> BUFLEN;
+Array buffer -> BUFLEN;
+
+[ RoomDesc;
+	print "A voice booooms out: Welcome to the test chamber.^^";
+	print "This tests a memory-pointer bug in Glulxe (which has also been
+		imported into Git, because it's in glkop.c). If a char array
+		is held open while memory is resized, the underlying realloc()
+		may yank the memory map out from under the array. (Examples of
+		an open char array: an open char memory stream or an open char
+		line input request.) This can result in writing to random memory
+		and corrupting the (libc) heap.^^";
+	print "This bug should be fixed in Glulxe 0.5.0 and later.^^";
+];
+
+[ RunTest str size res;
+	@gestalt 2 0 res;
+	if (~~res) {
+		print "This interpreter does not support @@64setmemsize, so it is
+			safe from the bug. Or at least, this test cannot demonstrate
+			it.^";
+		return;
+	}
+
+	print "Opening a unichar stream. This should not fail even on old
+		interpreters.^";
+	str = glk($0139, ubuffer, BUFLEN, 1, 0); ! stream_open_memory_uni
+	glk($0081, str, 'X'); ! put_char_stream
+	glk($0081, str, 'Y'); ! put_char_stream
+	@getmemsize size;
+	size = size + 1024;
+	print "Resizing to ", size, "...^";
+	@setmemsize size res;
+	if (res) {
+		failures++;
+		print "ERROR: unable to resize memory!^";
+	}
+	glk($0081, str, 'Z'); ! put_char_stream
+	glk($0081, str, 'W'); ! put_char_stream
+
+	glk($0044, str, gg_event); ! stream_close
+	str = 0;
+	print "Chars written: "; check_value(gg_event-->1, 4);
+	print ": "; check_value(ubuffer-->0, 'X');
+	print " "; check_value(ubuffer-->1, 'Y');
+	print " "; check_value(ubuffer-->2, 'Z');
+	print " "; check_value(ubuffer-->3, 'W'); print "^";
+
+	
+	print "Opening a char stream. This will probably fail on older
+		interpreters.^";
+	str = glk($0043, buffer, BUFLEN, 1, 0); ! stream_open_memory
+	glk($0081, str, 'x'); ! put_char_stream
+	glk($0081, str, 'y'); ! put_char_stream
+	@getmemsize size;
+	size = size + 1024;
+	print "Resizing to ", size, "...^";
+	@setmemsize size res;
+	if (res) {
+		failures++;
+		print "ERROR: unable to resize memory!^";
+	}
+	glk($0081, str, 'z'); ! put_char_stream
+	glk($0081, str, 'w'); ! put_char_stream
+
+	glk($0044, str, gg_event); ! stream_close
+	str = 0;
+	print "Chars written: "; check_value(gg_event-->1, 4);
+	print ": "; check_value(buffer->0, 'x');
+	print " "; check_value(buffer->1, 'y');
+	print " "; check_value(buffer->2, 'z');
+	print " "; check_value(buffer->3, 'w'); print "^";
+		
+    if (failures) {
+        print "^FAILED with ", failures, " errors.^";
+    }
+	else {
+		print "^Test passed.^";
+	}
+];
