@@ -284,20 +284,9 @@ Constant constantname 77;
 
 	print "constantname: "; check_value(constantname, 77); print "^";
 	
-! #Object bar with prop  2;
-! #Stub zork 3;
-
 	new_line;
 	if (failures == 0)
 		print "All passed.^";
 	else
 		print failures, " errors!^";
 ];
-
-
-
-
-
-
-  
-  
