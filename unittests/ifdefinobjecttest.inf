@@ -1,0 +1,303 @@
+Constant Story "IfdefInObjectTest";
+Constant Headline "Not a game.^";
+
+Release 1;
+
+! This is a compiler unit test for the ability to #ifdef within an
+! object definition.
+
+#ifdef TARGET_ZCODE;
+Constant HDR_GAMERELEASE      = $02;     ! word
+Constant HDR_GAMESERIAL       = $12;     ! six ASCII characters
+#ifnot;
+Global gg_mainwin;
+Constant HDR_GLULXVERSION  $04;     ! long word
+Constant ROM_GAMERELEASE   $34;     ! short word
+Constant ROM_GAMESERIAL    $36;     ! six ASCII characters
+#endif; ! TARGET_GLULX
+
+Global failures;
+
+[ Main;
+    #ifdef TARGET_GLULX;
+	@setiosys 2 0;
+	@push 201; @push 3; @push 0; @push 0; @push 0;
+	@glk $0023 5 gg_mainwin;
+
+	@push gg_mainwin;
+	@glk $002F 1 0;
+    #endif; ! TARGET_GLULX
+
+	Banner();
+	new_line;
+	RunTest();
+];
+
+[ Banner  ix;
+    if (Story ~= 0) {
+        #ifdef TARGET_ZCODE;
+        #ifV5; style bold; #Endif;
+        print (string) Story;
+        #ifV5; style roman; #Endif;
+        #ifnot; ! TARGET_GLULX;
+        glk($0086, 3); ! set header style
+        print (string) Story;
+        glk($0086, 0); ! set normal style
+        #Endif; ! TARGET_
+    }
+    if (Headline ~= 0) print ": ", (string) Headline;
+    #ifdef TARGET_ZCODE;
+    print "Release ", (HDR_GAMERELEASE-->0) & $03ff, " / Serial number ";
+    for (ix=0 : ix<6 : ix++) print (char) HDR_GAMESERIAL->ix;
+    #ifnot; ! TARGET_GLULX;
+    print "Release ";
+    @aloads ROM_GAMERELEASE 0 ix;
+    print ix;
+    print " / Serial number ";
+    for (ix=0 : ix<6 : ix++) print (char) ROM_GAMESERIAL->ix;
+    #Endif; ! TARGET_
+    print " / Inform v"; inversion;
+    print ", compiler options ";
+    ix = false;
+    #ifdef STRICT_MODE;
+    print "S"; ix++;
+    #Endif; ! STRICT_MODE
+    #ifdef INFIX;
+    print "X"; ix++;
+    #ifnot;
+    #ifdef DEBUG;
+    print "D"; ix++;
+    #Endif; ! DEBUG
+    #Endif; ! INFIX
+    if (~~ix) print "(none)";
+    new_line;
+
+    #ifdef TARGET_GLULX;
+    @gestalt 1 0 ix;
+    print "Interpreter version ", ix / $10000, ".", (ix & $FF00) / $100,
+    ".", ix & $FF, " / ";
+    @gestalt 0 0 ix;
+    print "VM ", ix / $10000, ".", (ix & $FF00) / $100, ".", ix & $FF, " / ";
+    ix = HDR_GLULXVERSION-->0;
+    print "game file format ", ix / $10000, ".", (ix & $FF00) / $100, ".", ix & $FF, "^";
+    #ifnot;
+    print "Game file format ", 0->0, ".^";
+    #Endif; ! TARGET_GLULX
+];
+
+[ check_value val1 val2;
+	print val1;
+	if (val1 ~= val2) {
+		failures++;
+		print " (ERROR, should be ", val2, ")";
+	}
+];
+
+Constant IS_DEFINED 1;
+
+Attribute attr1;
+Attribute attr2;
+Attribute attr3;
+Attribute attr4;
+
+! Simple case.
+Object obj1
+  has attr1,
+  has attr2 attr3;
+
+! ifdef out the attributes.
+Object obj2
+#ifdef NOT_DEFINED;
+  has attr1,
+  has attr2 attr3,
+#endif;
+;
+
+! ifdef specific "has" lines.
+Object obj3
+#ifdef IS_DEFINED;
+  has attr1,
+#ifnot;
+  has attr2,
+#endif;
+  has attr3;
+
+! ifdef specific entries within a "has" line.
+Object obj4
+  has
+#ifdef IS_DEFINED;
+    attr2
+#ifnot;
+    attr3
+#endif;
+    attr4;
+
+Property prop1;
+Property prop2;
+Property prop3;
+Property prop4;
+	
+! Simple case.
+Object obj5
+  with prop1 3,
+    prop2 4,
+	prop3 5;
+
+! ifdef out the attributes.
+Object obj6
+#ifdef NOT_DEFINED;
+  with prop1 3,
+    prop2 4,
+	prop3 5;
+#endif;
+;
+
+! ifdef specific "with" lines.
+Object obj7
+#ifdef IS_DEFINED;
+  with prop1 4,
+#ifnot;
+  with prop2 5,
+#endif;
+  with prop3 6;
+
+! ifdef specific entries within a "with" line.
+Object obj8
+  with
+#ifdef IS_DEFINED;
+    prop2 2,
+#ifnot;
+    prop3 3,
+#endif;
+    prop4 4;
+
+Class cla1
+  has attr1,
+#ifdef NOT_DEFINED;
+  has attr2,
+#endif;
+  with prop1 11,
+#ifdef NOT_DEFINED;
+  with prop2 22,
+#ifnot;
+  with prop3 33,
+#endif;
+;
+
+Class cla2
+  has attr4,
+  with prop2 99;
+
+! Inherit a class which itself has some lines ifdeffed out.
+Object obj9
+  class cla1;
+
+! Ifdef out the inheritance of a class.
+Object obj10
+#ifdef NOT_DEFINED;
+  class cla2
+#endif;
+  has attr1,
+  with prop1 1;
+
+! Ifdef out specific entries within a class line
+Object obj11
+  class
+#ifdef NOT_DEFINED;
+    cla1
+#ifnot;
+    cla2
+#endif;
+  has attr3;
+
+! An ifdeffed out property declaration doesn't define a property at all.
+Object obj12
+  with
+#ifndef IS_DEFINED;
+    constantname,
+#endif;
+;
+
+! Since constantname is not defined, it's legal to define it here.
+Constant constantname 77;
+
+[ RunTest;
+	print "obj1 has attr1: "; check_value(obj1 has attr1, 1); print "^";
+	print "obj1 has attr2: "; check_value(obj1 has attr2, 1); print "^";
+	print "obj1 has attr3: "; check_value(obj1 has attr3, 1); print "^";
+	print "obj1 has attr4: "; check_value(obj1 has attr4, 0); print "^";
+
+	print "obj2 has attr1: "; check_value(obj2 has attr1, 0); print "^";
+	print "obj2 has attr2: "; check_value(obj2 has attr2, 0); print "^";
+	print "obj2 has attr3: "; check_value(obj2 has attr3, 0); print "^";
+	print "obj2 has attr4: "; check_value(obj2 has attr4, 0); print "^";
+
+	print "obj3 has attr1: "; check_value(obj3 has attr1, 1); print "^";
+	print "obj3 has attr2: "; check_value(obj3 has attr2, 0); print "^";
+	print "obj3 has attr3: "; check_value(obj3 has attr3, 1); print "^";
+	print "obj3 has attr4: "; check_value(obj3 has attr4, 0); print "^";
+
+	print "obj4 has attr1: "; check_value(obj4 has attr1, 0); print "^";
+	print "obj4 has attr2: "; check_value(obj4 has attr2, 1); print "^";
+	print "obj4 has attr3: "; check_value(obj4 has attr3, 0); print "^";
+	print "obj4 has attr4: "; check_value(obj4 has attr4, 1); print "^";
+
+	print "obj5.prop1: "; check_value(obj5.prop1, 3); print "^";
+	print "obj5.prop2: "; check_value(obj5.prop2, 4); print "^";
+	print "obj5.prop3: "; check_value(obj5.prop3, 5); print "^";
+	print "obj5.prop4: "; check_value(obj5.prop4, 0); print "^";
+	
+	print "obj6.prop1: "; check_value(obj6.prop1, 0); print "^";
+	print "obj6.prop2: "; check_value(obj6.prop2, 0); print "^";
+	print "obj6.prop3: "; check_value(obj6.prop3, 0); print "^";
+	print "obj6.prop4: "; check_value(obj6.prop4, 0); print "^";
+	
+	print "obj7.prop1: "; check_value(obj7.prop1, 4); print "^";
+	print "obj7.prop2: "; check_value(obj7.prop2, 0); print "^";
+	print "obj7.prop3: "; check_value(obj7.prop3, 6); print "^";
+	print "obj7.prop4: "; check_value(obj7.prop4, 0); print "^";
+	
+	print "obj8.prop1: "; check_value(obj8.prop1, 0); print "^";
+	print "obj8.prop2: "; check_value(obj8.prop2, 2); print "^";
+	print "obj8.prop3: "; check_value(obj8.prop3, 0); print "^";
+	print "obj8.prop4: "; check_value(obj8.prop4, 4); print "^";
+
+	print "obj9 has attr1: "; check_value(obj9 has attr1, 1); print "^";
+	print "obj9 has attr2: "; check_value(obj9 has attr2, 0); print "^";
+	print "obj9.prop1: "; check_value(obj9.prop1, 11); print "^";
+	print "obj9.prop2: "; check_value(obj9.prop2, 0); print "^";
+	print "obj9.prop3: "; check_value(obj9.prop3, 33); print "^";
+
+	print "obj10 has attr1: "; check_value(obj10 has attr1, 1); print "^";
+	print "obj10 has attr2: "; check_value(obj10 has attr2, 0); print "^";
+	print "obj10 has attr4: "; check_value(obj10 has attr4, 0); print "^";
+	print "obj10.prop1: "; check_value(obj10.prop1, 1); print "^";
+	print "obj10.prop2: "; check_value(obj10.prop2, 0); print "^";
+	
+	print "obj11 has attr1: "; check_value(obj11 has attr1, 0); print "^";
+	print "obj11 has attr2: "; check_value(obj11 has attr2, 0); print "^";
+	print "obj11 has attr3: "; check_value(obj11 has attr3, 1); print "^";
+	print "obj11 has attr4: "; check_value(obj11 has attr4, 1); print "^";
+	print "obj11.prop1: "; check_value(obj11.prop1, 0); print "^";
+	print "obj11.prop2: "; check_value(obj11.prop2, 99); print "^";
+	print "obj11.prop3: "; check_value(obj11.prop3, 0); print "^";
+
+	print "constantname: "; check_value(constantname, 77); print "^";
+	
+! #Object bar with prop  2;
+! #Stub zork 3;
+
+	new_line;
+	if (failures == 0)
+		print "All passed.^";
+	else
+		print failures, " errors!^";
+];
+
+
+
+
+
+
+  
+  
