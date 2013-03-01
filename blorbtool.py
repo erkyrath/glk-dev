@@ -78,7 +78,7 @@ class BlorbChunk:
             else:
                 return self.literaldata
         if (self.filedata):
-            fl = open(self.filedata)
+            fl = open(self.filedata, 'rb')
             if (self.filestart is not None):
                 fl.seek(self.filestart)
             if (max is not None):
@@ -213,7 +213,7 @@ class BlorbFile:
             
         self.changed = False
 
-        self.file = open(filename)
+        self.file = open(filename, 'rb')
         formchunk = Chunk(self.file)
         self.formchunk = formchunk
         
@@ -327,7 +327,7 @@ class BlorbFile:
                 return
         self.canonicalize()
         tmpfilename = self.outfilename + '~TEMP'
-        fl = open(tmpfilename, 'w')
+        fl = open(tmpfilename, 'wb')
         fl.write('FORM----IFRS')
         pos = 12
         for chunk in self.chunks:
@@ -520,7 +520,7 @@ class BlorbTool:
             if (not confirm_input('File %s exists. Overwrite?' % (outfilename,))):
                 print 'Cancelled.'
                 return
-        outfl = open(outfilename, 'w')
+        outfl = open(outfilename, 'wb')
         if (chunk.formtype and chunk.formtype != 'FORM'):
             # For an AIFF file, we must include the FORM/length header.
             # (Unless it's an overly nested AIFF.)
@@ -550,7 +550,7 @@ class BlorbTool:
         infilename = args[-1]
         if (infilename == blorbfile.filename):
             raise CommandError('You can\'t import the original blorb file as a chunk!')
-        fl = open(infilename)
+        fl = open(infilename, 'rb')
         filestart = None
         formtype = None
         dat = fl.read(5)
