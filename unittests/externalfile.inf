@@ -1,7 +1,7 @@
 Constant Story "ExternalFile";
 Constant Headline "Not a game.^";
 
-Release 6;
+Release 7;
 
 Global mainwin = 0;
 Constant BUFLEN = 80;
@@ -42,6 +42,8 @@ Constant ROM_GAMESERIAL    $36;     ! six ASCII characters
   
   if (errorcount)
     print "^", errorcount, " tests failed.^";
+  else
+    print "^All tests passed.^";
 ];
 
 [ Banner  i ix;
