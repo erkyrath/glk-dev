@@ -254,3 +254,27 @@ Include "replacerename_inc2sys";
 	return 18;
 ];
 
+! Finally, a list of cases which the compiler catches as errors.
+! Uncommenting any of these should result in at least one compiler error.
+
+! Can't replace Main__(), because it has to be the first compiled function.
+!Replace Main__;
+
+! Can't replace a function with itself.
+!Replace Func Func;
+
+! Can't replace a function to two different targets.
+!Replace Func Orig1;
+!Replace Func Orig2;
+
+! Can't chain replacements.
+!Replace Orig Zoom;
+!Replace Func Orig;
+
+! Can't chain replacements in the opposite order.
+!Replace Func Orig;
+!Replace Orig Zoom;
+
+! Can't replace two different functions to the same target.
+!Replace Func Orig;
+!Replace Bar Orig;
