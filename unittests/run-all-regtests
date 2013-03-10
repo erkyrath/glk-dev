@@ -1,0 +1,38 @@
+# Script to run every test I've got -- at least, all the ones whose output
+# can be checked by RegTest.
+
+# To run this:
+# python ~/src/plotex/regtest.py run-all-regtests
+#
+# (Or wherever you've installed regtest.py. Find this script at:
+# http://eblong.com/zarf/plotex/regtest.html )
+
+
+# You'll probably want to change this line to refer to a CheapGlk Glulxe
+# binary.
+** interpreter: /Users/zarf/bin/glulxec -q -u
+
+# RegTest really wants to have a global game file, so glulxercise is it.
+# This will be changed in most of the tests.
+** game: glulxercise.ulx
+
+
+* glulxercise
+> look
+A voice booooms out: Welcome to the test chamber.
+> all
+All tests passed.
+!FAIL
+
+* unicodetest
+** game: unicodetest.ulx
+> read big sign
+AEIOU with umlauts: ÄËÏÖÜ
+aeiou with umlauts: äëïöü
+Greek: αβγδε (abgde)
+Hebrew: אבגדמ (abgdm... the aleph should be on the right)
+Punctuation: ‘single curly quotes’ “double curly quotes”
+Ligatures: æ (ae) œ (oe) ŋ (nj) ﬀ (ff) ﬁ (fi) ﬃ (ffi) ﬄ (ffl)
+Hirigana: おすも (O SU MO)
+Katakana: オスモ (O SU MO)
+
