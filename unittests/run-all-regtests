@@ -332,6 +332,14 @@ Read line of 0 chars
 (Read from unicode char stream: 35 chars)
 
 
+* resizememstreamtest
+** game: resizememstreamtest.ulx
+ResizeMemStreamTest
+
+Test passed.
+!FAIL
+
+
 ## External file and resource stream tests
 
 
