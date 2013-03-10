@@ -64,7 +64,9 @@ Constant ROM_GAMESERIAL    $36;     ! six ASCII characters
   
   ResStreamTest();
 
-  if (errorcount)
+  if (errorcount == 0)
+    print "^All tests passed.^";
+  else
     print "^", errorcount, " tests failed.^";
 ];
 
