@@ -36,3 +36,30 @@ Ligatures: æ (ae) œ (oe) ŋ (nj) ﬀ (ff) ﬁ (fi) ﬃ (ffi) ﬄ (ffl)
 Hirigana: おすも (O SU MO)
 Katakana: オスモ (O SU MO)
 
+* unicasetest
+** game: unicasetest.ulx
+> all
+All tests okay.
+!FAIL
+
+* unidicttest
+** game: unidicttest.ulx
+> dict
+Each entry is 48 bytes long, including 9 (4-byte) characters.
+'äëïöü'
+'αβγδε'
+'брать' (verb) (action 251)
+'אבגדמ'
+'おすも'
+> one two three
+Divided up: one two three
+Tokenized: (???) (???) (???)
+> x äëïöü
+Divided up: x äëïöü
+Tokenized: 'x' 'äëïöü'
+> брать αβγδε おすも
+Divided up: брать αβγδε おすも
+Tokenized: 'брать' 'αβγδε' 'おすも'
+> tenletterz version x
+Divided up: tenletterz version x
+Tokenized: 'tenletter' 'version' 'x'
