@@ -1,10 +1,13 @@
-Constant Story "UndefDirectiveTest";
+Constant Story "EndEndsIncludeTest";
 Constant Headline "Not a game.^";
 
 Release 1;
 
 ! This is a compiler unit test for the feature where the #end directive
 ! only ends the current file, when found in an include file.
+
+! ### Note: this feature never made it into the compiler, so this test
+! ### doesn't currently work.
 
 #ifdef TARGET_ZCODE;
 Constant HDR_GAMERELEASE      = $02;     ! word
