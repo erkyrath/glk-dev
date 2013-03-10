@@ -18,11 +18,14 @@
 
 
 * glulxercise
+Glulxercise
+
 > look
 A voice booooms out: Welcome to the test chamber.
 > all
 All tests passed.
 !FAIL
+
 
 * unicodetest
 ** game: unicodetest.ulx
@@ -36,14 +39,20 @@ Ligatures: æ (ae) œ (oe) ŋ (nj) ﬀ (ff) ﬁ (fi) ﬃ (ffi) ﬄ (ffl)
 Hirigana: おすも (O SU MO)
 Katakana: オスモ (O SU MO)
 
+
 * unicasetest
 ** game: unicasetest.ulx
+UniCaseTest
+
 > all
 All tests okay.
 !FAIL
 
+
 * unidicttest
 ** game: unidicttest.ulx
+UniDictTest
+
 > dict
 Each entry is 48 bytes long, including 9 (4-byte) characters.
 'äëïöü'
@@ -63,3 +72,56 @@ Tokenized: 'брать' 'αβγδε' 'おすも'
 > tenletterz version x
 Divided up: tenletterz version x
 Tokenized: 'tenletter' 'version' 'x'
+
+
+* unisourcetest
+** game: unisourcetest.ulx
+UniSourceTest
+
+"Simple ASCII" (12 chars)
+"AEIOU with umlauts: äëïöü ÄËÏÖÜ" (31 chars)
+"Greek: αβγδε (abgde)" (20 chars)
+"Hebrew: אבגדמ (abgdm)" (21 chars)
+"Punctuation: ‘single curly quotes’ “double curly quotes”" (56 chars)
+"Ligatures: æ (ae) œ (oe) ŋ (nj) ﬀ (ff) ﬁ (fi) ﬃ (ffi) ﬄ (ffl)" (61 chars)
+"Hirigana: おすも (O SU MO)" (23 chars)
+"Katakana: オスモ (O SU MO)" (23 chars)
+"CJK ideographs: 丂倀惿矢腄饧" (22 chars)
+
+Dict literals:
+
+'ascii'
+'hwæt'
+
+All tests passed.
+
+
+* dictflagtest
+** game: dictflagtest.ulx
+DictFlagTest
+
+Passed.
+!FAIL
+
+
+* externalfile
+** game: externalfile.ulx
+ExternalFile
+
+All tests passed.
+!ERROR
+!FAIL
+
+
+* datetimetest
+** game: datetimetest.ulx
+DateTimeTest
+
+> x calendar
+
+The first Moon landing: Sunday, Jul 20, 1969 at 8:17:40 pm (utc)
+The Unix epoch: Thursday, Jan 1, 1970 at 12:00:00 midnight (utc)
+Einstein's first time journey: Sunday, Oct 26, 1986 at 8:20:00 am (utc)
+The birthday of Inform 7: Sunday, Apr 30, 2006 at 5:48:09 pm (utc)
+The American Tricentennial: Saturday, Jul 4, 2076 at 12:00:00 noon (utc)
+The longest solar eclipse of the millennium: Sunday, Jul 16, 2186 at 3:08:05 pm (utc)
