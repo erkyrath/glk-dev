@@ -352,6 +352,14 @@ All tests passed.
 !FAIL
 
 
+* extbinaryfile
+** game: extbinaryfile.ulx
+ExtBinaryFile
+
+All tests passed.
+!ERROR
+
+
 * resstreamtest
 ** game: resstreamtest.gblorb
 

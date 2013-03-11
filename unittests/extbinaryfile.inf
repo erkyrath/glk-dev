@@ -159,7 +159,7 @@ Constant ROM_GAMESERIAL    $36;     ! six ASCII characters
 [ compare_string buf blen val   len ix;
     len = val.print_to_array(buffer2, BUFLEN);
     if (len ~= blen) {
-        print "ERROR: String does not match -- wrong length: ", len, ", not ", blen, "^";
+        print "ERROR: String does not match -- wrong length: ", blen, ", not ", len, "^";
         errorcount++;
         return;
     }
@@ -175,13 +175,29 @@ Constant ROM_GAMESERIAL    $36;     ! six ASCII characters
 [ compare_buffer buf blen bufarr   len ix;
 	len = bufarr->0;
     if (len ~= blen) {
-        print "ERROR: String does not match -- wrong length: ", len, ", not ", blen, "^";
+        print "ERROR: String does not match -- wrong length: ", blen, ", not ", len, "^";
         errorcount++;
         return;
     }
     for (ix=0 : ix<len : ix++) {
         if (buf->ix ~= bufarr->(1+ix)) {
             print "ERROR: String does not match -- character ", ix, " is ", (char) buf->ix, ", not ", (char) bufarr->(1+ix), "^";
+            errorcount++;
+            return;
+        }
+    }
+];
+
+[ compare_ubuffer buf blen bufarr   len ix;
+	len = bufarr-->0;
+    if (len ~= blen) {
+        print "ERROR: String does not match -- wrong length: ", blen, ", not ", len, "^";
+        errorcount++;
+        return;
+    }
+    for (ix=0 : ix<len : ix++) {
+        if (buf-->ix ~= bufarr-->(1+ix)) {
+            print "ERROR: String does not match -- character ", ix, " is ", (char) buf-->ix, ", not ", (char) bufarr-->(1+ix), "^";
             errorcount++;
             return;
         }
@@ -211,10 +227,15 @@ Array fourintform string 0 0 0 'T' 0 0 0 'e' 0 0 0 's' 0 0 0 't'
 	0 0 0 'R' 0 0 0 'e' 0 0 0 $EB 0 0 0 'l' 0 0 0 $EE 0 0 0 't' 0 0 0 'y'
 	0 0 0 '-' 0 0 0 $A9 0 0 0 '.' 0 0 0 $0A;
 Array utf8form string 'T' 'e' 's' 't' ' ' $CE $B1 $CE $B2 $CE $B3
-	' ' $E3 $82 $AA $E3 $82 $B9 $E3 $83 $A1
+	' ' $E3 $82 $AA $E3 $82 $B9 $E3 $83 $A2
 	' ' $E2 $80 $9C 'x' $E2 $80 $9D '.' $0A
 	'R' 'e' $C3 $AB 'l' $C3 $AE 't' 'y' '-' $C2 $A9 '.' $0A;
-
+Array utableform table 'T' 'e' 's' 't' ' ' $3B1 $3B2 $3B3
+	' ' $30AA $30B9 $30E2 ' ' $201C 'x' $201D '.' $0A
+	'R' 'e' $EB 'l' $EE 't' 'y' '-' $A9 '.' $0A;
+Array utf8form2 string 'X' $C3 $A6 'Y' $CE $B4 'a' $C3 $A4 $C2 $A9 $0A
+	'b' $C3 $A5 $D0 $94 $E2 $82 $AC $E4 $B8 $82 $0A;
+	
 [ RunTest freftext frefbin name str len;
 	name = "binfile";
 	freftext = make_fref(name, false);
@@ -227,6 +248,7 @@ Array utf8form string 'T' 'e' 's' 't' ' ' $CE $B1 $CE $B2 $CE $B3
 	write_chars_stream(str, "Test message.^Re@{EB}l@{EE}ty-@{A9}.^");
 	glk($0044, str, gg_result); ! stream_close
 	check_result_counts(0, 25);
+	buffer->8 = 0;
 	str = open_file(frefbin, name, filemode_Read);
 	len = glk($0092, str, buffer, BUFLEN); ! get_buffer_stream
     glk($0044, str, gg_result); ! stream_close
@@ -239,6 +261,7 @@ Array utf8form string 'T' 'e' 's' 't' ' ' $CE $B1 $CE $B2 $CE $B3
 	write_unichars_stream(str, "Test @{3B1}x@{201C}x@{201D}.^Re@{EB}l@{EE}ty-@{A9}.^");
 	glk($0044, str, gg_result); ! stream_close
 	check_result_counts(0, 23);
+	buffer->8 = 0;
 	str = open_file(frefbin, name, filemode_Read);
 	len = glk($0092, str, buffer, BUFLEN); ! get_buffer_stream
     glk($0044, str, gg_result); ! stream_close
@@ -251,13 +274,25 @@ Array utf8form string 'T' 'e' 's' 't' ' ' $CE $B1 $CE $B2 $CE $B3
 	write_unichars_stream(str, stringform);
 	glk($0044, str, gg_result); ! stream_close
 	check_result_counts(0, 29);
+	buffer->8 = 0;
 	str = open_file(frefbin, name, filemode_Read);
 	len = glk($0092, str, buffer, BUFLEN); ! get_buffer_stream
     glk($0044, str, gg_result); ! stream_close
     check_result_counts(4*29, 0);
     compare_buffer(buffer, len, fourintform);
 
-	!### write word/binary, read word/binary. (Identical.)
+	print "* Write in word/binary mode, then read it back in word/binary.^";
+	! Result should be identical
+	str = open_file_uni(frefbin, name, filemode_Write);
+	write_unichars_stream(str, stringform);
+	glk($0044, str, gg_result); ! stream_close
+	check_result_counts(0, 29);
+	ubuffer-->8 = 0;
+	str = open_file_uni(frefbin, name, filemode_Read);
+	len = glk($00131, str, ubuffer, BUFLEN); ! get_buffer_stream_uni
+    glk($0044, str, gg_result); ! stream_close
+    check_result_counts(29, 0);
+    compare_ubuffer(ubuffer, len, utableform);
 
 	print "* Write in char/text mode, then read it back in char/binary.^";
 	! We will only write ASCII in this text, because newlines and accented
@@ -266,6 +301,7 @@ Array utf8form string 'T' 'e' 's' 't' ' ' $CE $B1 $CE $B2 $CE $B3
 	write_chars_stream(str, "A test message.");
 	glk($0044, str, gg_result); ! stream_close
 	check_result_counts(0, 15);
+	buffer->8 = 0;
 	str = open_file(frefbin, name, filemode_Read);
 	len = glk($0092, str, buffer, BUFLEN); ! get_buffer_stream
     glk($0044, str, gg_result); ! stream_close
@@ -278,12 +314,50 @@ Array utf8form string 'T' 'e' 's' 't' ' ' $CE $B1 $CE $B2 $CE $B3
 	write_unichars_stream(str, stringform);
 	glk($0044, str, gg_result); ! stream_close
 	check_result_counts(0, 29);
+	ubuffer-->8 = 0;
 	str = open_file(frefbin, name, filemode_Read);
 	len = glk($0092, str, buffer, BUFLEN); ! get_buffer_stream
     glk($0044, str, gg_result); ! stream_close
     check_result_counts(utf8form->0, 0);
     compare_buffer(buffer, len, utf8form);
 
-	!### write word/text, read word/text. (Parse UTF-8.)
+	print "* Write in word/text mode, using various calls.^";
+	! We will see UTF-8.
+	str = open_file_uni(freftext, name, filemode_Write);
+	glk($0081, str, 'X'); ! put_char_stream
+	glk($0081, str, $E6); ! put_char_stream
+	glk($012B, str, 'Y'); ! put_char_stream_uni
+	glk($012B, str, $3B4); ! put_char_stream_uni
+	buffer->0 = 'a';
+	buffer->1 = $E4;
+	buffer->2 = $A9;
+	glk($0085, str, buffer, 3); ! put_buffer_stream
+	glk($012B, str, $0A); ! put_char_stream_uni
+	ubuffer-->0 = 'b';
+	ubuffer-->1 = $E5;
+	ubuffer-->2 = $414;
+	ubuffer-->3 = $20AC;
+	ubuffer-->4 = $4E02;
+	glk($012D, str, ubuffer, 5); ! put_buffer_stream_uni
+	glk($0081, str, $0A); ! put_char_stream
+	glk($0044, str, gg_result); ! stream_close
+	check_result_counts(0, 14);
+	str = open_file(frefbin, name, filemode_Read);
+	len = glk($0092, str, buffer, BUFLEN); ! get_buffer_stream
+    glk($0044, str, gg_result); ! stream_close
+    check_result_counts(utf8form2->0, 0);
+    compare_buffer(buffer, len, utf8form2);
+
+	print "* Write in word/text mode, then read it back.^";
+	! Should be identical.
+	str = open_file_uni(freftext, name, filemode_Write);
+	write_unichars_stream(str, stringform);
+	glk($0044, str, gg_result); ! stream_close
+	check_result_counts(0, 29);
+	str = open_file_uni(freftext, name, filemode_Read);
+	len = glk($00131, str, ubuffer, BUFLEN); ! get_buffer_stream_uni
+    glk($0044, str, gg_result); ! stream_close
+    check_result_counts(29, 0);
+    compare_ubuffer(ubuffer, len, utableform);
 
 ];
