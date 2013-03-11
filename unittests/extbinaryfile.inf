@@ -204,6 +204,13 @@ Constant ROM_GAMESERIAL    $36;     ! six ASCII characters
     }
 ];
 
+[ check_value val1 val2;
+	if (val1 ~= val2) {
+        print "ERROR: Value wrong: ", val1, ", not ", val2, "^";
+        errorcount++;
+	}
+];
+
 [ check_result_counts readcount writecount;
     if (gg_result-->0 ~= readcount) {
         print "ERROR: Read count was wrong: ", gg_result-->0, ", not ", readcount, "^";
@@ -235,8 +242,9 @@ Array utableform table 'T' 'e' 's' 't' ' ' $3B1 $3B2 $3B3
 	'R' 'e' $EB 'l' $EE 't' 'y' '-' $A9 '.' $0A;
 Array utf8form2 string 'X' $C3 $A6 'Y' $CE $B4 'a' $C3 $A4 $C2 $A9 $0A
 	'b' $C3 $A5 $D0 $94 $E2 $82 $AC $E4 $B8 $82 $0A;
-	
-[ RunTest freftext frefbin name str len;
+Array utableform3 table 'H' $DF $3C9 $416 $A06 $10B4 $2026 $5009 $AC07 $1F600 $0A;
+
+[ RunTest freftext frefbin name str len ix val;
 	name = "binfile";
 	freftext = make_fref(name, false);
 	frefbin = make_fref(name, true);
@@ -360,4 +368,20 @@ Array utf8form2 string 'X' $C3 $A6 'Y' $CE $B4 'a' $C3 $A4 $C2 $A9 $0A
     check_result_counts(29, 0);
     compare_ubuffer(ubuffer, len, utableform);
 
+	print "* Write in word/text mode, char by char, then read it back.^";
+	! Should be identical.
+	str = open_file_uni(freftext, name, filemode_Write);
+	for (ix=1 : ix<=utableform3-->0 : ix++) {
+		glk($012B, str, utableform3-->ix); ! put_char_stream_uni
+	}
+	glk($0044, str, gg_result); ! stream_close
+	check_result_counts(0, utableform3-->0);
+	str = open_file_uni(freftext, name, filemode_Read);
+	for (ix=1 : ix<=utableform3-->0 : ix++) {
+		val = glk($0130, str); ! get_char_stream_uni
+		check_value(val, utableform3-->ix);
+	}
+    glk($0044, str, gg_result); ! stream_close
+    check_result_counts(utableform3-->0, 0);
+	
 ];
