@@ -1,7 +1,7 @@
 Constant Story "ExtBinaryFile";
 Constant Headline "Not a game.^";
 
-Release 1;
+Release 2;
 
 Global mainwin = 0;
 Constant BUFLEN = 160;
@@ -225,21 +225,31 @@ Constant ROM_GAMESERIAL    $36;     ! six ASCII characters
 Constant filemode_Write = 1;
 Constant filemode_Read = 2;
 
-Constant stringform = "Test @{3B1}@{3B2}@{3B3} @{30AA}@{30B9}@{30E2} @{201C}x@{201D}.^Re@{EB}l@{EE}ty-@{A9}.^";
+! This is a routine because I6's @{} notation (in strings) only handles up to
+! $FFFF. We want to test a character beyond that. The write_unichars_stream()
+! call accepts both strings and functions.
+[ stringform;
+	print "Test @{3B1}@{3B2}@{3B3} @{30AA}@{30B9}@{30E2} @{201C}x@{201D}.^Re@{EB}l@{EE}ty-@{A9}.^";
+	@streamunichar $1F607; ! Unicode SMILING FACE WITH HALO
+	new_line;
+];
+
 ! These are "string" arrays, so a length byte followed by data.
 Array fourintform string 0 0 0 'T' 0 0 0 'e' 0 0 0 's' 0 0 0 't'
 	0 0 0 ' ' 0 0 $03 $B1 0 0 $03 $B2 0 0 $03 $B3
 	0 0 0 ' ' 0 0 $30 $AA 0 0 $30 $B9 0 0 $30 $E2
 	0 0 0 ' ' 0 0 $20 $1C 0 0 0 'x' 0 0 $20 $1D 0 0 0 '.' 0 0 0 $0A
 	0 0 0 'R' 0 0 0 'e' 0 0 0 $EB 0 0 0 'l' 0 0 0 $EE 0 0 0 't' 0 0 0 'y'
-	0 0 0 '-' 0 0 0 $A9 0 0 0 '.' 0 0 0 $0A;
+	0 0 0 '-' 0 0 0 $A9 0 0 0 '.' 0 0 0 $0A
+	0 $01 $F6 $07 0 0 0 $0A;
 Array utf8form string 'T' 'e' 's' 't' ' ' $CE $B1 $CE $B2 $CE $B3
 	' ' $E3 $82 $AA $E3 $82 $B9 $E3 $83 $A2
 	' ' $E2 $80 $9C 'x' $E2 $80 $9D '.' $0A
-	'R' 'e' $C3 $AB 'l' $C3 $AE 't' 'y' '-' $C2 $A9 '.' $0A;
+	'R' 'e' $C3 $AB 'l' $C3 $AE 't' 'y' '-' $C2 $A9 '.' $0A
+	$F0 $9F $98 $87 $0A;
 Array utableform table 'T' 'e' 's' 't' ' ' $3B1 $3B2 $3B3
 	' ' $30AA $30B9 $30E2 ' ' $201C 'x' $201D '.' $0A
-	'R' 'e' $EB 'l' $EE 't' 'y' '-' $A9 '.' $0A;
+	'R' 'e' $EB 'l' $EE 't' 'y' '-' $A9 '.' $0A $1F607 $0A;
 Array utf8form2 string 'X' $C3 $A6 'Y' $CE $B4 'a' $C3 $A4 $C2 $A9 $0A
 	'b' $C3 $A5 $D0 $94 $E2 $82 $AC $E4 $B8 $82 $0A;
 Array utableform3 table 'H' $DF $3C9 $416 $A06 $10B4 $2026 $5009 $AC07 $1F600 $0A;
@@ -281,12 +291,12 @@ Array utableform3 table 'H' $DF $3C9 $416 $A06 $10B4 $2026 $5009 $AC07 $1F600 $0
 	str = open_file_uni(frefbin, name, filemode_Write);
 	write_unichars_stream(str, stringform);
 	glk($0044, str, gg_result); ! stream_close
-	check_result_counts(0, 29);
+	check_result_counts(0, 31);
 	buffer->8 = 0;
 	str = open_file(frefbin, name, filemode_Read);
 	len = glk($0092, str, buffer, BUFLEN); ! get_buffer_stream
     glk($0044, str, gg_result); ! stream_close
-    check_result_counts(4*29, 0);
+    check_result_counts(4*31, 0);
     compare_buffer(buffer, len, fourintform);
 
 	print "* Write in word/binary mode, then read it back in word/binary.^";
@@ -294,12 +304,12 @@ Array utableform3 table 'H' $DF $3C9 $416 $A06 $10B4 $2026 $5009 $AC07 $1F600 $0
 	str = open_file_uni(frefbin, name, filemode_Write);
 	write_unichars_stream(str, stringform);
 	glk($0044, str, gg_result); ! stream_close
-	check_result_counts(0, 29);
+	check_result_counts(0, 31);
 	ubuffer-->8 = 0;
 	str = open_file_uni(frefbin, name, filemode_Read);
 	len = glk($00131, str, ubuffer, BUFLEN); ! get_buffer_stream_uni
     glk($0044, str, gg_result); ! stream_close
-    check_result_counts(29, 0);
+    check_result_counts(31, 0);
     compare_ubuffer(ubuffer, len, utableform);
 
 	print "* Write in char/text mode, then read it back in char/binary.^";
@@ -321,7 +331,7 @@ Array utableform3 table 'H' $DF $3C9 $416 $A06 $10B4 $2026 $5009 $AC07 $1F600 $0
 	str = open_file_uni(freftext, name, filemode_Write);
 	write_unichars_stream(str, stringform);
 	glk($0044, str, gg_result); ! stream_close
-	check_result_counts(0, 29);
+	check_result_counts(0, 31);
 	ubuffer-->8 = 0;
 	str = open_file(frefbin, name, filemode_Read);
 	len = glk($0092, str, buffer, BUFLEN); ! get_buffer_stream
@@ -361,11 +371,11 @@ Array utableform3 table 'H' $DF $3C9 $416 $A06 $10B4 $2026 $5009 $AC07 $1F600 $0
 	str = open_file_uni(freftext, name, filemode_Write);
 	write_unichars_stream(str, stringform);
 	glk($0044, str, gg_result); ! stream_close
-	check_result_counts(0, 29);
+	check_result_counts(0, 31);
 	str = open_file_uni(freftext, name, filemode_Read);
 	len = glk($00131, str, ubuffer, BUFLEN); ! get_buffer_stream_uni
     glk($0044, str, gg_result); ! stream_close
-    check_result_counts(29, 0);
+    check_result_counts(31, 0);
     compare_ubuffer(ubuffer, len, utableform);
 
 	print "* Write in word/text mode, char by char, then read it back.^";
