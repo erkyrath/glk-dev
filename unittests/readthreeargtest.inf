@@ -1,0 +1,132 @@
+Constant Story "ReadThreeArgTest";
+Constant Headline "Not a game.^";
+
+Release 1;
+
+! This is a compiler unit test.
+
+#ifdef TARGET_ZCODE;
+Constant HDR_GAMERELEASE      = $02;     ! word
+Constant HDR_GAMESERIAL       = $12;     ! six ASCII characters
+#ifnot;
+Global gg_mainwin;
+Constant HDR_GLULXVERSION  $04;     ! long word
+Constant ROM_GAMERELEASE   $34;     ! short word
+Constant ROM_GAMESERIAL    $36;     ! six ASCII characters
+#endif; ! TARGET_GLULX
+
+Constant MAX_BUF = 40;
+Constant MAX_PARSE = 12;
+
+Array buffer -> (MAX_BUF + 2);
+Array parse --> (MAX_PARSE * 4 + 2);
+
+[ Main;
+    #ifdef TARGET_GLULX;
+	@setiosys 2 0;
+	@copy 201 sp; @copy 3 sp; @copy 0 sp; @copy 0 sp; @copy 0 sp;
+	@glk $0023 5 gg_mainwin;
+
+	@copy gg_mainwin sp;
+	@glk $002F 1 0;
+    #endif; ! TARGET_GLULX
+
+	Banner();
+	new_line;
+	RunTest();
+];
+
+[ Banner  ix;
+    if (Story ~= 0) {
+        #ifdef TARGET_ZCODE;
+        #ifV5; style bold; #Endif;
+        print (string) Story;
+        #ifV5; style roman; #Endif;
+        #ifnot; ! TARGET_GLULX;
+        glk($0086, 3); ! set header style
+        print (string) Story;
+        glk($0086, 0); ! set normal style
+        #Endif; ! TARGET_
+    }
+    if (Headline ~= 0) print ": ", (string) Headline;
+    #ifdef TARGET_ZCODE;
+    print "Release ", (HDR_GAMERELEASE-->0) & $03ff, " / Serial number ";
+    for (ix=0 : ix<6 : ix++) print (char) HDR_GAMESERIAL->ix;
+    #ifnot; ! TARGET_GLULX;
+    print "Release ";
+    @aloads ROM_GAMERELEASE 0 ix;
+    print ix;
+    print " / Serial number ";
+    for (ix=0 : ix<6 : ix++) print (char) ROM_GAMESERIAL->ix;
+    #Endif; ! TARGET_
+    print " / Inform v"; inversion;
+    print ", compiler options ";
+    ix = false;
+    #ifdef STRICT_MODE;
+    print "S"; ix++;
+    #Endif; ! STRICT_MODE
+    #ifdef INFIX;
+    print "X"; ix++;
+    #ifnot;
+    #ifdef DEBUG;
+    print "D"; ix++;
+    #Endif; ! DEBUG
+    #Endif; ! INFIX
+    if (~~ix) print "(none)";
+    new_line;
+
+    #ifdef TARGET_GLULX;
+    @gestalt 1 0 ix;
+    print "Interpreter version ", ix / $10000, ".", (ix & $FF00) / $100,
+    ".", ix & $FF, " / ";
+    @gestalt 0 0 ix;
+    print "VM ", ix / $10000, ".", (ix & $FF00) / $100, ".", ix & $FF, " / ";
+    ix = HDR_GLULXVERSION-->0;
+    print "game file format ", ix / $10000, ".", (ix & $FF00) / $100, ".", ix & $FF, "^";
+    #ifnot;
+    print "Game file format ", 0->0, ".^";
+    #Endif; ! TARGET_GLULX
+];
+
+
+[ sub;
+	!string 0 "bang!";
+	temp__global4 = 0;
+];
+
+![ read3;
+!	read buffer parse sub;
+!];
+
+![ read2;
+!	read buffer parse;
+!];
+
+[ RunTest;
+
+	buffer->0 = MAX_BUF;
+	(parse+0)->0 = MAX_PARSE;
+
+	print "^^^Are you sure?^";
+
+	for (::) {
+		print "^>";
+		!read3();
+		read buffer parse sub;
+
+		if ((parse+0)->1) {
+			if (parse-->1 == 'yes') {
+				print "Affirmative!^";
+				continue;
+			}
+			if (parse-->1 == 'no')  {
+				print "Negative!^";
+				continue;
+			}
+			print "That was an unknown word.^";
+			continue;
+		}
+		print "Please type something!^";
+	}
+	new_line;
+];

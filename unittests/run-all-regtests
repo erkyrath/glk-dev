@@ -474,3 +474,26 @@ ActionExtensionTest
 All passed.
 !error
 !ERROR
+
+* readthreeargtest
+** game: readthreeargtest.z5
+** interpreter: /Users/zarf/bin/fizmo-console
+ReadThreeArgTest
+
+> yes
+Affirmative!
+
+> no
+Negative!
+
+> dfg
+That was an unknown word.
+
+>
+Please type something!
+
+>   yes  
+Affirmative!
+
+>   no   
+Negative!
