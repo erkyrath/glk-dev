@@ -203,6 +203,23 @@ Dict literals:
 All tests passed.
 
 
+* unisourcetestb-ulx
+** game: unisourcetestb.ulx
+### I'm not testing unisourcetestb.z5 here because fizmo-console doesn't have a UTF-8 output mode.
+UniSourceTest
+
+Simple ASCII
+AEIOU with umlauts: äëïöü ÄËÏÖÜ
+Greek: αβγδε (abgde)
+Hebrew: אבגדמ (abgdm)
+Punctuation: ‘single curly quotes’ “double curly quotes”
+Ligatures: æ (ae) œ (oe) ŋ (nj) ﬀ (ff) ﬁ (fi) ﬃ (ffi) ﬄ (ffl)
+Hirigana: おすも (O SU MO)
+Katakana: オスモ (O SU MO)
+ascii
+hwæt
+
+
 * dictflagtest
 ** game: dictflagtest.ulx
 DictFlagTest
