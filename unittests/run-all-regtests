@@ -208,16 +208,28 @@ All tests passed.
 ### I'm not testing unisourcetestb.z5 here because fizmo-console doesn't have a UTF-8 output mode.
 UniSourceTest
 
-Simple ASCII
-AEIOU with umlauts: äëïöü ÄËÏÖÜ
-Greek: αβγδε (abgde)
-Hebrew: אבגדמ (abgdm)
-Punctuation: ‘single curly quotes’ “double curly quotes”
-Ligatures: æ (ae) œ (oe) ŋ (nj) ﬀ (ff) ﬁ (fi) ﬃ (ffi) ﬄ (ffl)
-Hirigana: おすも (O SU MO)
-Katakana: オスモ (O SU MO)
-ascii
-hwæt
+Lit: Simple ASCII
+Esc: Simple ASCII
+Lit: AEIOU with umlauts: äëïöü ÄËÏÖÜ
+Esc: AEIOU with umlauts: äëïöü ÄËÏÖÜ
+Lit: Greek: αβγδε (abgde)
+Esc: Greek: αβγδε (abgde)
+Lit: Hebrew: אבגדמ (abgdm)
+Esc: Hebrew: אבגדמ (abgdm)
+Lit: Punctuation: ‘single curly quotes’ “double curly quotes”
+Esc: Punctuation: ‘single curly quotes’ “double curly quotes”
+Lit: Ligatures: æ (ae) œ (oe) ŋ (nj) ﬀ (ff) ﬁ (fi) ﬃ (ffi) ﬄ (ffl)
+Esc: Ligatures: æ (ae) œ (oe) ŋ (nj) ﬀ (ff) ﬁ (fi) ﬃ (ffi) ﬄ (ffl)
+Lit: Hirigana: おすも (O SU MO)
+Esc: Hirigana: おすも (O SU MO)
+Lit: Katakana: オスモ (O SU MO)
+Esc: Katakana: オスモ (O SU MO)
+Lit: ascii
+Esc: ascii
+Lit: hwæt
+Esc: hwæt
+Lit: Foo ä æ!
+Esc: Foo ä æ!
 
 
 * chinesedicttest

@@ -90,17 +90,24 @@ Constant ROM_GAMESERIAL    $36;     ! six ASCII characters
 ];
 
 [ run_tests ix;
-  print "* Each of the following lines should appear twice, identically:^^";
+  print "* Each of the following lines should appear twice, identically, from the literal and escaped source text:^^";
   
   for (ix=0 : string_literals-->ix : ix=ix+2) {
-    print (string) string_literals-->ix, "^";
-    print (string) string_literals-->(ix+1), "^";
+    print "Lit: ", (string) string_literals-->ix, "^";
+    print "Esc: ", (string) string_literals-->(ix+1), "^";
   }
 
   for (ix=0 : dict_literals-->ix : ix=ix+2) {
-    print (address) dict_literals-->ix, "^";
-    print (address) dict_literals-->(ix+1), "^";
+    print "Lit: ", (address) dict_literals-->ix, "^";
+    print "Esc: ", (address) dict_literals-->(ix+1), "^";
   }
+
+  print "Lit: ";
+  for (ix=0 : ix<ascii_literal->0 : ix++) {
+    print (char) ascii_literal->(ix+1);
+  }
+  new_line;
+  print "Esc: ", (string) ascii_literal_repr, "^";
 ];
 
 
@@ -159,3 +166,6 @@ Array dict_literals -->
     'hwæt'
     'hw@{E6}t'
     0 0;
+
+Array ascii_literal string "Foo ä æ!";
+Constant ascii_literal_repr "Foo @:a @{E6}!";
