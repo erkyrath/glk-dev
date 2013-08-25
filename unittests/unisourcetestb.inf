@@ -4,6 +4,9 @@ Constant Headline "Not a game.^";
 ! This tests the Unicode source option (~-Cu~). With that flag, it should
 ! compile and display its output text correctly on both Zcode and Glulx.
 !
+! In Glulx, compiling without the switch will produce bad output. In
+! Z-code, it won't compile without the switch at all.
+!
 ! This does not check its output or report failure; you have to check it
 ! by eye. For a self-test, see unisourcetest.inf.
 
@@ -31,7 +34,7 @@ Constant ROM_GAMESERIAL    $36;     ! six ASCII characters
   Banner();
   new_line;
 
-  print "NOTE: This test will only work right if compiled with the new ~inform -Cu~ switch.^^";
+  print "NOTE: This test will only work right if compiled with the new ~inform -Cu~ switch.)^^";
 
   run_tests();
 ];
