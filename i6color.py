@@ -44,15 +44,15 @@ SBIT_NO_DONTKNOW       = 0xFFFFFFFF ^ SBIT_DONTKNOW
 # Color constants. These are single-character strings, suitable for printing
 # by the print_as_lines() function. The algorithm just uses them as constants,
 # though.
-COL_FOREGROUND    = '.'
-COL_SINGLEQUOTE   = '\''
-COL_DOUBLEQUOTE   = '"'
-COL_COMMENT       = '!'
-COL_PROPERTY      = 'p'
-COL_DIRECTIVE     = 'D'
-COL_FUNCTION      = 'F'
-COL_FUNCTIONDELIM = 'f'
-COL_CODE          = 'C'
+COL_FOREGROUND    = '.'  # data at the top level
+COL_SINGLEQUOTE   = '\'' # a single-quoted string constant (dict word)
+COL_DOUBLEQUOTE   = '"'  # a double-quoted string constant
+COL_COMMENT       = '!'  # a comment
+COL_PROPERTY      = 'p'  # a property name
+COL_DIRECTIVE     = 'D'  # a directive keyword
+COL_FUNCTION      = 'F'  # the name of a function
+COL_FUNCTIONDELIM = 'f'  # the brackets delimiting a function body
+COL_CODE          = 'C'  # code or data within a function
 
 class I6ColorSpan:
     """I6ColorSpan: Represents one "span" of text -- a string of characters
@@ -409,7 +409,7 @@ popt = optparse.OptionParser()
 (opts, args) = popt.parse_args()
 
 if not args:
-    print 'Usage: i6color source.inf'
+    print 'Usage: i6color.py source.inf'
     sys.exit(-1)
 
 fl = open(args[0], 'U')
