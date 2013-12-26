@@ -61,7 +61,7 @@ class I6ColorSpan:
     Spans do not extend across multiple lines. (That is, you can have two
     adjacent spans of the same style, if there's a line break in the source
     between them). The span object never contains line breaks. Instead,
-    they're indicated by the startline field: a nonzero value indicates
+    they're indicated by the startline field: a nonfalse value indicates
     that this span is the start of a new line. If the value is greater than
     1, it indicates how many blank lines occur before the span.
     """
@@ -72,7 +72,10 @@ class I6ColorSpan:
     def __repr__(self):
         prefix = ''
         if self.startline:
-            prefix = 'NL:'
+            if self.startline > 1:
+                prefix = '%d*NL:' % (self.startline,)
+            else:
+                prefix = 'NL:'
         return '<%s%s: %s>' % (prefix,
                                I6SyntaxColor.color_names[self.color],
                                repr(self.text))
@@ -125,7 +128,7 @@ class I6SyntaxColor:
         color = COL_DIRECTIVE
         spans = []
     
-        startline = True
+        startline = 1
         ls = []
         
         while True:
@@ -143,24 +146,24 @@ class I6SyntaxColor:
                 ls = ls[ -backdist : ]
                 if prels:
                     spans.append(I6ColorSpan(''.join(prels), color, startline))
-                    startline = False
+                    startline = 0
                 color = backcol
             newcol = self.charcolor(state, ch)
             if newcol != color or ch == '\n':
                 if ls:
                     spans.append(I6ColorSpan(''.join(ls), color, startline))
                     ls = []
-                    startline = False
+                    startline = 0
                 color = newcol
             if ch == '\n':
-                startline = True
+                startline += 1
             else:
                 ls.append(ch)
             
         if ls:
             spans.append(I6ColorSpan(''.join(ls), color, startline))
             ls = []
-            startline = False
+            startline = 0
     
         return spans
     
@@ -387,19 +390,35 @@ def print_as_lines(spans):
 
         Object bar class Superclass;
         DDDDDD.....DDDDD.ppppppppppD
+
+    Because of the slightly goofy representation of line breaks in our
+    spans array, this trims blank lines at the very beginning and end of
+    the program.
     """
-    texts = []
-    colors = []
+    texts = None
+    colors = None
     for span in spans:
-        if span.startline:
+        if texts is None:
+            # Very first line: there's no accumulated data to print.
+            # Set up the accumulator arrays.
+            texts = []
+            colors = []
+        elif span.startline:
+            # Start of a line (after the first). Print the accumulated
+            # data from the preceding line. Then clear the arrays.
             print ''.join(texts)
             print ''.join(colors)
             texts = []
             colors = []
+            if span.startline > 1:
+                # Python's print statement adds an extra newline, plus
+                # there was a newline after the print statements above.
+                print '\n' * (span.startline-2)
         text = span.text.replace('\t', '    ')
         coltext = span.color * len(text)
         texts.append(text)
         colors.append(coltext)
+    # The last line's accumulated data needs to be printed.
     print ''.join(texts)
     print ''.join(colors)
 
