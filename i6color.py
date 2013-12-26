@@ -1,20 +1,22 @@
 #!/usr/bin/env python
 
-# http://inform-fiction.org/source/tm/chapter12.txt
+"""
+Python implementation of the Inform 6 syntax-coloring algorithm.
+Written by Andrew Plotkin (erkyrath@eblong.com).
+This code is in the public domain.
+
+This is based on Graham Nelson's algorithm in the Inform Technical Manual
+(http://inform-fiction.org/source/tm/chapter12.txt). However, that chapter
+is not completely clear, and requires some tweaks for correctness as well.
+Andrew Hunter's code in the MacOS I7 IDE was helpful in resolving the
+issues.
+"""
 
 import sys
 import optparse
 
-popt = optparse.OptionParser()
-(opts, args) = popt.parse_args()
-
-if not args:
-    print 'Usage: i6color source.inf'
-    sys.exit(-1)
-
 # Bit flags. It's probably silly to use a bitmask flag-set in Python,
 # but I'm doing it. I precompute all the "not bit" values as well.
-
 SBIT_COMMENT        = 1 << 16
 SBIT_SINGLEQUOTE    = 1 << 17
 SBIT_DOUBLEQUOTE    = 1 << 18
@@ -39,28 +41,46 @@ SBIT_NO_AFTERRESTART   = 0xFFFFFFFF ^ SBIT_AFTERRESTART
 SBIT_NO_WAITDIRECT     = 0xFFFFFFFF ^ SBIT_WAITDIRECT
 SBIT_NO_DONTKNOW       = 0xFFFFFFFF ^ SBIT_DONTKNOW
 
-COL_FOREGROUND = '.'
-COL_SINGLEQUOTE = '\''
-COL_DOUBLEQUOTE = '"'
-COL_COMMENT = '!'
-COL_PROPERTY = 'p'
-COL_DIRECTIVE = 'D'
-COL_FUNCTION = 'F'
+# Color constants. These are single-character strings, suitable for printing
+# by the printspans() function. The algorithm just uses them as constants,
+# though.
+COL_FOREGROUND    = '.'
+COL_SINGLEQUOTE   = '\''
+COL_DOUBLEQUOTE   = '"'
+COL_COMMENT       = '!'
+COL_PROPERTY      = 'p'
+COL_DIRECTIVE     = 'D'
+COL_FUNCTION      = 'F'
 COL_FUNCTIONDELIM = 'f'
-COL_CODE = 'C'
+COL_CODE          = 'C'
 
 class I6ColorSpan:
+    """I6ColorSpan: Represents one "span" of text -- a string of characters
+    of the same style.
+
+    Spans do not extend across multiple lines. (That is, you can have two
+    adjacent spans of the same style, if there's a line break in the source
+    between them). The span object never contains line breaks. Instead,
+    they're indicated by the startline field: a nonzero value indicates
+    that this span is the start of a new line. If the value is greater than
+    1, it indicates how many blank lines occur before the span.
+    """
     def __init__(self, text, color, startline=False):
         self.text = text
         self.color = color
         self.startline = startline
     def __repr__(self):
-        prefix = 'NL: ' if self.startline else ''
+        prefix = ''
+        if self.startline:
+            prefix = 'NL:'
         return '<%s%s: %s>' % (prefix,
                                I6SyntaxColor.color_names[self.color],
                                repr(self.text))
 
 class I6SyntaxColor:
+    """I6SyntaxColor: The syntax colorer.
+    """
+    
     bit_names = [
         'comment', 'singlequote', 'doublequote', 'statement', 'aftermarker',
         'highlight', 'highlightall', 'colorbacktrack', 'afterrestart',
@@ -333,6 +353,12 @@ class I6SyntaxColor:
         return spans
 
 def printspans(spans):
+    """A simple output model: displays a program with style characters under
+    each line of output. For example:
+
+        Object bar class Superclass;
+        DDDDDD.....DDDDD.ppppppppppD
+    """
     texts = []
     colors = []
     for span in spans:
@@ -347,6 +373,15 @@ def printspans(spans):
         colors.append(coltext)
     print ''.join(texts)
     print ''.join(colors)
+
+# The top level of the script -- argument-parsing.
+    
+popt = optparse.OptionParser()
+(opts, args) = popt.parse_args()
+
+if not args:
+    print 'Usage: i6color source.inf'
+    sys.exit(-1)
 
 fl = open(args[0], 'U')
 spans = I6SyntaxColor().parse(fl)
