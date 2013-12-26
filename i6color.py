@@ -42,7 +42,7 @@ SBIT_NO_WAITDIRECT     = 0xFFFFFFFF ^ SBIT_WAITDIRECT
 SBIT_NO_DONTKNOW       = 0xFFFFFFFF ^ SBIT_DONTKNOW
 
 # Color constants. These are single-character strings, suitable for printing
-# by the printspans() function. The algorithm just uses them as constants,
+# by the print_as_lines() function. The algorithm just uses them as constants,
 # though.
 COL_FOREGROUND    = '.'
 COL_SINGLEQUOTE   = '\''
@@ -80,13 +80,15 @@ class I6ColorSpan:
 class I6SyntaxColor:
     """I6SyntaxColor: The syntax colorer.
     """
-    
+
+    # Human-readable names for the state bit flags.
     bit_names = [
         'comment', 'singlequote', 'doublequote', 'statement', 'aftermarker',
         'highlight', 'highlightall', 'colorbacktrack', 'afterrestart',
         'waitdirect', 'dontknow',
     ]
 
+    # Human-readable names for the colors.
     color_names = {
         COL_FOREGROUND: 'foreground',
         COL_SINGLEQUOTE: 'singlequote',
@@ -101,6 +103,8 @@ class I6SyntaxColor:
 
     @staticmethod
     def show_state(state):
+        """Convert a state value to a human-readable string.
+        """
         bits = []
         for ix in range(len(I6SyntaxColor.bit_names)):
             if state & (1 << (ix+16)):
@@ -111,6 +115,15 @@ class I6SyntaxColor:
         return res
     
     def scanner(self, state, ch):
+        """Middle-level state machine for processing characters. Given a
+        state value and an input character, computes a new state value.
+
+        This returns a pair (backtrack, newstate). If the COLORBACKTRACK
+        bit of newstate is set, the backtrack value will itself be a pair
+        (color, backlength). This means to mark the previous backlength
+        characters as being of the given color. (The backlength will
+        not cross a line boundary.)
+        """
         newcolor = None
         
         if state & SBIT_COMMENT:
@@ -209,6 +222,12 @@ class I6SyntaxColor:
         raise Exception('scanner reached illegal state')
     
     def innerstate(self, state, ch):
+        """Low-level state machine for processing characters. This
+        updates the "inner state" (low 16 bits) of the state value.
+        It returns a pair (termflag, newstate). If termflag is True,
+        then we have reached the end of an identifier, "*", or "->"
+        token.
+        """
         instate = (state & 0xFFFF)
         termflag = False
     
@@ -283,6 +302,9 @@ class I6SyntaxColor:
         return (termflag, state)
     
     def charcolor(self, state, ch):
+        """Given a character and a state (returned from scanner()),
+        determine the color for the character.
+        """
         if state & SBIT_SINGLEQUOTE:
             return COL_SINGLEQUOTE
         if state & SBIT_DOUBLEQUOTE:
@@ -309,6 +331,11 @@ class I6SyntaxColor:
             return COL_FOREGROUND
     
     def parse(self, fl):
+        """Top-level handler for parsing a file. (The argument must be
+        an open file, or otherwise support the read(n) method.)
+
+        Returns a list of I6ColorSpan objects.
+        """
         state = SBIT_WAITDIRECT
         color = COL_DIRECTIVE
         spans = []
@@ -352,7 +379,7 @@ class I6SyntaxColor:
     
         return spans
 
-def printspans(spans):
+def print_as_lines(spans):
     """A simple output model: displays a program with style characters under
     each line of output. For example:
 
@@ -387,4 +414,4 @@ fl = open(args[0], 'U')
 spans = I6SyntaxColor().parse(fl)
 fl.close()
 
-printspans(spans)
+print_as_lines(spans)
