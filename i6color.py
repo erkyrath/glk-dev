@@ -114,6 +114,56 @@ class I6SyntaxColor:
             res = res + ',' + ','.join(bits)
         return res
     
+    
+    def parse(self, fl):
+        """Top-level handler for parsing a file. (The argument must be
+        an open file, or otherwise support the read(n) method.)
+
+        Returns a list of I6ColorSpan objects.
+        """
+        state = SBIT_WAITDIRECT
+        color = COL_DIRECTIVE
+        spans = []
+    
+        startline = True
+        ls = []
+        
+        while True:
+            ch = fl.read(1)
+            if ch == '':
+                break
+            (backtup, state) = self.scanner(state, ch)
+            if state & SBIT_COLORBACKTRACK:
+                assert (backtup is not None)
+                (backcol, backdist) = backtup
+                state &= SBIT_NO_COLORBACKTRACK
+                assert (backdist > 0)
+                assert (len(ls) >= backdist)
+                prels = ls[ 0 : -backdist ]
+                ls = ls[ -backdist : ]
+                if prels:
+                    spans.append(I6ColorSpan(''.join(prels), color, startline))
+                    startline = False
+                color = backcol
+            newcol = self.charcolor(state, ch)
+            if newcol != color or ch == '\n':
+                if ls:
+                    spans.append(I6ColorSpan(''.join(ls), color, startline))
+                    ls = []
+                    startline = False
+                color = newcol
+            if ch == '\n':
+                startline = True
+            else:
+                ls.append(ch)
+            
+        if ls:
+            spans.append(I6ColorSpan(''.join(ls), color, startline))
+            ls = []
+            startline = False
+    
+        return spans
+    
     def scanner(self, state, ch):
         """Middle-level state machine for processing characters. Given a
         state value and an input character, computes a new state value.
@@ -330,54 +380,6 @@ class I6SyntaxColor:
                 return COL_DOUBLEQUOTE
             return COL_FOREGROUND
     
-    def parse(self, fl):
-        """Top-level handler for parsing a file. (The argument must be
-        an open file, or otherwise support the read(n) method.)
-
-        Returns a list of I6ColorSpan objects.
-        """
-        state = SBIT_WAITDIRECT
-        color = COL_DIRECTIVE
-        spans = []
-    
-        startline = True
-        ls = []
-        
-        while True:
-            ch = fl.read(1)
-            if ch == '':
-                break
-            (backtup, state) = self.scanner(state, ch)
-            if state & SBIT_COLORBACKTRACK:
-                assert (backtup is not None)
-                (backcol, backdist) = backtup
-                state &= SBIT_NO_COLORBACKTRACK
-                assert (backdist > 0)
-                assert (len(ls) >= backdist)
-                prels = ls[ 0 : -backdist ]
-                ls = ls[ -backdist : ]
-                if prels:
-                    spans.append(I6ColorSpan(''.join(prels), color, startline))
-                    startline = False
-                color = backcol
-            newcol = self.charcolor(state, ch)
-            if newcol != color or ch == '\n':
-                if ls:
-                    spans.append(I6ColorSpan(''.join(ls), color, startline))
-                    ls = []
-                    startline = False
-                color = newcol
-            if ch == '\n':
-                startline = True
-            else:
-                ls.append(ch)
-            
-        if ls:
-            spans.append(I6ColorSpan(''.join(ls), color, startline))
-            ls = []
-            startline = False
-    
-        return spans
 
 def print_as_lines(spans):
     """A simple output model: displays a program with style characters under
