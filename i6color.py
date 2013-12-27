@@ -65,8 +65,10 @@ COL_PROPERTY      = 'p'  # a property name
 COL_DIRECTIVE     = 'D'  # a directive keyword
 COL_FUNCTION      = 'F'  # the name of a function
 COL_FUNCTIONDELIM = 'f'  # the brackets delimiting a function body
-COL_CODE          = 'C'  # code or data within a function
+COL_CODE          = 'C'  # code within a function
 COL_TEXTESCAPE    = '\\' # escape char in a string constant
+COL_ASSEMBLY      = '@'  # assembly opcode
+COL_CODEALPHA     = 'A'  # identifier or constant within a function
 
 class I6ColorSpan:
     """I6ColorSpan: Represents one "span" of text -- a string of characters
@@ -118,6 +120,8 @@ class I6SyntaxColor:
         COL_FUNCTIONDELIM: 'functiondelim',
         COL_CODE: 'code',
         COL_TEXTESCAPE: 'textescape',
+        COL_ASSEMBLY: 'assembly',
+        COL_CODEALPHA: 'codealpha',
     }
 
     # Group of escape characters in a string. This is unwieldy because
@@ -126,6 +130,29 @@ class I6SyntaxColor:
     # We're overgenerous here -- for example, we accept @xy as an escape
     # sequence, even though the compiler would reject it.
     re_stringescapes = re.compile('([~^\\\\]|@[0-9]+|@@[0-9]+|@[^0-9@{][^0-9]|@{[0-9A-Fa-f]+})+')
+
+    # An identifier, keyword, or constant at the top level.
+    re_foreidentifier = re.compile('[$#]*[a-zA-Z0-9_]+')
+
+    # An identifier, keyword, constant, or assembly opcode inside a
+    # function.
+    re_codeidentifier = re.compile('(@|[$#]*)[a-zA-Z0-9_]+')
+
+    codekeywords = set([
+        "box", "break", "child", "children", "continue", "default",
+        "do", "elder", "eldest", "else", "false", "font", "for", "give",
+        "has", "hasnt", "if", "in", "indirect", "inversion", "jump",
+        "metaclass", "move", "new_line", "nothing", "notin", "objectloop",
+        "ofclass", "or", "parent", "print", "print_ret", "provides", "quit",
+        "random", "read", "remove", "restore", "return", "rfalse", "rtrue",
+        "save", "sibling", "spaces", "string", "style", "switch", "to",
+        "true", "until", "while", "younger", "youngest",
+    ])
+
+    directkeywords = set([
+        "first", "last", "meta", "only", "private", "replace", "reverse",
+        "string", "table",
+    ])
 
     @staticmethod
     def show_state(state):
@@ -406,6 +433,46 @@ class I6SyntaxColor:
                     pos = match.end()    
                 if pos < len(text):
                     span = I6ColorSpan(text[pos:], col, startline)
+                    res.append(span)
+            elif span.color in (COL_FOREGROUND, COL_CODE):
+                # Locate identifiers, constants, and assembly opcodes.
+                text = span.text
+                col = span.color
+                startline = span.startline
+                lastpos = pos = 0
+                if col == COL_CODE:
+                    regex = self.re_codeidentifier
+                else:
+                    regex = self.re_foreidentifier
+                while pos < len(text):
+                    match = regex.search(text, pos)
+                    if not match:
+                        break
+                    # Choose a new color for this identifier. To not recolor
+                    # it, leave newcol as None.
+                    ident = match.group()
+                    newcol = None
+                    if col == COL_CODE:
+                        if ident.startswith('@'):
+                            newcol = COL_ASSEMBLY
+                        elif ident not in self.codekeywords:
+                            newcol = COL_CODEALPHA
+                    else:
+                        if ident in self.directkeywords:
+                            newcol = COL_DIRECTIVE
+                    if newcol is None:
+                        pos = match.end()
+                        continue
+                    if lastpos < match.start():
+                        span = I6ColorSpan(text[lastpos:match.start()], col, startline)
+                        res.append(span)
+                        startline = 0
+                    span = I6ColorSpan(text[match.start():match.end()], newcol, startline)
+                    res.append(span)
+                    startline = 0
+                    lastpos = pos = match.end()    
+                if lastpos < len(text):
+                    span = I6ColorSpan(text[lastpos:], col, startline)
                     res.append(span)
             else:
                 res.append(span)
