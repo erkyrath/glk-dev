@@ -10,6 +10,18 @@ This is based on Graham Nelson's algorithm in the Inform Technical Manual
 is not completely clear, and requires some tweaks for correctness as well.
 Andrew Hunter's code in the MacOS I7 IDE was helpful in resolving the
 issues.
+
+This syntax-colorer should work on all valid I6 programs. (If you feed it
+an invalid program, it will go off the rails, and not necessarily in the
+same way as the I6 compiler.)
+
+This uses Python's universal newline feature to wave away the difference
+between Unix and DOS-style source files.
+
+The text encoding of the source file is ignored; it is treated as a byte
+stream. Since Inform only permits non-ASCII characters inside strings,
+this is marginally okay. (But I really should add an encoding option,
+so that the output can be stably UTF8.)
 """
 
 import sys
@@ -108,8 +120,12 @@ class I6SyntaxColor:
         COL_TEXTESCAPE: 'textescape',
     }
 
-    # Group of escape characters in a string.
-    re_stringescapes = re.compile('[~^\\\\]+')
+    # Group of escape characters in a string. This is unwieldy because
+    # Inform accepts a lot of string escape formats:
+    #   ~  ^  @0  @@64  @'e  @{E9}
+    # We're overgenerous here -- for example, we accept @xy as an escape
+    # sequence, even though the compiler would reject it.
+    re_stringescapes = re.compile('([~^\\\\]|@[0-9]+|@@[0-9]+|@[^0-9@{][^0-9]|@{[0-9A-Fa-f]+})+')
 
     @staticmethod
     def show_state(state):
@@ -128,6 +144,9 @@ class I6SyntaxColor:
     def parse(self, fl):
         """Top-level handler for parsing a file. (The argument must be
         an open file, or otherwise support the read(n) method.)
+
+        The input file should *not* contain carriage return (\r) characters.
+        Open the underlying file using the 'U' option.
 
         Returns a list of I6ColorSpan objects.
         """
