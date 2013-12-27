@@ -240,13 +240,11 @@ class I6SyntaxColor:
                 newcolor = (COL_FUNCTION, (state & 0x7FFF)>>8)
                 state |= SBIT_COLORBACKTRACK
                 state &= SBIT_NO_AFTERRESTART
-            if ch == ';':
-                state &= SBIT_NO_AFTERRESTART
             return (newcolor, state)
         else:
             if ch == '[':
                 state |= SBIT_STATEMENT
-                if not state & SBIT_AFTERRESTART:
+                if not (state & SBIT_AFTERMARKER):
                     state |= SBIT_AFTERRESTART
                 return (None, state)
             (term, state) = self.innerstate(state, ch)
