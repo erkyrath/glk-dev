@@ -13,6 +13,7 @@ issues.
 """
 
 import sys
+import re
 import optparse
 
 # Bit flags. It's probably silly to use a bitmask flag-set in Python,
@@ -53,6 +54,7 @@ COL_DIRECTIVE     = 'D'  # a directive keyword
 COL_FUNCTION      = 'F'  # the name of a function
 COL_FUNCTIONDELIM = 'f'  # the brackets delimiting a function body
 COL_CODE          = 'C'  # code or data within a function
+COL_TEXTESCAPE    = '\\' # escape char in a string constant
 
 class I6ColorSpan:
     """I6ColorSpan: Represents one "span" of text -- a string of characters
@@ -66,6 +68,7 @@ class I6ColorSpan:
     1, it indicates how many blank lines occur before the span.
     """
     def __init__(self, text, color, startline=False):
+        assert (len(text) > 0)
         self.text = text
         self.color = color
         self.startline = startline
@@ -102,7 +105,11 @@ class I6SyntaxColor:
         COL_FUNCTION: 'function',
         COL_FUNCTIONDELIM: 'functiondelim',
         COL_CODE: 'code',
+        COL_TEXTESCAPE: 'textescape',
     }
+
+    # Group of escape characters in a string.
+    re_stringescapes = re.compile('[~^\\\\]+')
 
     @staticmethod
     def show_state(state):
@@ -164,7 +171,8 @@ class I6SyntaxColor:
             spans.append(I6ColorSpan(''.join(ls), color, startline))
             ls = []
             startline = 0
-    
+
+        spans = self.refine(spans)
         return spans
     
     def scanner(self, state, ch):
@@ -353,6 +361,37 @@ class I6SyntaxColor:
             raise Exception('scanner reached illegal state')
         state = (state & 0xFFFF0000) | instate
         return (termflag, state)
+
+    def refine(self, spans):
+        """Given a list of spans, split some of them up into more detailed
+        span-groups. Return an updated list.
+        """
+        res = []
+        for span in spans:
+            if span.color in (COL_SINGLEQUOTE, COL_DOUBLEQUOTE):
+                # Locate escape sequences in the string.
+                text = span.text
+                col = span.color
+                startline = span.startline
+                pos = 0
+                while pos < len(text):
+                    match = self.re_stringescapes.search(text, pos)
+                    if not match:
+                        break
+                    if pos < match.start():
+                        span = I6ColorSpan(text[pos:match.start()], col, startline)
+                        res.append(span)
+                        startline = 0
+                    span = I6ColorSpan(text[match.start():match.end()], COL_TEXTESCAPE, startline)
+                    res.append(span)
+                    startline = 0
+                    pos = match.end()    
+                if pos < len(text):
+                    span = I6ColorSpan(text[pos:], col, startline)
+                    res.append(span)
+            else:
+                res.append(span)
+        return res
     
     def charcolor(self, state, ch):
         """Given a character and a state (returned from scanner()),
