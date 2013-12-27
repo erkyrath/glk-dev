@@ -288,15 +288,16 @@ class I6SyntaxColor:
                         state |= SBIT_COLORBACKTRACK
                         state &= SBIT_NO_HIGHLIGHT
     
-                if ch == ';':
-                    state |= SBIT_WAITDIRECT
-                    state &= SBIT_NO_AFTERMARKER
-                    state &= SBIT_NO_AFTERRESTART
-                    state &= SBIT_NO_HIGHLIGHT
-                    state &= SBIT_NO_HIGHLIGHTALL
-                elif ch == ',':
-                    state |= SBIT_AFTERMARKER
-                    state |= SBIT_HIGHLIGHT
+            if ch == ';':
+                state |= SBIT_WAITDIRECT
+                state &= SBIT_NO_AFTERMARKER
+                state &= SBIT_NO_AFTERRESTART
+                state &= SBIT_NO_HIGHLIGHT
+                state &= SBIT_NO_HIGHLIGHTALL
+            elif ch == ',':
+                state |= SBIT_AFTERMARKER
+                state |= SBIT_HIGHLIGHT
+                
             return (newcolor, state)
         
         raise Exception('scanner reached illegal state')
