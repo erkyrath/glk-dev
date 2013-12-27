@@ -253,23 +253,23 @@ class I6SyntaxColor:
             newcolor = None
             if term:
                 instate = (state & 0xFFFF)
-                if instate == 2:
+                if instate == 2:  # "->" token
                     newcolor = (COL_DIRECTIVE, 2)
                     state |= SBIT_AFTERMARKER
                     state |= SBIT_COLORBACKTRACK
                     state &= 0xFFFF0000
-                elif instate == 3:
+                elif instate == 3:  # "*" token
                     newcolor = (COL_DIRECTIVE, 1)
                     state |= SBIT_AFTERMARKER
                     state |= SBIT_COLORBACKTRACK
                     state &= 0xFFFF0000
-                elif instate == 0x8404:
+                elif instate == 0x8404:  # "with"
                     newcolor = (COL_DIRECTIVE, (instate & 0x7FFF)>>8)
                     state |= SBIT_AFTERMARKER
                     state |= SBIT_COLORBACKTRACK
                     state |= SBIT_HIGHLIGHT
                     state &= SBIT_NO_HIGHLIGHTALL
-                elif instate == 0x8313 or instate == 0x8525:
+                elif instate == 0x8313 or instate == 0x8525: # "has", "class"
                     newcolor = (COL_DIRECTIVE, (instate & 0x7FFF)>>8)
                     state |= SBIT_AFTERMARKER
                     state |= SBIT_COLORBACKTRACK
