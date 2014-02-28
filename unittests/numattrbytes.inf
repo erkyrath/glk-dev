@@ -3,6 +3,14 @@ Constant Headline "Not a game.^";
 
 Release 1;
 
+! This is a compiler unit test, testing Glulx code generation when the
+! NUM_ATTR_BYTES option is raised from the default value (7).
+!
+! Given a newer I6 compiler, this test should compile and pass with
+! $NUM_ATTR_BYTES=11, $NUM_ATTR_BYTES=15, etc. (The value has to be
+! 4n+3.) And also with the default value, of course. In all cases it
+! should work with both -S and -~S mode.
+
 Global gg_mainwin;
 
 Constant HDR_GLULXVERSION  $04;     ! long word
@@ -93,6 +101,61 @@ Attribute attr0;
 	rfalse;
 ];
 
+[ string_to_array val arr arrlen    str oldstr len;
+	oldstr = glk($0048); ! stream_get_current
+	str = glk($0043, arr, arrlen, 1, 0); ! stream_open_memory
+	if (str == 0) return 0;
+
+	glk($0047, str); ! stream_set_current
+
+	if (val->0 == $c0 or $c1)
+		val();
+	else
+		@streamstr val;
+
+	glk($0047, oldstr); ! stream_set_current
+	@copy $ffffffff sp;
+	@copy str sp;
+	@glk $0044 2 0; ! stream_close
+	@copy sp len;
+	@copy sp 0;
+
+	return len;
+];
+
+Constant BIGBUFSIZE 256;
+Array bigbuffer -> BIGBUFSIZE;
+Array bigbuffer2 -> BIGBUFSIZE;
+
+[ check_str str len  newlen ix good ch;
+	good = true;
+	newlen = string_to_array(str, bigbuffer2, BIGBUFSIZE);
+	if (newlen ~= len) {
+		good = false;
+	}
+	else {
+		for (ix=0 : ix<len : ix++) {
+			if (bigbuffer->ix ~= bigbuffer2->ix)
+				good = false;
+		}
+	}
+	print "~";
+	for (ix=0 : ix<len : ix++) {
+		ch = bigbuffer->ix;
+		@streamchar ch;
+	}
+	print "~ len ", len;
+	if (~~good) {
+		failures++;
+		print " (should be ~";
+		for (ix=0 : ix<newlen : ix++) {
+			ch = bigbuffer2->ix;
+			@streamchar ch;
+		}
+		print "~ len ", newlen, ", FAIL)";
+	}
+];
+
 Object obj0 "Obj-0"
   with name 'prop0';
 
@@ -105,7 +168,7 @@ Object -> -> obj2 "Obj-2"
 Object -> obj3 "Obj-3"
   with name 'prop3';
 
-[ RunTest val lastattr count;
+[ RunTest val lastattr count len;
 	failures = 0;
 	
 	print "NUM_ATTR_BYTES is ", NUM_ATTR_BYTES, "^^";
@@ -169,6 +232,22 @@ Object -> obj3 "Obj-3"
 	
 	CheckBasicSetup();
 
+	print "Class: ";
+	len = string_to_array(print_obj_class, bigbuffer, BIGBUFSIZE);
+	check_str("Class", len); new_line;
+	print "obj0: ";
+	len = string_to_array(print_obj_0, bigbuffer, BIGBUFSIZE);
+	check_str("Obj-0", len); new_line;
+	print "obj3: ";
+	len = string_to_array(print_obj_3, bigbuffer, BIGBUFSIZE);
+	check_str("Obj-3", len); new_line;
+	print "obj1 name: ";
+	len = string_to_array(print_name_1, bigbuffer, BIGBUFSIZE);
+	check_str("Obj-1", len); new_line;
+	print "obj2 name: ";
+	len = string_to_array(print_name_2, bigbuffer, BIGBUFSIZE);
+	check_str("Obj-2", len); new_line;
+
 	new_line;
 	if (failures == 0) {
 		print "All tests passed.^";
@@ -176,6 +255,26 @@ Object -> obj3 "Obj-3"
 	else {
 		print failures, " tests failed!^";
 	}
+];
+
+[ print_obj_class;
+	print (object) Class;
+];
+
+[ print_obj_0;
+	print (object) obj0;
+];
+
+[ print_obj_3;
+	print (object) obj3;
+];
+
+[ print_name_1;
+	print (name) obj1;
+];
+
+[ print_name_2;
+	print (name) obj2;
 ];
 
 [ CheckBasicSetup val count;
@@ -276,11 +375,3 @@ Object -> obj3 "Obj-3"
 	print "Total "; check(count, 4); new_line;
 
 ];
-
-!### Crap to test: (with both -S and -~S)
-! x in y
-! move x to y, remove x
-! parent(), sibling(), child(), youngest(), elder(), children()
-! print (object), print (name) [both objects and classes!]
-! objectloop (x), objectloop (x in y), objectloop (x has a)
-! ...and of course rebuild on Advent.inf and HL.inf, to verify binary identity
