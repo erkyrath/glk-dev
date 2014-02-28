@@ -1,0 +1,286 @@
+Constant Story "NumAttrBytes";
+Constant Headline "Not a game.^";
+
+Release 1;
+
+Global gg_mainwin;
+
+Constant HDR_GLULXVERSION  $04;     ! long word
+Constant ROM_GAMERELEASE   $34;     ! short word
+Constant ROM_GAMESERIAL    $36;     ! six ASCII characters
+
+Global failures;
+
+Attribute attr0;
+
+[ Main loc;
+	@setiosys 2 0;
+	@push 201; @push 3; @push 0; @push 0; @push 0;
+	@glk $0023 5 gg_mainwin;
+
+	@push gg_mainwin;
+	@glk $002F 1 loc;
+
+	Banner();
+	new_line;
+	RunTest();
+];
+
+[ Banner  i ix;
+    if (Story ~= 0) {
+        glk($0086, 3); ! set header style
+        print (string) Story;
+        glk($0086, 0); ! set normal style
+    }
+    if (Headline ~= 0) print ": ", (string) Headline;
+    print "Release ";
+    @aloads ROM_GAMERELEASE 0 i;
+    print i;
+    print " / Serial number ";
+    for (i=0 : i<6 : i++) print (char) ROM_GAMESERIAL->i;
+    print " / Inform v"; inversion;
+    print ", compiler options ";
+    i = false;
+    #Ifdef STRICT_MODE;
+    print "S"; i++;
+    #Endif; ! STRICT_MODE
+    #Ifdef INFIX;
+    print "X"; i++;
+    #Ifnot;
+    #Ifdef DEBUG;
+    print "D"; i++;
+    #Endif; ! DEBUG
+    #Endif; ! INFIX
+    if (~~i) print "(none)";
+    new_line;
+
+    @gestalt 1 0 ix;
+    print "Interpreter version ", ix / $10000, ".", (ix & $FF00) / $100,
+    ".", ix & $FF, " / ";
+    @gestalt 0 0 ix;
+    print "VM ", ix / $10000, ".", (ix & $FF00) / $100, ".", ix & $FF, " / ";
+    ix = HDR_GLULXVERSION-->0;
+    print "game file format ", ix / $10000, ".", (ix & $FF00) / $100, ".", ix & $FF, "^";
+];
+
+[ check val wanted;
+	if (val == wanted) {
+		print val;
+		rtrue;
+	}
+	failures++;
+	print val, " (should be ", wanted, " FAIL)";
+	rfalse;
+];
+
+[ checkobj val wanted;
+	if (val == wanted) {
+		print (object) val;
+		rtrue;
+	}
+	failures++;
+	print (object) val, " (should be ", (object) wanted, " FAIL)";
+	rfalse;
+];
+
+[ checkdictword val wanted;
+	if (val == wanted) {
+		print "'", (address) val, "'";
+		rtrue;
+	}
+	failures++;
+	print "'", (address) val, "'", " (should be '", (address) wanted, "' FAIL)";
+	rfalse;
+];
+
+Object obj0 "Obj-0"
+  with name 'prop0';
+
+Object -> obj1 "Obj-1"
+  with name 'prop1';
+
+Object -> -> obj2 "Obj-2"
+  with name 'prop2';
+
+Object -> obj3 "Obj-3"
+  with name 'prop3';
+
+[ RunTest val lastattr count;
+	failures = 0;
+	
+	print "NUM_ATTR_BYTES is ", NUM_ATTR_BYTES, "^^";
+	
+	CheckBasicSetup();
+
+	print "* General manipulation:^";
+	
+	remove obj2;
+	val = (obj1 in obj2);
+	print "obj1 in obj2: "; check(val, false); new_line;
+	val = (obj2 in obj1);
+	print "obj2 in obj1: "; check(val, false); new_line;
+	val = parent(obj2);
+	print "parent(obj2): "; check(val, 0); new_line;
+	move obj2 to obj1;
+
+	remove obj3;
+	val = children(obj0);
+	print "children(obj0): "; check(val, 1); new_line;
+	remove obj1;
+	val = children(obj0);
+	print "children(obj0): "; check(val, 0); new_line;
+	move obj3 to obj0;
+	move obj1 to obj0;
+	
+	CheckBasicSetup();
+
+	print "* Attribute setting:^";
+
+	give obj1 attr0;
+	give obj3 attr0;
+	if (NUM_ATTR_BYTES >= 11) {
+		give obj0 70;
+		give obj1 70;
+		give obj2 70;
+	}
+	lastattr = (NUM_ATTR_BYTES*8) - 1;
+	give obj0 lastattr;
+	give obj1 lastattr;
+	give obj2 lastattr;
+	give obj3 lastattr;
+
+	count = 0;
+	print "Objectloop: objects has attr0:";
+	objectloop (val has attr0) {
+		print " ", (object) val;
+		count++;
+	}
+	new_line;
+	print "Total "; check(count, 2); new_line;
+	
+	count = 0;
+	print "Objectloop: objects has attr", lastattr, ":";
+	objectloop (val has lastattr) {
+		print " ", (object) val;
+		count++;
+	}
+	new_line;
+	print "Total "; check(count, 4); new_line;
+	
+	CheckBasicSetup();
+
+	new_line;
+	if (failures == 0) {
+		print "All tests passed.^";
+	}
+	else {
+		print failures, " tests failed!^";
+	}
+];
+
+[ CheckBasicSetup val count;
+	print "* CheckBasicSetup:^";
+
+	print "obj1: ", (object) obj1, " ";
+	checkdictword(obj1.name, 'prop1');
+	new_line;
+	
+	val = parent(obj1);
+	print "parent(obj1): ";
+	checkobj(val, obj0);
+	print " ";
+	checkdictword(val.name, 'prop0');
+	new_line;
+	
+	val = sibling(obj1);
+	print "sibling(obj1): ";
+	checkobj(val, obj3);
+	print " ";
+	checkdictword(val.name, 'prop3');
+	new_line;
+	
+	val = child(obj1);
+	print "child(obj1): ";
+	checkobj(val, obj2);
+	print " ";
+	checkdictword(val.name, 'prop2');
+	new_line;
+
+	val = parent(obj2);
+	print "parent(obj2): ";
+	checkobj(val, obj1);
+	print " ";
+	checkdictword(val.name, 'prop1');
+	new_line;
+	
+	val = youngest(obj0);
+	print "youngest(obj0): ";
+	checkobj(val, obj3);
+	print " ";
+	checkdictword(val.name, 'prop3');
+	new_line;
+	
+	val = elder(obj3);
+	print "elder(obj3): ";
+	checkobj(val, obj1);
+	print " ";
+	checkdictword(val.name, 'prop1');
+	new_line;
+	
+	val = (obj1 in obj0);
+	print "obj1 in obj0: "; check(val, true); new_line;
+	val = (obj1 in obj2);
+	print "obj1 in obj2: "; check(val, false); new_line;
+	val = (obj2 in obj1);
+	print "obj2 in obj1: "; check(val, true); new_line;
+	
+	val = children(obj0);
+	print "children(obj0): "; check(val, 2); new_line;
+	val = children(obj1);
+	print "children(obj1): "; check(val, 1); new_line;
+
+	count = 0;
+	print "Objectloop: all objects:";
+	objectloop (val) {
+		print " ", (object) val;
+		count++;
+	}
+	new_line;
+	print "Total "; check(count, 8); new_line;
+
+	count = 0;
+	print "Objectloop: objects in obj0:";
+	objectloop (val in obj0) {
+		print " ", (object) val;
+		count++;
+	}
+	new_line;
+	print "Total "; check(count, 2); new_line;
+
+	count = 0;
+	print "Objectloop: objects ofclass Object:";
+	objectloop (val ofclass Object) {
+		print " ", (object) val;
+		count++;
+	}
+	new_line;
+	print "Total "; check(count, 4); new_line;
+
+	count = 0;
+	print "Objectloop: objects ofclass Class:";
+	objectloop (val ofclass Class) {
+		print " ", (object) val;
+		count++;
+	}
+	new_line;
+	print "Total "; check(count, 4); new_line;
+
+];
+
+!### Crap to test: (with both -S and -~S)
+! x in y
+! move x to y, remove x
+! parent(), sibling(), child(), youngest(), elder(), children()
+! print (object), print (name) [both objects and classes!]
+! objectloop (x), objectloop (x in y), objectloop (x has a)
+! ...and of course rebuild on Advent.inf and HL.inf, to verify binary identity
