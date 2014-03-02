@@ -53,10 +53,16 @@ and depends on the $NUM_ATTR_BYTES memory setting. The compiler assures
 that its length is always of the form 4i+3, so that the long fields that
 follow fall on four-byte boundaries.
 
-If the $GLULX_OBJECT_EXT_BYTES setting is nonzero, that many bytes are
+If the $GLULX_OBJECT_EXT_BYTES setting is used, that many bytes are
 appended to the object structure. (They are initialized to zero, and not
-used by any I6 language feature.) Thus, the total size of the object
-structure is (1 + NUM_ATTR_BYTES + 6*4 + GLULX_OBJECT_EXT_BYTES).
+used by any I6 language feature.) The compiler constant GOBJ_EXT_START
+may be used to find the start of this extra space (in bytes, counting
+from the start of the object structure).
+
+The compiler constant GOBJ_TOTAL_LENGTH contains the total size of the
+object, which is (1 + NUM_ATTR_BYTES + 6*4 + GLULX_OBJECT_EXT_BYTES).
+If $GLULX_OBJECT_EXT_BYTES is not set, then GOBJ_EXT_START will be the
+same as GOBJ_TOTAL_LENGTH.
 
 * Property Tables
 
