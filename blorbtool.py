@@ -123,6 +123,27 @@ class BlorbChunk:
             else:
                 num = struct.unpack('>I', dat[0:4])[0]
                 print 'Frontispiece is pict number', num
+        elif (self.type == 'RDes'):
+            # Resource description chunk
+            dat = self.data()
+            (subdat, dat) = (dat[:4], dat[4:])
+            count = struct.unpack('>I', subdat)[0]
+            print '%d entries:' % (count,)
+            for ix in range(count):
+                if (len(dat) < 12):
+                    print 'Warning: contents too short!'
+                    break
+                (subdat, dat) = (dat[:12], dat[12:])
+                subls = struct.unpack('>4c2I', subdat)
+                strlen = subls[-1]
+                num = subls[-2]
+                if (len(dat) < strlen):
+                    print 'Warning: contents too short!'
+                    break
+                (subdat, dat) = (dat[:strlen], dat[strlen:])
+                print '  \'%c%c%c%c\' resource %d: "%s"' % (subls[0:4] + (num, subdat))
+            if (len(dat) > 0):
+                print 'Warning: contents too long!'
         elif (self.type == 'APal'):
             # Adaptive palette
             dat = self.data()
