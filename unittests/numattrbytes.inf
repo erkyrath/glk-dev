@@ -1,7 +1,7 @@
 Constant Story "NumAttrBytes";
 Constant Headline "Not a game.^";
 
-Release 1;
+Release 2;
 
 ! This is a compiler unit test, testing Glulx code generation when the
 ! NUM_ATTR_BYTES option is raised from the default value (7).
@@ -171,7 +171,14 @@ Object -> obj3 "Obj-3"
 [ RunTest val lastattr count len;
 	failures = 0;
 	
-	print "NUM_ATTR_BYTES is ", NUM_ATTR_BYTES, "^^";
+	print "NUM_ATTR_BYTES is ", NUM_ATTR_BYTES, "^";
+	#ifdef GOBJ_EXT_START;
+	print "GOBJ_EXT_START is ", GOBJ_EXT_START, "^";
+	#endif;
+	#ifdef GOBJ_TOTAL_LENGTH;
+	print "GOBJ_TOTAL_LENGTH is ", GOBJ_TOTAL_LENGTH, "^";
+	#endif;
+	new_line;
 	
 	CheckBasicSetup();
 
