@@ -1,7 +1,7 @@
 The Glulx Inform Technical Reference
 Inform version 6.21(G0.35) to 6.31N
 http://eblong.com/zarf/glulxe/
-(Last update: Dec 9, 2009)
+(Last update: Mar 1, 2014)
 
 *** Compiler Table Formats
 
