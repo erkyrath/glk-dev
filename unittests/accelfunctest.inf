@@ -1,7 +1,7 @@
 Constant Story "AccelFuncTest";
 Constant Headline "^Not a game.^";
 
-Release 2;
+Release 3;
 
 ! Unit test for the @accelfunc and @accelparam opcodes.
 
@@ -33,10 +33,22 @@ Class TestObj
 
 Object Kitchen "Acceleration Room"
   with
-	description "A voice booooms out: Try ~slow test~ or ~fast test~, to run 
-		a sequence with the standard or accelerated function. The results
-		should be identical. Type ~which~ to list the functions that your
-		interpreter can accelerate.",
+	description [;
+		print "A voice booooms out: Try ~slow test~ or ~fast test~, to run 
+			a sequence with the standard or accelerated function. The results
+			should be identical. Type ~which~ to list the functions that your
+			interpreter can accelerate.^^";
+		if (NUM_ATTR_BYTES == 7) {
+			print "NUM_ATTR_BYTES is ", NUM_ATTR_BYTES, " (the default).
+				The old and new accel functions should behave identically.^";
+		}
+		else {
+			print "NUM_ATTR_BYTES is ", NUM_ATTR_BYTES, " (not the default).
+				The old accel functions should fail. The new functions
+				should produce the correct result (even if this interpreter
+				can't accelerate them).^";
+		}
+	],
   has light;
 
 TestObj -> CoreRegion "core test"
@@ -55,51 +67,99 @@ TestObj -> TestZRegion "ZRegion test"
 	corefunc Z__Region,
 	testfunc test_zregion;
 
-TestObj -> TestCPTab "CPTab test"
+TestObj -> TestCPTabOld "CPTab (old) test"
   with
-	name 'cptab' 'cp' 'tab',
+	name 'cptab' 'cp' 'tab' 'old',
 	indexnum 2,
-	indexname "CP__Tab",
+	indexname "CP__Tab (old)",
 	corefunc CP__Tab,
 	testfunc test_cptab;
 
-TestObj -> TestRAPr "RAPr test"
+TestObj -> TestRAPrOld "RAPr (old) test"
   with
-	name 'rapr' 'ra' 'pr',
+	name 'rapr' 'ra' 'pr' 'old',
 	indexnum 3,
-	indexname "RA__Pr",
+	indexname "RA__Pr (old)",
 	corefunc RA__Pr,
 	testfunc test_rapr;
 
-TestObj -> TestRLPr "RLPr test"
+TestObj -> TestRLPrOld "RLPr (old) test"
   with
-	name 'rlpr' 'rl' 'pr',
+	name 'rlpr' 'rl' 'pr' 'old',
 	indexnum 4,
-	indexname "RL__Pr",
+	indexname "RL__Pr (old)",
 	corefunc RL__Pr,
 	testfunc test_rlpr;
 
-TestObj -> TestOCCl "OCCl test"
+TestObj -> TestOCClOld "OCCl (old) test"
   with
-	name 'occl' 'oc' 'cl',
+	name 'occl' 'oc' 'cl' 'old',
 	indexnum 5,
-	indexname "OC__Cl",
+	indexname "OC__Cl (old)",
 	corefunc OC__Cl,
 	testfunc test_occl;
 
-TestObj -> TestRVPr "RVPr test"
+TestObj -> TestRVPrOld "RVPr (old) test"
   with
-	name 'rvpr' 'rv' 'pr',
+	name 'rvpr' 'rv' 'pr' 'old',
 	indexnum 6,
-	indexname "RV__Pr",
+	indexname "RV__Pr (old)",
 	corefunc RV__Pr,
 	testfunc test_rvpr;
 
-TestObj -> TestOPPr "OPPr test"
+TestObj -> TestOPPrOld "OPPr (old) test"
   with
-	name 'oppr' 'op' 'pr',
+	name 'oppr' 'op' 'pr' 'old',
 	indexnum 7,
-	indexname "OP__Pr",
+	indexname "OP__Pr (old)",
+	corefunc OP__Pr,
+	testfunc test_oppr;
+
+TestObj -> TestCPTab "CPTab (new) test"
+  with
+	name 'cptab' 'cp' 'tab' 'new',
+	indexnum 8,
+	indexname "CP__Tab (new)",
+	corefunc CP__Tab,
+	testfunc test_cptab;
+
+TestObj -> TestRAPr "RAPr (new) test"
+  with
+	name 'rapr' 'ra' 'pr' 'new',
+	indexnum 9,
+	indexname "RA__Pr (new)",
+	corefunc RA__Pr,
+	testfunc test_rapr;
+
+TestObj -> TestRLPr "RLPr (new) test"
+  with
+	name 'rlpr' 'rl' 'pr' 'new',
+	indexnum 10,
+	indexname "RL__Pr (new)",
+	corefunc RL__Pr,
+	testfunc test_rlpr;
+
+TestObj -> TestOCCl "OCCl (new) test"
+  with
+	name 'occl' 'oc' 'cl' 'new',
+	indexnum 11,
+	indexname "OC__Cl (new)",
+	corefunc OC__Cl,
+	testfunc test_occl;
+
+TestObj -> TestRVPr "RVPr (new) test"
+  with
+	name 'rvpr' 'rv' 'pr' 'new',
+	indexnum 12,
+	indexname "RV__Pr (new)",
+	corefunc RV__Pr,
+	testfunc test_rvpr;
+
+TestObj -> TestOPPr "OPPr (new) test"
+  with
+	name 'oppr' 'op' 'pr' 'new',
+	indexnum 13,
+	indexname "OP__Pr (new)",
 	corefunc OP__Pr,
 	testfunc test_oppr;
 
