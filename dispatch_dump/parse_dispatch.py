@@ -2,7 +2,8 @@
 
 # parse_dispatch.py: A script to parse the output of dispatch_dump, and
 #   generate the Javascript data structures needed for gi_dispa.js.
-#   It can also generate the infglk.h header file (for Inform 6).
+#   It can also generate the infglk.h header file (for Inform 6),
+#   and a human-readable form.
 #
 #   parse_dispatch.py --dispajs dispatch_dump.xml > proto_map.js
 #   parse_dispatch.py --infglk  dispatch_dump.xml > infglk.h
@@ -12,6 +13,9 @@
 # is updated, I'll need to re-run this and replace that block.
 #
 # The --infglk form will generate the infglk.h header file.
+#
+# The --human form will generate a list of human-readable function
+# descriptions.
 #
 # Just as an illustration: the C prototype of glk_put_char is:
 #   void glk_put_char(char)
