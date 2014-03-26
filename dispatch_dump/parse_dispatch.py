@@ -40,9 +40,12 @@ if ('--dispajs' in args):
 if ('--infglk' in args):
     args.remove('--infglk')
     target = 'infglk'
+if ('--human' in args):
+    args.remove('--human')
+    target = 'human'
 
 if (len(args) != 1):
-    print 'usage: parse_dispatch.py [ --dispajs | --infglk ] dispatch_dump.xml'
+    print 'usage: parse_dispatch.py [ --dispajs | --infglk | --human ] dispatch_dump.xml'
     sys.exit(1)
 
 filename = args[0]
@@ -127,6 +130,8 @@ class ArgBase:
             return 'true'
         else:
             return 'false'
+    def tohuman(self):
+        return self.tolabel()
     
 class ArgString(ArgBase):
     def __init__(self):
@@ -137,6 +142,8 @@ class ArgString(ArgBase):
         return 'new ArgString()'
     def tolabel(self):
         return 'string'
+    def tohuman(self):
+        return 'string (8-bit array, null-terminated)'
         
 class ArgUnicode(ArgBase):
     def __init__(self):
@@ -147,6 +154,8 @@ class ArgUnicode(ArgBase):
         return 'new ArgUnicode()'
     def tolabel(self):
         return 'unicode'
+    def tohuman(self):
+        return 'unicode (32-bit array, null-terminated)'
         
 class ArgChar(ArgBase):
     def __init__(self, signed=None):
@@ -173,6 +182,13 @@ class ArgChar(ArgBase):
             return 'char'
         else:
             return 'uchar'
+    def tohuman(self):
+        if (self.signed is None):
+            return 'native char'
+        elif (self.signed):
+            return 'signed char'
+        else:
+            return 'unsigned char'
         
 class ArgInt(ArgBase):
     def __init__(self, signed=True):
@@ -193,6 +209,11 @@ class ArgInt(ArgBase):
             return 'int'
         else:
             return 'uint'
+    def tohuman(self):
+        if (self.signed):
+            return 'signed int'
+        else:
+            return 'unsigned int'
         
 class ArgClass(ArgBase):
     def __init__(self, name):
@@ -215,6 +236,9 @@ class ArgStruct(ArgBase):
         return 'new ArgStruct(%s)' % (self.form.tojs(),)
     def tolabel(self):
         return '%s' % (self.form.tolabel('{}'),)
+    def tohuman(self):
+        pair = ('struct {', '}')
+        return '%s' % (self.form.tolabel(pair),)
 
 class ArgRef(ArgBase):
     def __init__(self, arg, passin=True, passout=True, nonnull=False):
@@ -245,6 +269,20 @@ class ArgRef(ArgBase):
         return 'new ArgRef(%s, %s, %s, %s)' % (self.arg.tojs(), self.booltojs(self.passin), self.booltojs(self.passout), self.booltojs(self.nonnull))
     def tolabel(self):
         return '&%s' % (self.arg.tolabel(),)
+    def tohuman(self):
+        if self.passin and self.passout:
+            dir = 'in/out'
+        elif self.passin:
+            dir = 'in'
+        elif self.passout:
+            dir = 'out'
+        else:
+            dir = '?'
+        if self.nonnull:
+            dir += ', mandatory'
+        else:
+            dir += ', optional'
+        return 'reference (%s) to %s' % (dir, self.arg.tohuman(),)
     
 class ArgArray(ArgBase):
     def __init__(self, arg, retained=False, passin=True, passout=True, nonnull=False):
@@ -280,6 +318,22 @@ class ArgArray(ArgBase):
         return 'new ArgArray(%s, %s, %s, %s, %s)' % (self.arg.tojs(), self.booltojs(self.retained), self.booltojs(self.passin), self.booltojs(self.passout), self.booltojs(self.nonnull))
     def tolabel(self):
         return '%sarray, arraylen' % (self.arg.tolabel(),)
+    def tohuman(self):
+        if self.passin and self.passout:
+            dir = 'in/out'
+        elif self.passin:
+            dir = 'in'
+        elif self.passout:
+            dir = 'out'
+        else:
+            dir = '?'
+        if self.nonnull:
+            dir += ', mandatory'
+        else:
+            dir += ', optional'
+        if self.retained:
+            dir += ', retained'
+        return 'array (%s) of %s; arraylen' % (dir, self.arg.tohuman(),)
 
 class Arguments:
     def __init__(self, args, retarg=None):
@@ -305,7 +359,7 @@ class Arguments:
         if (self.retarg):
             retval = ' => ' + self.retarg.arg.tolabel()
         ls = [ val.tolabel() for val in self.args ]
-        return '%c%s%c%s' % (paren[0], ', '.join(ls), paren[1], retval)
+        return '%s%s%s%s' % (paren[0], ', '.join(ls), paren[1], retval)
     
 regex_numbers = re.compile('[0-9]+')
 regex_qualifiers = re.compile('[&<>+#!:]*')
@@ -694,12 +748,41 @@ def make_infglk():
                 print '  return 0;'
                 print '];'
             print
-    
+
+def make_human():
+    for id in idarray:
+        func = functions[id]
+        if (not func.form):
+            continue
+        form = func.form
+        hexid = hex(func.id).upper().replace('X', 'x')
+        print '(%s) glk_%s:' % (hexid, func.name)
+        ix = 0
+        for arg in form.args:
+            num = str(ix)
+            if isinstance(arg, ArgArray):
+                num = '%d,%d' % (ix, ix+1,)
+                ix += 2
+            else:
+                num = str(ix)
+                ix += 1
+            print '  arg %s: %s' % (num, arg.tohuman())
+        if not form.args:
+            print '  (no arguments)'
+        if form.retarg:
+            assert isinstance(form.retarg, ArgRef)
+            print '  returns: %s' % (form.retarg.arg.tohuman(),)
+        else:
+            print '  (no return value)'
+        print
+
 if (not target):
     print 'Found', len(constants), 'constants,', len(classes), 'classes, and', len(functions), 'functions.'
 elif (target == 'dispajs'):
     make_javascript()
 elif (target == 'infglk'):
     make_infglk()
+elif (target == 'human'):
+    make_human()
 
 
