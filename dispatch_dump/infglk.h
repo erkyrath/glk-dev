@@ -30,6 +30,7 @@ Constant gestalt_CharOutput_ExactPrint = 2;
 Constant gestalt_DateTime = 20;
 Constant gestalt_DrawImage = 7;
 Constant gestalt_Graphics = 6;
+Constant gestalt_GraphicsCharInput = 23;
 Constant gestalt_GraphicsTransparency = 14;
 Constant gestalt_HyperlinkInput = 12;
 Constant gestalt_Hyperlinks = 11;
