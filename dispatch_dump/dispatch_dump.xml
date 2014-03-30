@@ -6,7 +6,7 @@
     <class name="window" value="0" />
   </classes>
 
-  <constants count="125">
+  <constants count="126">
     <constant name="evtype_Arrange" value="5" />
     <constant name="evtype_CharInput" value="2" />
     <constant name="evtype_Hyperlink" value="8" />
@@ -36,6 +36,7 @@
     <constant name="gestalt_DateTime" value="20" />
     <constant name="gestalt_DrawImage" value="7" />
     <constant name="gestalt_Graphics" value="6" />
+    <constant name="gestalt_GraphicsCharInput" value="23" />
     <constant name="gestalt_GraphicsTransparency" value="14" />
     <constant name="gestalt_HyperlinkInput" value="12" />
     <constant name="gestalt_Hyperlinks" value="11" />

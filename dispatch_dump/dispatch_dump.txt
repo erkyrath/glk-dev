@@ -4,7 +4,7 @@ schannel 3
 stream 1
 window 0
 
-* constants 125
+* constants 126
 evtype_Arrange 5
 evtype_CharInput 2
 evtype_Hyperlink 8
@@ -34,6 +34,7 @@ gestalt_CharOutput_ExactPrint 2
 gestalt_DateTime 20
 gestalt_DrawImage 7
 gestalt_Graphics 6
+gestalt_GraphicsCharInput 23
 gestalt_GraphicsTransparency 14
 gestalt_HyperlinkInput 12
 gestalt_Hyperlinks 11
