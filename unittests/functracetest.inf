@@ -1,0 +1,167 @@
+Constant Story "FuncTraceTest";
+Constant Headline "Not a game.^";
+
+Release 1;
+
+! This is a compiler unit test, testing the ability to use debug function
+! tracing [ Func *; ] in Glulx.
+!
+! When compiled in Glulx, this should run and display the function arguments
+! in the obvious way:
+!
+! [ func(x = 0, y = 0, z = 0) ]
+! I am a function: 0 0 0
+! [ func(x = 3, y = 72, z = 0) ]
+! I am a function: 3 72 0
+! 
+! [ funcv(_vararg_count = 0:) ]
+! Vararg function got 0 variables:
+! [ funcv(_vararg_count = 2: 3 72) ]
+! Vararg function got 2 variables: 3 72
+! [ funcv(_vararg_count = 4: -1 2 -3 4) ]
+! Vararg function got 4 variables: -1 2 -3 4
+!
+! When compiled in Z-code, it only performs the func() test, since there
+! is no Z-code equivalent to _vararg_count:
+!
+!  [ func() ]
+!  I am a function: 0 0 0
+!  [ func(x = 3, y = 317) ]
+!  I am a function: 3 317 0
+!
+! Note that for the func() test, the Glulx version prints every local
+! variable; it cannot tell how many arguments were actually passed in.
+
+#ifndef TARGET_GLULX;
+
+Constant HDR_GAMERELEASE   $02;     ! word
+Constant HDR_GAMESERIAL    $12;     ! six ASCII characters
+
+#ifnot;
+
+Global gg_mainwin;
+
+Constant HDR_GLULXVERSION  $04;     ! long word
+Constant ROM_GAMERELEASE   $34;     ! short word
+Constant ROM_GAMESERIAL    $36;     ! six ASCII characters
+
+#endif;
+
+[ Main loc;
+#ifdef TARGET_GLULX;
+    @setiosys 2 0;
+    @push 201; @push 3; @push 0; @push 0; @push 0;
+    @glk $0023 5 gg_mainwin;
+
+    @push gg_mainwin;
+    @glk $002F 1 loc;
+#endif;
+
+    Banner();
+    new_line;
+    RunTest();
+    
+    loc = RunTest; ! shut up unused-variable warnings
+];
+
+#ifndef TARGET_GLULX;
+
+[ Banner  i;
+    if (Story ~= 0) {
+        style bold;
+        print (string) Story;
+        style roman;
+    }
+    if (Headline ~= 0) print ": ", (string) Headline;
+    print "Release ";
+    print (HDR_GAMERELEASE-->0) & $03ff;
+    print " / Serial number ";
+    for (i=0 : i<6 : i++) print (char) HDR_GAMESERIAL->i;
+    print " / Inform v"; inversion;
+    print ", compiler options ";
+    i = false;
+    #Ifdef STRICT_MODE;
+    print "S"; i++;
+    #Endif; ! STRICT_MODE
+    #Ifdef INFIX;
+    print "X"; i++;
+    #Ifnot;
+    #Ifdef DEBUG;
+    print "D"; i++;
+    #Endif; ! DEBUG
+    #Endif; ! INFIX
+    if (~~i) print "(none)";
+    new_line;
+];
+
+#ifnot;
+
+[ Banner  i ix;
+    if (Story ~= 0) {
+        glk($0086, 3); ! set header style
+        print (string) Story;
+        glk($0086, 0); ! set normal style
+    }
+    if (Headline ~= 0) print ": ", (string) Headline;
+    print "Release ";
+    @aloads ROM_GAMERELEASE 0 i;
+    print i;
+    print " / Serial number ";
+    for (i=0 : i<6 : i++) print (char) ROM_GAMESERIAL->i;
+    print " / Inform v"; inversion;
+    print ", compiler options ";
+    i = false;
+    #Ifdef STRICT_MODE;
+    print "S"; i++;
+    #Endif; ! STRICT_MODE
+    #Ifdef INFIX;
+    print "X"; i++;
+    #Ifnot;
+    #Ifdef DEBUG;
+    print "D"; i++;
+    #Endif; ! DEBUG
+    #Endif; ! INFIX
+    if (~~i) print "(none)";
+    new_line;
+
+    @gestalt 1 0 ix;
+    print "Interpreter version ", ix / $10000, ".", (ix & $FF00) / $100,
+    ".", ix & $FF, " / ";
+    @gestalt 0 0 ix;
+    print "VM ", ix / $10000, ".", (ix & $FF00) / $100, ".", ix & $FF, " / ";
+    ix = HDR_GLULXVERSION-->0;
+    print "game file format ", ix / $10000, ".", (ix & $FF00) / $100, ".", ix & $FF, "^";
+];
+
+#endif;
+
+[ RunTest;
+    func();
+    func(3, Main);
+
+    new_line;
+    
+    #ifdef TARGET_GLULX;
+    funcv();
+    funcv(3, Main);
+    funcv(-1, 2, -3, 4);
+    #endif;
+];
+
+[ func * x y z;
+    print "I am a function: ", x, " ", y, " ", z, "^";
+];
+
+#ifdef TARGET_GLULX;
+
+[ funcv * _vararg_count loc;
+    print "Vararg function got ", _vararg_count, " variables:";
+    while (_vararg_count) {
+        @pull loc;
+        _vararg_count--;
+        print " ", loc;
+    }
+    new_line;
+];
+
+#endif;
