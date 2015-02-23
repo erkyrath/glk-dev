@@ -199,6 +199,13 @@ class ZarfI7Style(pygments.style.Style):
         Token.Generic.Heading: 'bold underline',
     }
 
+def get_int_opt(options, key, defval):
+    val = options.get(key)
+    try:
+        return int(val)
+    except:
+        return defval
+
 class ZarfRtfFormatter(pygments.formatter.Formatter):
     name = 'ZRTF'
     aliases = ['zrtf']
@@ -208,7 +215,9 @@ class ZarfRtfFormatter(pygments.formatter.Formatter):
         pygments.formatter.Formatter.__init__(self, **options)
         self.monochrome = pygments.util.get_bool_opt(options, 'monochrome', False)
         #self.fontface = options.get('fontface') or ''
-        #self.fontsize = get_int_opt(options, 'fontsize', 0)
+        self.fontsize = get_int_opt(options, 'fontsize', 10)
+        self.headfontsize = get_int_opt(options, 'headfontsize', int(self.fontsize*1.25))
+        self.fixfontsize = get_int_opt(options, 'fixfontsize', int(self.fontsize*0.925))
 
     def _escape(self, text):
         return text.replace(u'\\', u'\\\\') \
@@ -262,7 +271,7 @@ class ZarfRtfFormatter(pygments.formatter.Formatter):
                         ))
                         offset += 1
             outfile.write(u'}')
-        outfile.write(u'\\f0 \\fs%d' % (20,))
+        outfile.write(u'\\f0 \\fs%d' % (2*self.fontsize,))
 
         # highlight stream
         for ttype, value in tokensource:
@@ -279,9 +288,9 @@ class ZarfRtfFormatter(pygments.formatter.Formatter):
             if style['italic']:
                 buf.append(u'\\i')
             if style['underline']:
-                buf.append(u'\\fs24')
+                buf.append(u'\\fs%d' % (2*self.headfontsize,))
             if style['border']:
-                buf.append(u'\\f1\\fs18')
+                buf.append(u'\\f1\\fs%d' % (2*self.fixfontsize,))
             start = u''.join(buf)
             if start:
                 outfile.write(u'{%s ' % start)
