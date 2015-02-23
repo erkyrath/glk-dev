@@ -20,6 +20,9 @@ popt = optparse.OptionParser(usage='usage: i7tortf.py [OPTIONS] story.ni [ story
 popt.add_option('-o', '--output',
                 action='store', dest='outfile',
                 help='name for generated RTF file (default: stdout)')
+popt.add_option('-f', '--fontsize',
+                action='store', dest='fontsize', type='int', default=12,
+                help='base font size')
 popt.add_option('-c', '--color',
                 action='store_true', dest='colorize',
                 help='add color to the generated RTF file')
@@ -310,7 +313,7 @@ for filename in args:
 
 # Create the lexer and formatter.
 lexer = ZarfI7Lexer()
-form = ZarfRtfFormatter(style=ZarfI7Style, monochrome=(not opts.colorize))
+form = ZarfRtfFormatter(style=ZarfI7Style, monochrome=(not opts.colorize), fontsize=opts.fontsize)
 
 # Do the job.
 
