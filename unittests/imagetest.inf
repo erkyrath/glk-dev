@@ -7,8 +7,7 @@ Include "VerbLib";
 
 [ Initialise;
 	if (~~graphics_supported())
-		print "This interpreter does not support graphics! The test commands
-			will cause errors.^^";
+		print "This interpreter does not support graphics!.^^";
 		
 	location = Kitchen;
 	selfobj.description = "You're some kind of person.";
@@ -18,8 +17,12 @@ Object Kitchen "Image Room"
   with
     description [;
 		print "A voice booooms out: Try ~image~, or ~image NUMBER~,
-			or ~image NUMBER ALIGN~. You can also do ~size NUMBER~
-			to check an image size, and ~break~ for a flow break.^^
+			or ~image NUMBER ALIGN~. Alignment are ~up~, ~down~,
+			~center~, ~left~, ~right~. Throw in the word ~caption~ to
+			mix some text on the line.
+			You can also type ~size NUMBER~ to check an image size.
+			Type ~text~ for a long text paragraph, and
+			~break~ for a flow break.^^
 			Images available (imported from Sensory Jam):
 			0, 1, 2, 5, 10, 11.^";
 	],
@@ -27,12 +30,81 @@ Object Kitchen "Image Room"
 
 Include "Grammar";
 
+Global parsed_alignment;
+Global parsed_caption;
+
+[ ImageSpec startwn wd res;
+	parsed_number = 0;
+	parsed_alignment = 1;
+	parsed_caption = false;
+
+	startwn = wn;
+
+	while (1) {
+		wd = NextWordStopped();
+		if (wd == comma_word or THEN1__WD or -1) {
+			if (wn-1 == startwn) {
+				parsed_number = -1;
+				return GPR_NUMBER;
+			}
+			return GPR_NUMBER;
+		}
+		
+		res = TryNumber(wn-1);
+		if (res >= 0) {
+			parsed_number = res;
+			continue;
+		}
+
+		if (wd == 'text' or 'caption') {
+			parsed_caption = true;
+			continue;
+		}
+		
+		if (wd == 'up' or 'inlineup') {
+			parsed_alignment = 1;
+			continue;
+		}
+		if (wd == 'down' or 'inlinedown') {
+			parsed_alignment = 2;
+			continue;
+		}
+		if (wd == 'center' or 'inlinecenter') {
+			parsed_alignment = 3;
+			continue;
+		}
+		if (wd == 'left' or 'marginleft') {
+			parsed_alignment = 4;
+			continue;
+		}
+		if (wd == 'right' or 'inlineright') {
+			parsed_alignment = 5;
+			continue;
+		}
+
+		if (1)
+			return GPR_FAIL;
+	}
+];
+	
 Verb 'size'
 	* number -> Size;
 
+Verb 'image'
+	* ImageSpec -> Image;
+
+Verb 'text'
+	* -> Text;
+
+Extend 'break' replace
+	* -> Break;
+
 Array info_array --> 2;
-	
+
 [ SizeSub res;
+	if (~~graphics_supported())
+		print_ret "This interpreter does not support graphics.";
+		
 	res = glk_image_get_info(parsed_number, info_array, info_array+WORDSIZE);
 	if (~~res)
 		print_ret "There is no image ", parsed_number, ".";
@@ -41,8 +113,54 @@ Array info_array --> 2;
 		info_array-->0, " by ", info_array-->1, ".";
 ];
 
+[ ImageSub;
+	!print_ret "Image ", parsed_number, " align ", parsed_alignment, ".";
+	if (~~bufgraphics_supported())
+		print_ret "This window does not support image display.";
+
+	if (parsed_number < 0) {
+		print "Here are several images in a row:^";
+		print "With inlineup: ";
+		glk_image_draw(gg_mainwin, 0, 1, 0);
+		print " With inlinedown: ";
+		glk_image_draw(gg_mainwin, 10, 2, 0);
+		print " With inlinecenter: ";
+		glk_image_draw(gg_mainwin, 5, 3, 0);
+		new_line;
+		rtrue;
+	}
+	
+	glk_image_draw(gg_mainwin, parsed_number, parsed_alignment, 0);
+	if (parsed_caption)
+		print " -- that is an image.^";
+];
+
+[ TextSub ix val;
+	print "Here is some";
+	for (ix=0 : ix<100 : ix++) {
+		val = random("random", "wacky", "arbitrary", "mixed-up", "fool");
+		print " ", (string) val;
+	}
+	print_ret " text.";
+];
+
+[ BreakSub;
+	if (~~bufgraphics_supported())
+		print_ret "This window does not support image display.";
+
+	glk_window_flow_break(gg_mainwin);
+];
+
 [ graphics_supported;
 	return glk_gestalt(6, 0); ! gestalt_Graphics
+];
+
+[ bufgraphics_supported;
+	if (~~glk_gestalt(6, 0)) ! gestalt_Graphics
+		return false;
+	if (~~glk_gestalt(7, 3)) ! gestalt_DrawImage, wintype_TextBuffer
+		return false;
+	rtrue;
 ];
 
 [ glk_gestalt _vararg_count ret;
