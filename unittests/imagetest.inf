@@ -1,0 +1,77 @@
+Constant Story "ImageTest";
+Constant Headline "^Not a game.^";
+Release 1;
+
+Include "Parser";
+Include "VerbLib";
+
+[ Initialise;
+	if (~~graphics_supported())
+		print "This interpreter does not support graphics! The test commands
+			will cause errors.^^";
+		
+	location = Kitchen;
+	selfobj.description = "You're some kind of person.";
+];
+
+Object Kitchen "Image Room"
+  with
+    description [;
+		print "A voice booooms out: Try ~image~, or ~image NUMBER~,
+			or ~image NUMBER ALIGN~. You can also do ~size NUMBER~
+			to check an image size, and ~break~ for a flow break.^^
+			Images available (imported from Sensory Jam):
+			0, 1, 2, 5, 10, 11.^";
+	],
+  has light;
+
+Include "Grammar";
+
+Verb 'size'
+	* number -> Size;
+
+Array info_array --> 2;
+	
+[ SizeSub res;
+	res = glk_image_get_info(parsed_number, info_array, info_array+WORDSIZE);
+	if (~~res)
+		print_ret "There is no image ", parsed_number, ".";
+	
+	print_ret "Image ", parsed_number, " size: ",
+		info_array-->0, " by ", info_array-->1, ".";
+];
+
+[ graphics_supported;
+	return glk_gestalt(6, 0); ! gestalt_Graphics
+];
+
+[ glk_gestalt _vararg_count ret;
+  ! glk_gestalt(uint, uint) => uint
+  @glk 4 _vararg_count ret;
+  return ret;
+];
+
+[ glk_image_get_info _vararg_count ret;
+  ! glk_image_get_info(uint, &uint, &uint) => uint
+  @glk 224 _vararg_count ret;
+  return ret;
+];
+
+[ glk_image_draw _vararg_count ret;
+  ! glk_image_draw(window, uint, int, int) => uint
+  @glk 225 _vararg_count ret;
+  return ret;
+];
+
+[ glk_image_draw_scaled _vararg_count ret;
+  ! glk_image_draw_scaled(window, uint, int, int, uint, uint) => uint
+  @glk 226 _vararg_count ret;
+  return ret;
+];
+
+[ glk_window_flow_break _vararg_count;
+  ! glk_window_flow_break(window)
+  @glk 232 _vararg_count 0;
+  return 0;
+];
+
