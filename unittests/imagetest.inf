@@ -1,6 +1,6 @@
 Constant Story "ImageTest";
 Constant Headline "^Not a game.^";
-Release 1;
+Release 2;
 
 Include "Parser";
 Include "VerbLib";
@@ -22,7 +22,8 @@ Object Kitchen "Image Room"
 			mix some text on the line. Adding a term like ~100x200~
 			will scale the image to those dimensions.^^
 			You can also type ~size NUMBER~ to check an image size.
-			Type ~text~ for a long text paragraph, and
+			Type ~text~ for a long text paragraph,
+			~clear~ to clear the text buffer, and
 			~break~ for a flow break.^^
 			Images that should be available (imported from Sensory Jam):
 			0, 1, 2, 5, 10, 11.^";
@@ -137,6 +138,9 @@ Verb 'text'
 Extend 'break' replace
 	* -> Break;
 
+Extend 'clear' replace
+	* -> Clear;
+
 Array info_array --> 2;
 
 [ SizeSub res;
@@ -197,6 +201,11 @@ Array info_array --> 2;
 	glk_window_flow_break(gg_mainwin);
 ];
 
+[ ClearSub;
+	glk_window_clear(gg_mainwin);
+	print_ret "You erase history.";
+];
+
 [ graphics_supported;
 	return glk_gestalt(6, 0); ! gestalt_Graphics
 ];
@@ -213,6 +222,12 @@ Array info_array --> 2;
   ! glk_gestalt(uint, uint) => uint
   @glk 4 _vararg_count ret;
   return ret;
+];
+
+[ glk_window_clear _vararg_count;
+  ! glk_window_clear(window)
+  @glk 42 _vararg_count 0;
+  return 0;
 ];
 
 [ glk_image_get_info _vararg_count ret;
