@@ -199,11 +199,12 @@ Array info_array --> 4;
 	print_ret "Graphics window closed.";
 ];
 
-[ ShowWinSub;
+[ ShowWinSub pairwin;
 	if (~~gg_graphwin)
 		print_ret "There is no graphics window.";
 
-	glk_window_get_arrangement(gg_graphwin, info_array, info_array+WORDSIZE, info_array+2*WORDSIZE);
+	pairwin = glk_window_get_parent(gg_graphwin);
+	glk_window_get_arrangement(pairwin, info_array, info_array+WORDSIZE, info_array+2*WORDSIZE);
 	print "The current graphics window is ";
 	switch (info_array-->0 & $0F) {
 		0: print "left";
@@ -227,7 +228,7 @@ Array info_array --> 4;
 	".";
 ];
 
-[ SplitFixedSub;
+[ SplitFixedSub pairwin;
 	if (~~graphics_supported())
 		print_ret "This interpreter does not support graphics.";
 	if (parsed_number <= 0)
@@ -238,12 +239,13 @@ Array info_array --> 4;
 		SetUpGraphWin();
 	}
 	else {
-		glk_window_set_arrangement(gg_graphwin, $12, winsplit, gg_graphwin);
+		pairwin = glk_window_get_parent(gg_graphwin);
+		glk_window_set_arrangement(pairwin, $12, winsplit, gg_graphwin);
 	}
 	print_ret "Changed window to ", winsplit, " pixels high.";
 ];
 
-[ SplitPropSub;
+[ SplitPropSub pairwin;
 	if (~~graphics_supported())
 		print_ret "This interpreter does not support graphics.";
 	if (parsed_number <= 5 || parsed_number >= 95)
@@ -254,7 +256,8 @@ Array info_array --> 4;
 		SetUpGraphWin();
 	}
 	else {
-		glk_window_set_arrangement(gg_graphwin, $22, -winsplit, gg_graphwin);
+		pairwin = glk_window_get_parent(gg_graphwin);
+		glk_window_set_arrangement(pairwin, $22, -winsplit, gg_graphwin);
 	}
 	print_ret "Changed window to ", -winsplit, " percent of the screen.";
 ];
@@ -335,6 +338,12 @@ Array info_array --> 4;
   ! glk_window_close(window, &{uint, uint})
   @glk 36 _vararg_count 0;
   return 0;
+];
+
+[ glk_window_get_parent _vararg_count ret;
+  ! glk_window_get_parent(window) => window
+  @glk 41 _vararg_count ret;
+  return ret;
 ];
 
 [ glk_window_get_size _vararg_count;
