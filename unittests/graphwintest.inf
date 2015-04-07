@@ -30,13 +30,13 @@ Include "VerbLib";
 	}
 
 	if (winsplit == 0) {
-	    if (gg_graphwin) {
+		if (gg_graphwin) {
 			glk_window_close(gg_graphwin, 0);
 			gg_graphwin = 0;
 		}
 	}
 	else {
-	    if (~~gg_graphwin) {
+		if (~~gg_graphwin) {
 			! Open a graphics window.
 			if (winsplit > 0) {
 				method = $12;
@@ -46,50 +46,51 @@ Include "VerbLib";
 				method = $22;
 				size = -winsplit;
 			}
-	        gg_graphwin = glk_window_open(gg_mainwin, method, size, 5, 
-	            GG_GRAPHWIN_ROCK); ! window_open
-	        if (~~gg_graphwin) {
-	            print "Your interpreter was unable to create a graphics
-	                window, even though it said it could.^^";
+			gg_graphwin = glk_window_open(gg_mainwin, method, size, 5, 
+				GG_GRAPHWIN_ROCK); ! window_open
+			if (~~gg_graphwin) {
+				print "Your interpreter was unable to create a graphics
+					window, even though it said it could.^^";
 				winsplit = 0;
-	        }
-	    }
+			}
+		}
 	}
 ];
 
 [ IdentifyGlkObject phase type ref rock;
-    if (phase == 0) {
-        ! Zero out references to our objects.
-        gg_graphwin = 0;
-        return;
-    }
+	if (phase == 0) {
+		! Zero out references to our objects.
+		gg_graphwin = 0;
+		return;
+	}
 
-    if (phase == 1) {
-        switch (type) {
-            0: ! it's a window
-                switch (rock) {
-                    GG_GRAPHWIN_ROCK: gg_graphwin = ref;
-                }
-            1: ! it's a stream
-                ! But we don't create any.
-            2: ! it's a fileref
-                ! But we don't create any.
-        }
-        return;
-    }
+	if (phase == 1) {
+		switch (type) {
+			0: ! it's a window
+				switch (rock) {
+					GG_GRAPHWIN_ROCK: gg_graphwin = ref;
+				}
+			1: ! it's a stream
+				! But we don't create any.
+			2: ! it's a fileref
+				! But we don't create any.
+		}
+		return;
+	}
 
-    if (phase == 2) {
-        ! Now that we know whether the painting window exists, we have to 
-        ! turn it on or off, depending on whether it *should* exist or not.
+	if (phase == 2) {
+		! Now that we know whether the painting window exists, we have to 
+		! turn it on or off, depending on whether it *should* exist or not.
 		SetUpGraphWin();
-        return;
-    }
+		return;
+	}
 ];
 
 Object Kitchen "Image Room"
   with
-    description [;
-		print "A voice booooms out: Try ~image~, or ~image NUMBER~,
+	description [;
+		print "A voice booooms out:
+			Try ~image~, or ~image NUMBER~,
 			or ~image NUMBER X Y~. Adding a term like ~100x200~
 			will scale the image to those dimensions.^^
 			You can also type ~size NUMBER~ to check an image size.
