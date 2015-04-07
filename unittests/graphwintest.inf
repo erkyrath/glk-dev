@@ -90,9 +90,16 @@ Object Kitchen "Image Room"
   with
 	description [;
 		print "A voice booooms out:
-			Try ~image~, or ~image NUMBER~,
-			or ~image NUMBER X Y~. Adding a term like ~100x200~
-			will scale the image to those dimensions.^^
+			Try ~split NUMBER fixed~ or ~split NUMBER percent~ to adjust
+			the graphics window height. Type ~show~ to show the current
+			height, or ~close~ to close the graphics window entirely.^^
+			Type ~color COLOR~ to set the default color;
+			~fill COLOR X Y WxH~ to fill a rectangle;
+			~erase X Y WxH~ to erase a rectangle to the default color.
+			Type ~image~, or ~image NUMBER~,
+			or ~image NUMBER X Y~ to display an image.
+			Adding a ~WxH~ term will scale the image to those
+			dimensions.^^
 			You can also type ~size NUMBER~ to check an image size.
 			Images that should be available (imported from Sensory Jam):
 			0, 1, 2, 5, 10, 11.^";
@@ -103,6 +110,49 @@ Include "Grammar";
 
 Global parsed_dimensions;
 Global parsed_position;
+
+[ TryColor wordnum   addr len ix val ch digits;
+	addr = WordAddress(wordnum);
+	len = WordLength(wordnum);
+	
+	val = 0;
+	digits = 0;
+	for (ix=0 : ix<len : ix++) {
+		ch = addr->ix;
+		if (ch == '#' or '$')
+			continue;
+		if (ch >= '0' && ch <= '9') {
+			val = 16*val + (ch-'0');
+			digits++;
+			continue;
+		}
+		if (ch >= 'a' && ch <= 'f') {
+			val = 16*val + (ch-'a'+10);
+			digits++;
+			continue;
+		}
+		if (ch >= 'A' && ch <= 'F') {
+			val = 16*val + (ch-'A'+10);
+			digits++;
+			continue;
+		}
+		return -1;
+	}
+
+	! Special case -- accept "F80" as "FF8800".
+	if (digits == 3) {
+		val = ((val & $F00) * 256) | ((val & $0F0) * 16) | (val & $00F);
+		val = val + (val * 16);
+	}
+
+	return val;
+];
+
+Array colornames -->
+	'red' $FF0000 'green' $00FF00 'blue' $0000FF
+	'yellow' $FFFF00 'orange' $FF8000 'purple' $FF00FF
+	'black' $000000 'white' $FFFFFF
+	0 0;
 
 [ TryDimensions wordnum   ix addr len ch xcount val res;
 	addr = WordAddress(wordnum);
@@ -131,6 +181,26 @@ Global parsed_position;
 	if (res == 0 || val == 0)
 		return 0;
 	return ((res * $10000) | val);
+];
+
+[ ColorSpec    wd res ix;
+	parsed_number = 0;
+
+	wd = NextWordStopped();
+	for (ix=0 : colornames-->ix : ix=ix+2) {
+		if (wd == colornames-->ix) {
+			parsed_number = colornames-->(ix+1);
+			return GPR_NUMBER;
+		}
+	}
+
+	res = TryColor(wn-1);
+	if (res >= 0 && res <= $FFFFFF) {
+		parsed_number = res;
+		return GPR_NUMBER;
+	}
+	
+	return GPR_FAIL;
 ];
 
 [ ImageSpec startwn wd res;
@@ -167,6 +237,9 @@ Global parsed_position;
 	}
 ];
 	
+Verb 'color'
+	* ColorSpec -> SetColor;
+
 Verb 'size'
 	* number -> Size;
 
@@ -263,6 +336,14 @@ Array info_array --> 4;
 	print_ret "Changed window to ", -winsplit, " percent of the screen.";
 ];
 
+[ SetColorSub;
+	if (~~gg_graphwin)
+		print_ret "There is no graphics window.";
+
+	glk_window_set_background_color(gg_graphwin, parsed_number);
+	print_ret "Set default window color to ", (Hex6) parsed_number, ".";
+];
+
 [ SizeSub res;
 	if (~~graphics_supported())
 		print_ret "This interpreter does not support graphics.";
@@ -307,8 +388,23 @@ Array info_array --> 4;
 [ ClearSub;
 	if (~~gg_graphwin)
 		print_ret "There is no graphics window.";
-	!### erase graphics win -- two ways?
+	glk_window_clear(gg_graphwin);
 	print_ret "You erase the window.";
+];
+
+[ Hex6 val   byte ix;
+	print "$";
+	for (ix=0 : ix<8 : ix++) {
+		@ushiftr val 28 byte;
+		@shiftl val 4 val;
+		byte = byte & $0F;
+		if (byte == 0 && ix < 2)
+			continue;
+		if (byte <= 9)
+			print (char) (byte+'0');
+		else
+			print (char) (byte-10+'A');
+	}
 ];
 
 [ graphics_supported;
@@ -388,3 +484,22 @@ Array info_array --> 4;
   @glk 226 _vararg_count ret;
   return ret;
 ];
+
+[ glk_window_erase_rect _vararg_count;
+  ! glk_window_erase_rect(window, int, int, uint, uint)
+  @glk 233 _vararg_count 0;
+  return 0;
+];
+
+[ glk_window_fill_rect _vararg_count;
+  ! glk_window_fill_rect(window, uint, int, int, uint, uint)
+  @glk 234 _vararg_count 0;
+  return 0;
+];
+
+[ glk_window_set_background_color _vararg_count;
+  ! glk_window_set_background_color(window, uint)
+  @glk 235 _vararg_count 0;
+  return 0;
+];
+
