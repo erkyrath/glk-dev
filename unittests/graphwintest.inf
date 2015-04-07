@@ -1,0 +1,380 @@
+Constant Story "GraphWinTest";
+Constant Headline "^Not a game.^";
+Release 1;
+
+Constant GG_GRAPHWIN_ROCK 210;
+Global gg_graphwin = 0;
+
+Global winsplit = 0;
+
+Include "Parser";
+Include "VerbLib";
+
+[ Initialise;
+	if (~~graphics_supported()) {
+		print "This interpreter does not support graphics!^^";
+	}
+	else {
+		winsplit = 200;
+		SetUpGraphWin();
+	}
+
+	location = Kitchen;
+	selfobj.description = "You're some kind of person.";
+];
+
+[ SetUpGraphWin   method size;
+	if (~~graphics_supported()) {
+		winsplit = 0;
+		return;
+	}
+
+	if (winsplit == 0) {
+	    if (gg_graphwin) {
+			glk_window_close(gg_graphwin, 0);
+			gg_graphwin = 0;
+		}
+	}
+	else {
+	    if (~~gg_graphwin) {
+			! Open a graphics window.
+			if (winsplit > 0) {
+				method = $12;
+				size = winsplit;
+			}
+			else {
+				method = $22;
+				size = -winsplit;
+			}
+	        gg_graphwin = glk_window_open(gg_mainwin, method, size, 5, 
+	            GG_GRAPHWIN_ROCK); ! window_open
+	        if (~~gg_graphwin) {
+	            print "Your interpreter was unable to create a graphics
+	                window, even though it said it could.^^";
+				winsplit = 0;
+	        }
+	    }
+	}
+];
+
+[ IdentifyGlkObject phase type ref rock;
+    if (phase == 0) {
+        ! Zero out references to our objects.
+        gg_graphwin = 0;
+        return;
+    }
+
+    if (phase == 1) {
+        switch (type) {
+            0: ! it's a window
+                switch (rock) {
+                    GG_GRAPHWIN_ROCK: gg_graphwin = ref;
+                }
+            1: ! it's a stream
+                ! But we don't create any.
+            2: ! it's a fileref
+                ! But we don't create any.
+        }
+        return;
+    }
+
+    if (phase == 2) {
+        ! Now that we know whether the painting window exists, we have to 
+        ! turn it on or off, depending on whether it *should* exist or not.
+		SetUpGraphWin();
+        return;
+    }
+];
+
+Object Kitchen "Image Room"
+  with
+    description [;
+		print "A voice booooms out: Try ~image~, or ~image NUMBER~,
+			or ~image NUMBER X Y~. Adding a term like ~100x200~
+			will scale the image to those dimensions.^^
+			You can also type ~size NUMBER~ to check an image size.
+			Images that should be available (imported from Sensory Jam):
+			0, 1, 2, 5, 10, 11.^";
+	],
+  has light;
+
+Include "Grammar";
+
+Global parsed_dimensions;
+Global parsed_position;
+
+[ TryDimensions wordnum   ix addr len ch xcount val res;
+	addr = WordAddress(wordnum);
+	len = WordLength(wordnum);
+
+	res = 0;
+	xcount = 0;
+	val = 0;
+	for (ix=0 : ix<len : ix++) {
+		ch = addr->ix;
+		if (ch == 'x') {
+			xcount++;
+			res = val;
+			val = 0;
+			continue;
+		}
+		if (ch >= '0' && ch <= '9') {
+			val = 10*val + (ch-'0');
+			continue;
+		}
+		return 0;
+	}
+
+	if (xcount ~= 1)
+		return 0;
+	if (res == 0 || val == 0)
+		return 0;
+	return ((res * $10000) | val);
+];
+
+[ ImageSpec startwn wd res;
+	parsed_number = 0;
+	parsed_dimensions = 0;
+	parsed_position = 0;
+
+	startwn = wn;
+
+	while (1) {
+		wd = NextWordStopped();
+		if (wd == comma_word or THEN1__WD or -1) {
+			if (wn-1 == startwn) {
+				parsed_number = -1;
+				return GPR_NUMBER;
+			}
+			return GPR_NUMBER;
+		}
+		
+		res = TryNumber(wn-1);
+		if (res >= 0) {
+			parsed_number = res;
+			continue;
+		}
+
+		res = TryDimensions(wn-1);
+		if (res) {
+			parsed_dimensions = res;
+			continue;
+		}
+
+		if (1)
+			return GPR_FAIL;
+	}
+];
+	
+Verb 'size'
+	* number -> Size;
+
+Verb 'image'
+	* ImageSpec -> Image;
+
+Extend 'clear' replace
+	* -> Clear;
+
+Extend 'close' replace
+	* -> CloseWin;
+
+Extend 'show' replace
+	* -> ShowWin;
+
+Verb 'split'
+	* number -> SplitFixed
+	* number 'fix'/'fixed' -> SplitFixed
+	* number 'prop'/'percent' -> SplitProp
+	* 'fix'/'fixed' number -> SplitFixed
+	* 'prop'/'percent' number -> SplitProp;
+	
+Array info_array --> 4;
+
+[ CloseWinSub;
+	if (~~gg_graphwin)
+		print_ret "There is no graphics window.";
+
+	winsplit = 0;
+	SetUpGraphWin();
+	print_ret "Graphics window closed.";
+];
+
+[ ShowWinSub;
+	if (~~gg_graphwin)
+		print_ret "There is no graphics window.";
+
+	glk_window_get_arrangement(gg_graphwin, info_array, info_array+WORDSIZE, info_array+2*WORDSIZE);
+	print "The current graphics window is ";
+	switch (info_array-->0 & $0F) {
+		0: print "left";
+		1: print "right";
+		2: print "above";
+		3: print "below";
+		default: print "???";
+	}
+	print ", ";
+	print info_array-->1;
+	print " ";
+	switch (info_array-->0 & $F0) {
+		$10: print "(fixed)";
+		$20: print "(percent)";
+		default: print "(???)";
+	}
+
+	glk_window_get_size(gg_graphwin, info_array, info_array+WORDSIZE);
+	print ". Its size is ", info_array-->0, " by ", info_array-->1,
+		" pixels";
+	".";
+];
+
+[ SplitFixedSub;
+	if (~~graphics_supported())
+		print_ret "This interpreter does not support graphics.";
+	if (parsed_number <= 0)
+		print_ret "The split height must be positive.";
+
+	winsplit = parsed_number;
+	if (~~gg_graphwin) {
+		SetUpGraphWin();
+	}
+	else {
+		glk_window_set_arrangement(gg_graphwin, $12, winsplit, gg_graphwin);
+	}
+	print_ret "Changed window to ", winsplit, " pixels high.";
+];
+
+[ SplitPropSub;
+	if (~~graphics_supported())
+		print_ret "This interpreter does not support graphics.";
+	if (parsed_number <= 5 || parsed_number >= 95)
+		print_ret "The split height must be between 5 and 95.";
+
+	winsplit = -parsed_number;
+	if (~~gg_graphwin) {
+		SetUpGraphWin();
+	}
+	else {
+		glk_window_set_arrangement(gg_graphwin, $22, -winsplit, gg_graphwin);
+	}
+	print_ret "Changed window to ", -winsplit, " percent of the screen.";
+];
+
+[ SizeSub res;
+	if (~~graphics_supported())
+		print_ret "This interpreter does not support graphics.";
+		
+	res = glk_image_get_info(parsed_number, info_array, info_array+WORDSIZE);
+	if (~~res)
+		print_ret "There is no image ", parsed_number, ".";
+	
+	print_ret "Image ", parsed_number, " size: ",
+		info_array-->0, " by ", info_array-->1, ".";
+];
+
+[ ImageSub wid hgt;
+	print "Image ", parsed_number, "^"; !###
+	if (~~gg_graphwin)
+		print_ret "There is no graphics window.";
+	if (~~graphicswin_supported())
+		print_ret "The graphics window does not support image display.";
+
+	if (parsed_number < 0) {
+		print "Here are several images in a row:^";
+		print "With inlineup: ";
+		glk_image_draw(gg_mainwin, 0, 1, 0);
+		print " With inlinedown: ";
+		glk_image_draw(gg_mainwin, 10, 2, 0);
+		print " With inlinecenter: ";
+		glk_image_draw(gg_mainwin, 5, 3, 0);
+		new_line;
+		rtrue;
+	}
+
+	if (parsed_dimensions == 0) {
+		!glk_image_draw(gg_mainwin, parsed_number, parsed_alignment, 0);
+	}
+	else {
+		wid = ((parsed_dimensions / $10000) & $FFFF);
+		hgt = (parsed_dimensions & $FFFF);
+		!glk_image_draw_scaled(gg_mainwin, parsed_number, parsed_alignment, 0, wid, hgt);
+	}
+];
+
+[ ClearSub;
+	if (~~gg_graphwin)
+		print_ret "There is no graphics window.";
+	!### erase graphics win -- two ways?
+	print_ret "You erase the window.";
+];
+
+[ graphics_supported;
+	return glk_gestalt(6, 0); ! gestalt_Graphics
+];
+
+[ graphicswin_supported;
+	if (~~glk_gestalt(6, 0)) ! gestalt_Graphics
+		return false;
+	if (~~glk_gestalt(7, 5)) ! gestalt_DrawImage, wintype_Graphics
+		return false;
+	rtrue;
+];
+
+[ glk_gestalt _vararg_count ret;
+  ! glk_gestalt(uint, uint) => uint
+  @glk 4 _vararg_count ret;
+  return ret;
+];
+
+[ glk_window_open _vararg_count ret;
+  ! glk_window_open(window, uint, uint, uint, uint) => window
+  @glk 35 _vararg_count ret;
+  return ret;
+];
+
+[ glk_window_close _vararg_count;
+  ! glk_window_close(window, &{uint, uint})
+  @glk 36 _vararg_count 0;
+  return 0;
+];
+
+[ glk_window_get_size _vararg_count;
+  ! glk_window_get_size(window, &uint, &uint)
+  @glk 37 _vararg_count 0;
+  return 0;
+];
+
+[ glk_window_set_arrangement _vararg_count;
+  ! glk_window_set_arrangement(window, uint, uint, window)
+  @glk 38 _vararg_count 0;
+  return 0;
+];
+
+[ glk_window_get_arrangement _vararg_count;
+  ! glk_window_get_arrangement(window, &uint, &uint, &window)
+  @glk 39 _vararg_count 0;
+  return 0;
+];
+
+[ glk_window_clear _vararg_count;
+  ! glk_window_clear(window)
+  @glk 42 _vararg_count 0;
+  return 0;
+];
+
+[ glk_image_get_info _vararg_count ret;
+  ! glk_image_get_info(uint, &uint, &uint) => uint
+  @glk 224 _vararg_count ret;
+  return ret;
+];
+
+[ glk_image_draw _vararg_count ret;
+  ! glk_image_draw(window, uint, int, int) => uint
+  @glk 225 _vararg_count ret;
+  return ret;
+];
+
+[ glk_image_draw_scaled _vararg_count ret;
+  ! glk_image_draw_scaled(window, uint, int, int, uint, uint) => uint
+  @glk 226 _vararg_count ret;
+  return ret;
+];
