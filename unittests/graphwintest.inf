@@ -87,17 +87,17 @@ Include "VerbLib";
 ];
 
 [ HandleGlkEvent ev context;
-    context = 0; ! suppress ignored warning
-    switch (ev-->0) {
-      5: ! evtype_Arrange
-        glk_cancel_line_event(gg_mainwin, gg_event);
+	context = 0; ! suppress ignored warning
+	switch (ev-->0) {
+	  5: ! evtype_Arrange
+		glk_cancel_line_event(gg_mainwin, gg_event);
 		print "^Window arrangement event!^>";
 		glk_request_line_event(gg_mainwin, buffer+WORDSIZE, INPUT_BUFFER_LEN-WORDSIZE, gg_event-->2);
-      6: ! evtype_Redraw
-        glk_cancel_line_event(gg_mainwin, gg_event);
+	  6: ! evtype_Redraw
+		glk_cancel_line_event(gg_mainwin, gg_event);
 		print "^Graphics window redraw event!^>";
 		glk_request_line_event(gg_mainwin, buffer+WORDSIZE, INPUT_BUFFER_LEN-WORDSIZE, gg_event-->2);
-    }
+	}
 ];
 
 Object Kitchen "Image Room"
@@ -197,7 +197,7 @@ Array colornames -->
 	return ((res * $10000) | val);
 ];
 
-[ ColorSpec    wd res ix;
+[ ColorSpec   wd res ix;
 	parsed_number = 0;
 
 	wd = NextWordStopped();
