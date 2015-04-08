@@ -7,6 +7,8 @@ Global gg_graphwin = 0;
 
 Global winsplit = 0;
 
+Replace Tokenise__;
+
 Include "Parser";
 Include "VerbLib";
 
@@ -100,6 +102,53 @@ Include "VerbLib";
 	}
 ];
 
+[ Tokenise__ buf tab
+    cx numwords len bx ix wx wpos wlen val res dictlen entrylen;
+    len = buf-->0;
+    buf = buf+WORDSIZE;
+
+    ! First, split the buffer up into words. We split on period and
+	! double-quote, but not comma.
+
+    cx = 0;
+    numwords = 0;
+    while (cx < len) {
+        while (cx < len && buf->cx == ' ') cx++;
+        if (cx >= len) break;
+        bx = cx;
+        if (buf->cx == '.' or ',' or '"') cx++;
+        else {
+            while (cx < len && buf->cx ~= ' ' or '.' or '"') cx++;
+        }
+        tab-->(numwords*3+2) = (cx-bx);
+        tab-->(numwords*3+3) = WORDSIZE+bx;
+        numwords++;
+        if (numwords >= MAX_BUFFER_WORDS) break;
+    }
+    tab-->0 = numwords;
+
+    ! Now we look each word up in the dictionary.
+
+    dictlen = #dictionary_table-->0;
+    entrylen = DICT_WORD_SIZE + 7;
+
+    for (wx=0 : wx<numwords : wx++) {
+        wlen = tab-->(wx*3+2);
+        wpos = tab-->(wx*3+3);
+
+        ! Copy the word into the gg_tokenbuf array, clipping to DICT_WORD_SIZE
+        ! characters and lower case.
+        if (wlen > DICT_WORD_SIZE) wlen = DICT_WORD_SIZE;
+        cx = wpos - WORDSIZE;
+        for (ix=0 : ix<wlen : ix++) gg_tokenbuf->ix = glk($00A0, buf->(cx+ix));
+        for (: ix<DICT_WORD_SIZE : ix++) gg_tokenbuf->ix = 0;
+
+        val = #dictionary_table + WORDSIZE;
+        @binarysearch gg_tokenbuf DICT_WORD_SIZE val entrylen dictlen 1 1 res;
+        tab-->(wx*3+1) = res;
+    }
+];
+
 Object Kitchen "Image Room"
   with
 	description [;
@@ -108,10 +157,12 @@ Object Kitchen "Image Room"
 			the graphics window height. Type ~show~ to show the current
 			height, or ~close~ to close the graphics window entirely.^^
 			Type ~color COLOR~ to set the default color;
-			~fill COLOR X Y WxH~ to fill a rectangle;
-			~erase X Y WxH~ to erase a rectangle to the default color.
+			~fill COLOR X,Y WxH~ to fill a rectangle;
+			~erase X,Y WxH~ to erase a rectangle to the default color.
+			(No space after the comma.)
+			~clear~ will erase the entire graphics window.^^
 			Type ~image~, or ~image NUMBER~,
-			or ~image NUMBER X Y~ to display an image.
+			or ~image NUMBER X,Y~ to display an image.
 			Adding a ~WxH~ term will scale the image to those
 			dimensions.^^
 			You can also type ~size NUMBER~ to check an image size.
@@ -197,6 +248,35 @@ Array colornames -->
 	return ((res * $10000) | val);
 ];
 
+[ TryPosition wordnum   ix addr len ch xcount val res;
+	addr = WordAddress(wordnum);
+	len = WordLength(wordnum);
+
+	res = 0;
+	xcount = 0;
+	val = 0;
+	for (ix=0 : ix<len : ix++) {
+		ch = addr->ix;
+		if (ch == ',') {
+			xcount++;
+			res = val;
+			val = 0;
+			continue;
+		}
+		if (ch >= '0' && ch <= '9') {
+			val = 10*val + (ch-'0');
+			continue;
+		}
+		return 0;
+	}
+
+	if (xcount ~= 1)
+		return 0;
+	if (res == 0 || val == 0)
+		return 0;
+	return ((res * $10000) | val);
+];
+
 [ ColorSpec   wd res ix;
 	parsed_number = 0;
 
@@ -217,6 +297,89 @@ Array colornames -->
 	return GPR_FAIL;
 ];
 
+[ RectColorSpec startwn wd res ix;
+	parsed_number = 0;
+	parsed_dimensions = 0;
+	parsed_position = 0;
+
+	startwn = wn;
+
+	while (1) {
+		wd = NextWordStopped();
+		if (wd == comma_word or THEN1__WD or -1) {
+			if (wn-1 == startwn) {
+				parsed_number = -1;
+				return GPR_NUMBER;
+			}
+			return GPR_NUMBER;
+		}
+		
+		for (ix=0 : colornames-->ix : ix=ix+2) {
+			if (wd == colornames-->ix) {
+				parsed_number = colornames-->(ix+1);
+				ix = -1;
+				break;
+			}
+		}
+		if (ix == -1)
+			continue;
+		res = TryColor(wn-1);
+		if (res >= 0 && res <= $FFFFFF) {
+			parsed_number = res;
+			continue;
+		}
+
+		res = TryDimensions(wn-1);
+		if (res) {
+			parsed_dimensions = res;
+			continue;
+		}
+
+		res = TryPosition(wn-1);
+		if (res) {
+			parsed_position = res;
+			continue;
+		}
+
+		if (1)
+			return GPR_FAIL;
+	}
+];
+	
+[ RectSpec startwn wd res;
+	parsed_number = 0;
+	parsed_dimensions = 0;
+	parsed_position = 0;
+
+	startwn = wn;
+
+	while (1) {
+		wd = NextWordStopped();
+		if (wd == comma_word or THEN1__WD or -1) {
+			if (wn-1 == startwn) {
+				parsed_number = -1;
+				return GPR_NUMBER;
+			}
+			return GPR_NUMBER;
+		}
+		
+		res = TryDimensions(wn-1);
+		if (res) {
+			parsed_dimensions = res;
+			continue;
+		}
+
+		res = TryPosition(wn-1);
+		if (res) {
+			parsed_position = res;
+			continue;
+		}
+
+		if (1)
+			return GPR_FAIL;
+	}
+];
+	
 [ ImageSpec startwn wd res;
 	parsed_number = 0;
 	parsed_dimensions = 0;
@@ -246,12 +409,18 @@ Array colornames -->
 			continue;
 		}
 
+		res = TryPosition(wn-1);
+		if (res) {
+			parsed_position = res;
+			continue;
+		}
+
 		if (1)
 			return GPR_FAIL;
 	}
 ];
 	
-Verb 'color'
+Verb 'color' 'setcolor'
 	* ColorSpec -> SetColor;
 
 Verb 'size'
@@ -259,6 +428,12 @@ Verb 'size'
 
 Verb 'image'
 	* ImageSpec -> Image;
+
+Extend 'fill' replace
+	* RectColorSpec -> GFill;
+
+Verb 'erase'
+	* RectSpec -> GErase;
 
 Extend 'clear' replace
 	* -> Clear;
@@ -356,6 +531,41 @@ Array info_array --> 4;
 
 	glk_window_set_background_color(gg_graphwin, parsed_number);
 	print_ret "Set default window color to ", (Hex6) parsed_number, ".";
+];
+
+[ GFillSub   posx posy wid hgt;
+	if (parsed_dimensions == 0)
+		print_ret "You must supply rectangle dimensions (WxH).";
+
+	if (~~gg_graphwin)
+		print_ret "There is no graphics window.";
+
+	posx = ((parsed_position / $10000) & $FFFF);
+	posy = (parsed_position & $FFFF);
+	wid = ((parsed_dimensions / $10000) & $FFFF);
+	hgt = (parsed_dimensions & $FFFF);
+
+	glk_window_fill_rect(gg_graphwin, parsed_number, posx, posy, wid, hgt);
+
+	print_ret "Filled rectangle with color ", (Hex6) parsed_number,
+		" at ", posx, ",", posy, " ", wid, "x", hgt, ".";
+];
+
+[ GEraseSub   posx posy wid hgt;
+	if (parsed_dimensions == 0)
+		print_ret "You must supply rectangle dimensions (WxH).";
+
+	if (~~gg_graphwin)
+		print_ret "There is no graphics window.";
+
+	posx = ((parsed_position / $10000) & $FFFF);
+	posy = (parsed_position & $FFFF);
+	wid = ((parsed_dimensions / $10000) & $FFFF);
+	hgt = (parsed_dimensions & $FFFF);
+
+	glk_window_erase_rect(gg_graphwin, posx, posy, wid, hgt);
+
+	print_ret "Erased rectangle at ", posx, ",", posy, " ", wid, "x", hgt, ".";
 ];
 
 [ SizeSub res;
