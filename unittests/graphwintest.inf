@@ -272,8 +272,6 @@ Array colornames -->
 
 	if (xcount ~= 1)
 		return 0;
-	if (res == 0 || val == 0)
-		return 0;
 	return ((res * $10000) | val);
 ];
 
@@ -580,32 +578,25 @@ Array info_array --> 4;
 		info_array-->0, " by ", info_array-->1, ".";
 ];
 
-[ ImageSub wid hgt;
-	print "Image ", parsed_number, "^"; !###
+[ ImageSub wid hgt xpos ypos;
 	if (~~gg_graphwin)
 		print_ret "There is no graphics window.";
 	if (~~graphicswin_supported())
 		print_ret "The graphics window does not support image display.";
 
 	if (parsed_number < 0) {
-		print "Here are several images in a row:^";
-		print "With inlineup: ";
-		glk_image_draw(gg_mainwin, 0, 1, 0);
-		print " With inlinedown: ";
-		glk_image_draw(gg_mainwin, 10, 2, 0);
-		print " With inlinecenter: ";
-		glk_image_draw(gg_mainwin, 5, 3, 0);
-		new_line;
-		rtrue;
+		parsed_number = 0;
 	}
 
+	xpos = ((parsed_position / $10000) & $FFFF);
+	ypos = (parsed_position & $FFFF);
 	if (parsed_dimensions == 0) {
-		!glk_image_draw(gg_mainwin, parsed_number, parsed_alignment, 0);
+		glk_image_draw(gg_graphwin, parsed_number, xpos, ypos);
 	}
 	else {
 		wid = ((parsed_dimensions / $10000) & $FFFF);
 		hgt = (parsed_dimensions & $FFFF);
-		!glk_image_draw_scaled(gg_mainwin, parsed_number, parsed_alignment, 0, wid, hgt);
+		glk_image_draw_scaled(gg_graphwin, parsed_number, xpos, ypos, wid, hgt);
 	}
 ];
 
