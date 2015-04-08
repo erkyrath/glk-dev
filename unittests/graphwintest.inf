@@ -79,11 +79,25 @@ Include "VerbLib";
 	}
 
 	if (phase == 2) {
-		! Now that we know whether the painting window exists, we have to 
+		! Now that we know whether the graphics window exists, we have to 
 		! turn it on or off, depending on whether it *should* exist or not.
 		SetUpGraphWin();
 		return;
 	}
+];
+
+[ HandleGlkEvent ev context;
+    context = 0; ! suppress ignored warning
+    switch (ev-->0) {
+      5: ! evtype_Arrange
+        glk_cancel_line_event(gg_mainwin, gg_event);
+		print "^Window arrangement event!^>";
+		glk_request_line_event(gg_mainwin, buffer+WORDSIZE, INPUT_BUFFER_LEN-WORDSIZE, gg_event-->2);
+      6: ! evtype_Redraw
+        glk_cancel_line_event(gg_mainwin, gg_event);
+		print "^Graphics window redraw event!^>";
+		glk_request_line_event(gg_mainwin, buffer+WORDSIZE, INPUT_BUFFER_LEN-WORDSIZE, gg_event-->2);
+    }
 ];
 
 Object Kitchen "Image Room"
@@ -423,6 +437,18 @@ Array info_array --> 4;
   ! glk_gestalt(uint, uint) => uint
   @glk 4 _vararg_count ret;
   return ret;
+];
+
+[ glk_request_line_event _vararg_count;
+  ! glk_request_line_event(window, nativechararray, arraylen, uint)
+  @glk 208 _vararg_count 0;
+  return 0;
+];
+
+[ glk_cancel_line_event _vararg_count;
+  ! glk_cancel_line_event(window, &{uint, window, uint, uint})
+  @glk 209 _vararg_count 0;
+  return 0;
 ];
 
 [ glk_window_open _vararg_count ret;
