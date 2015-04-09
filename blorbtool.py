@@ -615,9 +615,14 @@ class BlorbTool:
             print 'Replaced chunk, new length %d' % (filelen,)
             
     def cmd_giload(self, args):
-        if (len(args) != 1):
-            raise CommandError('usage: giload DIRECTORY')
-        outdirname = args[-1]
+        prefix = ''
+        if (len(args) == 1):
+            outdirname = args[0]
+        elif (len(args) == 2):
+            outdirname = args[0]
+            prefix = args[1]
+        else:
+            raise CommandError('usage: giload DIRECTORY | giload DIRECTORY PREFIX')
         if (not (os.path.exists(outdirname) and os.path.isdir(outdirname))):
             raise CommandError('Not a directory: %s' % (outdirname))
         
@@ -652,7 +657,7 @@ class BlorbTool:
                 continue
             picfilename = 'pict-%d.%s' % (num, suffix)
             map = collections.OrderedDict()
-            map['url'] = picfilename
+            map['url'] = os.path.join(prefix, picfilename)
             if ('Pict', num) in alttexts:
                 map['alttext'] = alttexts.get( ('Pict',num) )
             map['width'] = size[0]
