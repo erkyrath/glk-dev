@@ -642,12 +642,13 @@ class BlorbTool:
                 continue
             try:
                 (suffix, size) = analyze_pict(chunk)
-            except:
+            except Exception, ex:
+                print 'Error on Pict chunk %d: %s' % (num, ex)
                 continue
             map = collections.OrderedDict()
             map['url'] = 'pict-%d.%s' % (num, suffix)
-            map['width'] = 100
-            map['height'] = 101
+            map['width'] = size[0]
+            map['height'] = size[1]
             indexdat = json.dumps(map, indent=2)
             if (first):
                 first = False
@@ -709,6 +710,66 @@ class BlorbTool:
         print '### chunkatpos:', blorbfile.chunkatpos
         print '### usages:', blorbfile.usages
         print '### usagemap:', blorbfile.usagemap
+
+# Some utility functions.
+
+def analyze_pict(chunk):
+    if (chunk.type == 'JPEG'):
+        size = parse_jpeg(chunk.data())
+        return ('jpeg', size)
+    if (chunk.type == 'PNG '):
+        size = parse_png(chunk.data())
+        return ('png', size)
+    raise Exception('Unrecognized Pict type: %s' % (chunk.type,))
+
+def parse_png(dat):
+    dat = [ ord(val) for val in dat ]
+    pos = 0
+    sig = dat[pos:pos+8]
+    pos += 8
+    if sig != [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]:
+        raise Exception('PNG signature does not match')
+    while pos < len(dat):
+        clen = (dat[pos] << 24) | (dat[pos+1] << 16) | (dat[pos+2] << 8) | dat[pos+3]
+        pos += 4
+        ctyp = ''.join([ chr(val) for val in dat[pos:pos+4] ])
+        pos += 4
+        #print 'Chunk:', ctyp, 'len', clen
+        if ctyp == 'IHDR':
+            width  = (dat[pos] << 24) | (dat[pos+1] << 16) | (dat[pos+2] << 8) | dat[pos+3]
+            pos += 4
+            height = (dat[pos] << 24) | (dat[pos+1] << 16) | (dat[pos+2] << 8) | dat[pos+3]
+            pos += 4
+            return (width, height)
+        pos += clen
+        pos += 4
+    raise Exception('No PNG header block found')
+
+def parse_jpeg(dat):
+    dat = [ ord(val) for val in dat ]
+    #print 'Length:', len(dat)
+    pos = 0
+    while pos < len(dat):
+        if dat[pos] != 0xFF:
+            raise Exception('marker is not FF')
+        while dat[pos] == 0xFF:
+            pos += 1
+        marker = dat[pos]
+        pos += 1
+        if marker == 0x01 or (marker >= 0xD0 and marker <= 0xD9):
+            #print 'FF%02X*' % (marker,)
+            continue
+        clen = (dat[pos] << 8) | dat[pos+1]
+        #print 'FF%02X, len %d' % (marker, clen)
+        if (marker >= 0xC0 and marker <= 0xCF and marker != 0xC8):
+            if clen <= 7:
+                raise Exception('SOF block is too small')
+            bits = dat[pos+2]
+            height = (dat[pos+3] << 8) | dat[pos+4]
+            width  = (dat[pos+5] << 8) | dat[pos+6]
+            return (width, height)
+        pos += clen
+    raise Exception('SOF block not found')
 
 # Actual work begins here.
 
