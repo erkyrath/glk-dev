@@ -636,10 +636,10 @@ class BlorbTool:
         outfl.close()
         outfl = open(os.path.join(outdirname, 'resourcemap.js'), 'w')
         outfl.write('StaticImageInfo = {\n')
+        usages = [ (num, chunk) for (use, num, chunk) in blorbfile.usages if (use == 'Pict') ]
+        usages.sort()   # on num
         first = True
-        for (use, num, chunk) in blorbfile.usages:
-            if (use != 'Pict'):
-                continue
+        for (num, chunk) in usages:
             try:
                 (suffix, size) = analyze_pict(chunk)
             except Exception, ex:
