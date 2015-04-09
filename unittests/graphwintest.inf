@@ -93,11 +93,11 @@ Include "VerbLib";
 	switch (ev-->0) {
 	  5: ! evtype_Arrange
 		glk_cancel_line_event(gg_mainwin, gg_event);
-		print "^Window arrangement event!^>";
+		print "Window arrangement event!^>";
 		glk_request_line_event(gg_mainwin, buffer+WORDSIZE, INPUT_BUFFER_LEN-WORDSIZE, gg_event-->2);
 	  6: ! evtype_Redraw
 		glk_cancel_line_event(gg_mainwin, gg_event);
-		print "^Graphics window redraw event!^>";
+		print "Graphics window redraw event!^>";
 		glk_request_line_event(gg_mainwin, buffer+WORDSIZE, INPUT_BUFFER_LEN-WORDSIZE, gg_event-->2);
 	}
 ];
