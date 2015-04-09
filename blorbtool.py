@@ -677,7 +677,7 @@ class BlorbTool:
         outfl.write('};\n')
         outfl.close()
             
-        print 'Wrote Quixe-compatible data to directory %s.' % (outdirname,)
+        print 'Wrote Quixe-compatible data to directory "%s".' % (outdirname,)
             
     def cmd_delete(self, args):
         if (len(args) == 1):
