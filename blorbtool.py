@@ -620,6 +620,7 @@ class BlorbTool:
         outdirname = args[-1]
         if (not (os.path.exists(outdirname) and os.path.isdir(outdirname))):
             raise CommandError('Not a directory: %s' % (outdirname))
+        
         chunk = blorbfile.usagemap.get( ('Exec', 0) )
         if (not chunk):
             raise CommandError('No resource with usage %s, number %d' % (repr(use), num))
@@ -634,6 +635,12 @@ class BlorbTool:
         outfl.write("  GiLoad.load_run(null, '%s', 'base64');\n" % (chunkdatenc,))
         outfl.write('});\n')
         outfl.close()
+
+        alttexts = {}
+        ls = blorbfile.chunkmap.get('RDes')
+        if (ls):
+            alttexts = analyze_resourcedescs(chunk)
+        
         outfl = open(os.path.join(outdirname, 'resourcemap.js'), 'w')
         outfl.write('StaticImageInfo = {\n')
         usages = [ (num, chunk) for (use, num, chunk) in blorbfile.usages if (use == 'Pict') ]
@@ -647,6 +654,8 @@ class BlorbTool:
                 continue
             map = collections.OrderedDict()
             map['url'] = 'pict-%d.%s' % (num, suffix)
+            if ('Pict', num) in alttexts:
+                map['alttext'] = alttexts.get( ('Pict',num) )
             map['width'] = size[0]
             map['height'] = size[1]
             indexdat = json.dumps(map, indent=2)
@@ -713,6 +722,24 @@ class BlorbTool:
 
 # Some utility functions.
 
+def analyze_resourcedescs(chunk):
+    res = {}
+    dat = chunk.data()
+    (subdat, dat) = (dat[:4], dat[4:])
+    count = struct.unpack('>I', subdat)[0]
+    for ix in range(count):
+        if (len(dat) < 12):
+            break
+        (subdat, dat) = (dat[:12], dat[12:])
+        subls = struct.unpack('>4c2I', subdat)
+        strlen = subls[-1]
+        num = subls[-2]
+        if (len(dat) < strlen):
+            break
+        (subdat, dat) = (dat[:strlen], dat[strlen:])
+        res[(subls[0:4], num)] = subdat
+    return res
+    
 def analyze_pict(chunk):
     if (chunk.type == 'JPEG'):
         size = parse_jpeg(chunk.data())
