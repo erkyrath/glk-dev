@@ -18,7 +18,11 @@
 import sys
 import os
 import optparse
+import collections
 import struct
+import base64
+import json
+
 from chunk import Chunk
 try:
     import readline
@@ -413,6 +417,7 @@ class BlorbTool:
         print 'import USE NUM TYPE FILENAME -- import a file as a resource of that use, number, and type'
         print 'delete TYPE -- delete chunk(s) of that type'
         print 'delete USE NUM -- delete chunk by use and number'
+        print 'giload DIRECTORY -- export the Exec and Pict chunks for use with Quixe'
         print 'save -- write out changes'
         print 'reload -- discard changes and reload existing blorb file'
 
@@ -608,6 +613,51 @@ class BlorbTool:
             print 'Added chunk, length %d' % (filelen,)
         else:
             print 'Replaced chunk, new length %d' % (filelen,)
+            
+    def cmd_giload(self, args):
+        if (len(args) != 1):
+            raise CommandError('usage: giload DIRECTORY')
+        outdirname = args[-1]
+        if (not (os.path.exists(outdirname) and os.path.isdir(outdirname))):
+            raise CommandError('Not a directory: %s' % (outdirname))
+        chunk = blorbfile.usagemap.get( ('Exec', 0) )
+        if (not chunk):
+            raise CommandError('No resource with usage %s, number %d' % (repr(use), num))
+        chunkdat = chunk.data()
+        if (chunk.formtype and chunk.formtype != 'FORM'):
+            # For an AIFF file, we must include the FORM/length header.
+            # (Unless it's an overly nested AIFF.)
+            chunkdat = 'FORM' + struct.pack('>I', chunk.len) + chunkdat
+        outfl = open(os.path.join(outdirname, 'game.ulx.js'), 'wb')
+        chunkdatenc = base64.b64encode(chunkdat).decode()
+        outfl.write('$(document).ready(function() {\n')
+        outfl.write("  GiLoad.load_run(null, '%s', 'base64');\n" % (chunkdatenc,))
+        outfl.write('});\n')
+        outfl.close()
+        outfl = open(os.path.join(outdirname, 'resourcemap.js'), 'w')
+        outfl.write('StaticImageInfo = {\n')
+        first = True
+        for (use, num, chunk) in blorbfile.usages:
+            if (use != 'Pict'):
+                continue
+            try:
+                (suffix, size) = analyze_pict(chunk)
+            except:
+                continue
+            map = collections.OrderedDict()
+            map['url'] = 'pict-%d.%s' % (num, suffix)
+            map['width'] = 100
+            map['height'] = 101
+            indexdat = json.dumps(map, indent=2)
+            if (first):
+                first = False
+            else:
+                outfl.write(',\n')
+            outfl.write('%d: %s\n' % (num, indexdat))
+        outfl.write('};\n')
+        outfl.close()
+            
+        print 'Wrote Quixe-compatible data to directory %s.' % (outdirname,)
             
     def cmd_delete(self, args):
         if (len(args) == 1):
