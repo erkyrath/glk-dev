@@ -626,8 +626,6 @@ class BlorbTool:
             raise CommandError('No resource with usage %s, number %d' % (repr(use), num))
         chunkdat = chunk.data()
         if (chunk.formtype and chunk.formtype != 'FORM'):
-            # For an AIFF file, we must include the FORM/length header.
-            # (Unless it's an overly nested AIFF.)
             chunkdat = 'FORM' + struct.pack('>I', chunk.len) + chunkdat
         outfl = open(os.path.join(outdirname, 'game.ulx.js'), 'wb')
         chunkdatenc = base64.b64encode(chunkdat).decode()
@@ -652,8 +650,9 @@ class BlorbTool:
             except Exception, ex:
                 print 'Error on Pict chunk %d: %s' % (num, ex)
                 continue
+            picfilename = 'pict-%d.%s' % (num, suffix)
             map = collections.OrderedDict()
-            map['url'] = 'pict-%d.%s' % (num, suffix)
+            map['url'] = picfilename
             if ('Pict', num) in alttexts:
                 map['alttext'] = alttexts.get( ('Pict',num) )
             map['width'] = size[0]
@@ -664,6 +663,12 @@ class BlorbTool:
             else:
                 outfl.write(',\n')
             outfl.write('%d: %s\n' % (num, indexdat))
+            outfl2 = open(os.path.join(outdirname, picfilename), 'wb')
+            if (chunk.formtype and chunk.formtype != 'FORM'):
+                outfl2.write('FORM')
+                outfl2.write(struct.pack('>I', chunk.len))
+            outfl2.write(chunk.data())
+            outfl2.close()
         outfl.write('};\n')
         outfl.close()
             
