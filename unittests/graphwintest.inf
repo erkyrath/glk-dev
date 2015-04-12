@@ -1,6 +1,6 @@
 Constant Story "GraphWinTest";
 Constant Headline "^Not a game.^";
-Release 1;
+Release 2;
 
 Constant GG_GRAPHWIN_ROCK 210;
 Global gg_graphwin = 0;
@@ -55,6 +55,9 @@ Include "VerbLib";
 					window, even though it said it could.^^";
 				winsplit = 0;
 			}
+			else {
+				glk_request_mouse_event(gg_graphwin);
+			}
 		}
 	}
 ];
@@ -88,9 +91,16 @@ Include "VerbLib";
 	}
 ];
 
-[ HandleGlkEvent ev context;
+[ HandleGlkEvent ev context xpos ypos;
 	context = 0; ! suppress ignored warning
 	switch (ev-->0) {
+	  4: ! evtype_MouseInput
+		xpos = ev-->2;
+		ypos = ev-->3;
+		glk_cancel_line_event(gg_mainwin, gg_event);
+		print "Mouse event at ", xpos, ", ", ypos, "!^>";
+		glk_request_line_event(gg_mainwin, buffer+WORDSIZE, INPUT_BUFFER_LEN-WORDSIZE, gg_event-->2);
+		glk_request_mouse_event(gg_graphwin);
 	  5: ! evtype_Arrange
 		glk_cancel_line_event(gg_mainwin, gg_event);
 		print "Window arrangement event!^>";
@@ -727,6 +737,12 @@ Array info_array --> 4;
 [ glk_window_set_background_color _vararg_count;
   ! glk_window_set_background_color(window, uint)
   @glk 235 _vararg_count 0;
+  return 0;
+];
+
+[ glk_request_mouse_event _vararg_count;
+  ! glk_request_mouse_event(window)
+  @glk 212 _vararg_count 0;
   return 0;
 ];
 
