@@ -643,6 +643,7 @@ class BlorbTool:
         alttexts = {}
         ls = blorbfile.chunkmap.get('RDes')
         if (ls):
+            chunk = ls[0]
             alttexts = analyze_resourcedescs(chunk)
         
         outfl = open(os.path.join(outdirname, 'resourcemap.js'), 'w')
@@ -744,12 +745,13 @@ def analyze_resourcedescs(chunk):
             break
         (subdat, dat) = (dat[:12], dat[12:])
         subls = struct.unpack('>4c2I', subdat)
+        usage = ''.join(subls[0:4])
         strlen = subls[-1]
         num = subls[-2]
         if (len(dat) < strlen):
             break
         (subdat, dat) = (dat[:strlen], dat[strlen:])
-        res[(subls[0:4], num)] = subdat
+        res[(usage, num)] = subdat
     return res
     
 def analyze_pict(chunk):
