@@ -2,6 +2,7 @@
 
 # blorbtool.py: A (semi-)multifunctional Blorb utility
 # Created by Andrew Plotkin (erkyrath@eblong.com)
+# Last updated: April 24, 2015
 # This script is in the public domain.
 
 # When listing chunks, you'll see output that looks like:
