@@ -657,6 +657,7 @@ class BlorbTool:
                 continue
             picfilename = 'pict-%d.%s' % (num, suffix)
             map = collections.OrderedDict()
+            map['image'] = num
             map['url'] = os.path.join(prefix, picfilename)
             if ('Pict', num) in alttexts:
                 map['alttext'] = alttexts.get( ('Pict',num) )
