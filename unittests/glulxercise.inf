@@ -2,7 +2,7 @@
 
 Constant Story "Glulxercise";
 Constant Headline "A Glulx interpreter unit test^";
-Release 5;
+Release 6;
 ! Written by Andrew Plotkin (erkyrath@eblong.com).
 ! This unit test suite, and its functions, are in the public domain.
 
@@ -916,6 +916,130 @@ TestClass ArithTest
 		count_failures();
 	];
 
+TestClass BigMulTest
+	with name 'bigmul',
+	testfunc [ val loc1 loc2;
+		print "Large integer multiplication:^^";
+		
+		@mul 51537 35117 val;
+		print "51537*35117="; check_hex(val, 1809824829); print "^";
+		@mul (-51539) 35117 val;
+		print "-51539*35117="; check_hex(val, -1809895063); print "^";
+		@mul 51537 (-35119) val;
+		print "51537*-35119="; check_hex(val, -1809927903); print "^";
+		@mul (-51539) (-35119) val;
+		print "-51539*-35119="; check_hex(val, 1809998141); print "^";
+
+		loc1 = 51537;
+		loc2 = 35117;
+		@mul loc1 loc2 val;
+		print "51537*35117 (loc)="; check_hex(val, 1809824829); print "^";
+
+		testglobal = 51537;
+		testglobal2 = 35117;
+		@mul testglobal testglobal2 val;
+		print "51537*35117 (glob)="; check_hex(val, 1809824829); print "^";
+
+		loc1 = $5432FEDB;
+		loc2 = -1;
+		@mul loc1 loc2 val;
+		print "$5432FEDB*-1 (loc)="; check_hex(val, -$5432FEDB); print "^";
+
+		testglobal = $1C10FF9E;
+		loc2 = -3;
+		@mul testglobal loc2 val;
+		print "$1C10FF9E*-3 (glob,loc)="; check_hex(val, -$5432FEDA); print "^";
+		new_line;
+
+		testglobal = $7654321;
+		@mul testglobal 1 val;
+		print "$7654321*1="; check_hex(val, $7654321); print "^";
+		@mul testglobal 2 val;
+		print "$7654321*2="; check_hex(val, $ECA8642); print "^";
+		@mul testglobal 4 val;
+		print "$7654321*4="; check_hex(val, $1D950C84); print "^";
+		@mul testglobal 5 val;
+		print "$7654321*5="; check_hex(val, $24FA4FA5); print "^";
+		@mul testglobal 8 val;
+		print "$7654321*8="; check_hex(val, $3B2A1908); print "^";
+		@mul testglobal 16 val;
+		print "$7654321*16="; check_hex(val, $76543210); print "^";
+		@mul testglobal 32 val;
+		print "$7654321*32="; check_hex(val, $ECA86420); print "^";
+		@mul testglobal 64 val;
+		print "$7654321*64="; check_hex(val, $D950C840); print "^";
+		@mul testglobal 128 val;
+		print "$7654321*128="; check_hex(val, $B2A19080); print "^";
+		@mul testglobal 256 val;
+		print "$7654321*256="; check_hex(val, $65432100); print "^";
+		@mul testglobal 1024 val;
+		print "$7654321*1024="; check_hex(val, $950C8400); print "^";
+		@mul testglobal 32768 val;
+		print "$7654321*32768="; check_hex(val, $A1908000); print "^";
+		@mul testglobal 65536 val;
+		print "$7654321*65536="; check_hex(val, $43210000); print "^";
+		
+		new_line;
+
+		testglobal = $7654321;
+		@mul 1 testglobal val;
+		print "1*$7654321="; check_hex(val, $7654321); print "^";
+		@mul 2 testglobal val;
+		print "2*$7654321="; check_hex(val, $ECA8642); print "^";
+		@mul 4 testglobal val;
+		print "4*$7654321="; check_hex(val, $1D950C84); print "^";
+		@mul 5 testglobal val;
+		print "5*$7654321="; check_hex(val, $24FA4FA5); print "^";
+		@mul 8 testglobal val;
+		print "8*$7654321="; check_hex(val, $3B2A1908); print "^";
+		@mul 16 testglobal val;
+		print "16*$7654321="; check_hex(val, $76543210); print "^";
+		@mul 32 testglobal val;
+		print "32*$7654321="; check_hex(val, $ECA86420); print "^";
+		@mul 64 testglobal val;
+		print "64*$7654321="; check_hex(val, $D950C840); print "^";
+		@mul 128 testglobal val;
+		print "128*$7654321="; check_hex(val, $B2A19080); print "^";
+		@mul 256 testglobal val;
+		print "256*$7654321="; check_hex(val, $65432100); print "^";
+		@mul 1024 testglobal val;
+		print "1024*$7654321="; check_hex(val, $950C8400); print "^";
+		@mul 32768 testglobal val;
+		print "32768*$7654321="; check_hex(val, $A1908000); print "^";
+		@mul 65536 testglobal val;
+		print "65536*$7654321="; check_hex(val, $43210000); print "^";
+		
+		new_line;
+		
+		@mul $7FFFFFFF $7FFFFFFF val;
+		print "$7FFFFFFF*$7FFFFFFF (trunc)="; check_hex(val, 1); print "^";
+		
+		testglobal = $7FFFFFFF;
+		testglobal2 = $7FFFFFFE;
+		@mul testglobal testglobal2 val;
+		print "$7FFFFFFF*$7FFFFFFE (glob,trunc)="; check_hex(val, $80000002); print "^";
+
+		loc1 = -$7FFFFFFE;
+		loc2 = $7FFFFFFE;
+		@mul loc1 loc2 val;
+		print "-$7FFFFFFE*$7FFFFFFE (loc,trunc)="; check_hex(val, -4); print "^";
+		
+		@mul $10000003 $10000007 val;
+		print "$10000003*$10000007 (trunc)="; check_hex(val, $A0000015); print "^";
+
+		testglobal = $10000001;
+		testglobal2 = $10000003;
+		@mul testglobal testglobal2 val;
+		print "$10000001*$10000003 (glob,trunc)="; check_hex(val, $40000003); print "^";
+
+		loc1 = -$10000005;
+		loc2 = $10000007;
+		@mul loc1 loc2 val;
+		print "-$10000005*$10000007 (loc,trunc)="; check_hex(val, $3FFFFFDD); print "^";
+
+		count_failures();
+	];
+		
 TestClass CompoundVarTest
 	with name 'comvar' 'compvar',
 	testfunc [ loc1 loc2;
