@@ -2,7 +2,8 @@
 
 Constant Story "Glulxercise";
 Constant Headline "A Glulx interpreter unit test^";
-Release 6;
+Release 7;
+Serial "150729";
 ! Written by Andrew Plotkin (erkyrath@eblong.com).
 ! This unit test suite, and its functions, are in the public domain.
 
@@ -5888,6 +5889,84 @@ TestClass MultiUndoTest
 		print "Undo 1 succeeded, return value "; check(val, -1); print ".^";
 		print "loc="; check(loc, 99); print " glob="; check(testglobal, 999); print "^";
 		
+		count_failures();
+	];
+
+TestClass ExtUndoTest
+	with name 'extundo',
+	testfunc [ val;
+		print "ExtUndo:^^";
+
+		@gestalt 12 0 val; ! ExtUndo
+		if (~~val) {
+			print "Interpreter claims to not support extended. Skipping test.^^";
+			count_failures();
+			return;
+		}
+		
+		@protect destarray 4;
+
+		destarray->0 = 0;
+
+		print "No undo states: ";
+		@hasundo val;
+		print "val="; check(val, 1);
+		@hasundo testglobal;
+		print " testglobal="; check(testglobal, 1); print "^";
+
+		destarray->0 = destarray->0 + 1;
+		print "counter="; check(destarray->0, 1); print "^";
+		
+		@saveundo val;
+		if (val == 1) {
+			print "@@64saveundo failed!^";
+			failures++;
+			count_failures();
+			return;
+		}
+		else if (val == 0) {
+			print "Undo saved...^";
+		}
+		else if (val ~= -1) {
+			print "Unknown @@64saveundo return value: ", val, "^";
+			failures++;
+			count_failures();
+			return;
+		}
+		else {
+			print "@@64saveundo restored when it should have been discarded.^";
+			failures++;
+			count_failures();
+			return;
+		}
+
+		@hasundo val;
+		print "val="; check(val, 0);
+		@hasundo testglobal;
+		print " testglobal="; check(testglobal, 0); print "^";
+
+		destarray->0 = destarray->0 + 1;
+		print "counter="; check(destarray->0, 2); print "^";
+
+		@discardundo;
+		print "Undo discarded...^";
+		
+		@hasundo val;
+		print "val="; check(val, 1);
+		@hasundo testglobal;
+		print " testglobal="; check(testglobal, 1); print "^";
+
+		destarray->0 = destarray->0 + 1;
+		print "counter="; check(destarray->0, 3); print "^";
+
+		@protect 0 0;
+		
+		print "End of test: ";
+		@hasundo val;
+		print "val="; check(val, 1);
+		@hasundo testglobal;
+		print " testglobal="; check(testglobal, 1); print "^";
+
 		count_failures();
 	];
 
