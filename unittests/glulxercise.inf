@@ -5894,7 +5894,7 @@ TestClass MultiUndoTest
 
 TestClass ExtUndoTest
 	with name 'extundo',
-	testfunc [ val;
+	testfunc [ val loc;
 		print "ExtUndo:^^";
 
 		@gestalt 12 0 val; ! ExtUndo
@@ -5907,6 +5907,7 @@ TestClass ExtUndoTest
 		@protect destarray 4;
 
 		destarray->0 = 0;
+		destarray->1 = 0; ! protected failures
 
 		print "No undo states: ";
 		@hasundo val;
@@ -5959,13 +5960,99 @@ TestClass ExtUndoTest
 		destarray->0 = destarray->0 + 1;
 		print "counter="; check(destarray->0, 3); print "^";
 
+		print "^";
+
+		loc = 99;
+		testglobal = 999;
+		@saveundo val;
+		if (val == 1) {
+			print "First @@64saveundo failed!^";
+			failures++;
+			count_failures();
+			return;
+		}
+		if (val == 0) {
+			print "Undo 1 saved...^";
+			! The following changes will be undone.
+			loc = 77;
+			testglobal = 777;
+
+			destarray->0 = destarray->0 + 1;
+			print "counter="; check(destarray->0, 4); print "^";
+		
+			@saveundo val;
+			if (val == 1) {
+				print "Second @@64saveundo failed!^";
+				failures++;
+				count_failures();
+				return;
+			}
+			if (val == 0) {
+				print "Undo 2 saved...^";
+				! The following changes will NOT be undone.
+				loc = 55;
+				testglobal = 555;
+				
+				destarray->0 = destarray->0 + 1;
+				print "counter="; check(destarray->0, 5); print "^";
+			}
+			else if (val ~= -1) {
+				print "Unknown @@64saveundo return value: ", val, "^";
+				failures++;
+				count_failures();
+				return;
+			}
+			
+			print "loc="; check(loc, 55); print " glob="; check(testglobal, 555); print "^";
+
+			@discardundo;
+			print "Undo 2 discarded...^";
+
+			destarray->0 = destarray->0 + 1;
+			print "counter="; check(destarray->0, 6); print "^";
+		
+			@hasundo val;
+			print "val="; check(val, 0);
+			@hasundo testglobal2;
+			print " testglobal="; check(testglobal2, 0); print "^";
+
+			if (failures)
+				destarray->1 = destarray->1 + 1;
+
+			print "Restoring undo 1...^";
+			@restoreundo val;
+			if (val == 1) {
+				print "First @@64restoreundo failed (value 1)!^";
+			}
+			else {
+				print "First @@64restoreundo failed with unknown return value: ", val, "^";
+			}
+			failures++;
+			count_failures();
+			return;
+		}
+		else if (val ~= -1) {
+			print "Unknown @@64saveundo return value: ", val, "^";
+			failures++;
+			count_failures();
+			return;
+		}
+		print "Undo 1 succeeded, return value "; check(val, -1); print ".^";
+		print "loc="; check(loc, 99); print " glob="; check(testglobal, 999); print "^";
+		
+		destarray->0 = destarray->0 + 1;
+		print "counter="; check(destarray->0, 7); print "^";
+		
 		@protect 0 0;
+
+		print "^";
 		
 		print "End of test: ";
 		@hasundo val;
 		print "val="; check(val, 1);
 		@hasundo testglobal;
 		print " testglobal="; check(testglobal, 1); print "^";
+		print "Protected failures="; check(destarray->1, 0); print "^";
 
 		count_failures();
 	];
