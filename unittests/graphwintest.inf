@@ -1,6 +1,6 @@
 Constant Story "GraphWinTest";
 Constant Headline "^Not a game.^";
-Release 2;
+Release 3;
 
 Constant GG_GRAPHWIN_ROCK 210;
 Global gg_graphwin = 0;
@@ -446,6 +446,9 @@ Verb 'erase'
 Extend 'clear' replace
 	* -> Clear;
 
+Verb 'clearcolor' 'colorclear'
+	* ColorSpec -> SetColorClear;
+	
 Extend 'close' replace
 	* -> CloseWin;
 
@@ -539,6 +542,15 @@ Array info_array --> 4;
 
 	glk_window_set_background_color(gg_graphwin, parsed_number);
 	print_ret "Set default window color to ", (Hex6) parsed_number, ".";
+];
+
+[ SetColorClearSub;
+	if (~~gg_graphwin)
+		print_ret "There is no graphics window.";
+
+	glk_window_set_background_color(gg_graphwin, parsed_number);
+	glk_window_clear(gg_graphwin);
+	print_ret "Set default window color to ", (Hex6) parsed_number, ", and cleared it.";
 ];
 
 [ GFillSub   posx posy wid hgt;
