@@ -1,6 +1,6 @@
 Constant Story "ImageTest";
 Constant Headline "^Not a game.^";
-Release 2;
+Release 3;
 
 Include "Parser";
 Include "VerbLib";
@@ -8,6 +8,8 @@ Include "VerbLib";
 [ Initialise;
 	if (~~graphics_supported())
 		print "This interpreter does not support graphics!^^";
+
+	glk_request_hyperlink_event(gg_mainwin);
 		
 	location = Kitchen;
 	selfobj.description = "You're some kind of person.";
@@ -19,7 +21,8 @@ Object Kitchen "Image Room"
 		print "A voice booooms out: Try ~image~, or ~image NUMBER~,
 			or ~image NUMBER ALIGN~. Alignment are ~up~, ~down~,
 			~center~, ~left~, ~right~. Throw in the word ~caption~ to
-			mix some text on the line. Adding a term like ~100x200~
+			mix some text on the line. Throw in ~link~ to make the image
+			a hyperlink. Adding a term like ~100x200~
 			will scale the image to those dimensions.^^
 			You can also type ~size NUMBER~ to check an image size.
 			Type ~text~ for a long text paragraph,
@@ -30,10 +33,22 @@ Object Kitchen "Image Room"
 	],
   has light;
 
+[ HandleGlkEvent ev ischar buffer   linknum;
+	if (ischar == 0 && ev-->0 == 8) {  ! evtype_Hyperlink
+		linknum = ev-->2;
+		glk_cancel_line_event(gg_mainwin, gg_event);
+		print "Clicked hyperlink: ", linknum, ".^";
+		print ">";
+		glk_request_line_event(gg_mainwin, buffer+WORDSIZE, INPUT_BUFFER_LEN-WORDSIZE, gg_event-->2);
+		glk_request_hyperlink_event(gg_mainwin);
+	}
+];
+
 Include "Grammar";
 
 Global parsed_alignment;
 Global parsed_caption;
+Global parsed_hyperlink;
 Global parsed_dimensions;
 
 [ TryDimensions wordnum   ix addr len ch xcount val res;
@@ -70,6 +85,7 @@ Global parsed_dimensions;
 	parsed_alignment = 1;
 	parsed_dimensions = 0;
 	parsed_caption = false;
+	parsed_hyperlink = false;
 
 	startwn = wn;
 
@@ -97,6 +113,11 @@ Global parsed_dimensions;
 
 		if (wd == 'text' or 'caption') {
 			parsed_caption = true;
+			continue;
+		}
+		
+		if (wd == 'hyper' or 'link' or 'hyperlink') {
+			parsed_hyperlink = true;
 			continue;
 		}
 		
@@ -172,6 +193,9 @@ Array info_array --> 2;
 		rtrue;
 	}
 
+	if (parsed_hyperlink)
+		glk_set_hyperlink(1000+parsed_number);
+
 	if (parsed_dimensions == 0) {
 		glk_image_draw(gg_mainwin, parsed_number, parsed_alignment, 0);
 	}
@@ -181,6 +205,9 @@ Array info_array --> 2;
 		glk_image_draw_scaled(gg_mainwin, parsed_number, parsed_alignment, 0, wid, hgt);
 	}
 	
+	if (parsed_hyperlink)
+		glk_set_hyperlink(0);
+
 	if (parsed_caption)
 		print " -- that is an image.^";
 ];
@@ -230,6 +257,18 @@ Array info_array --> 2;
   return 0;
 ];
 
+[ glk_request_line_event _vararg_count;
+  ! glk_request_line_event(window, nativechararray, arraylen, uint)
+  @glk 208 _vararg_count 0;
+  return 0;
+];
+
+[ glk_cancel_line_event _vararg_count;
+  ! glk_cancel_line_event(window, &{uint, window, uint, uint})
+  @glk 209 _vararg_count 0;
+  return 0;
+];
+
 [ glk_image_get_info _vararg_count ret;
   ! glk_image_get_info(uint, &uint, &uint) => uint
   @glk 224 _vararg_count ret;
@@ -251,6 +290,18 @@ Array info_array --> 2;
 [ glk_window_flow_break _vararg_count;
   ! glk_window_flow_break(window)
   @glk 232 _vararg_count 0;
+  return 0;
+];
+
+[ glk_set_hyperlink _vararg_count;
+  ! glk_set_hyperlink(uint)
+  @glk 256 _vararg_count 0;
+  return 0;
+];
+
+[ glk_request_hyperlink_event _vararg_count;
+  ! glk_request_hyperlink_event(window)
+  @glk 258 _vararg_count 0;
   return 0;
 ];
 
