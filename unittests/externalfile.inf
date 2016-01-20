@@ -1,7 +1,7 @@
 Constant Story "ExternalFile";
 Constant Headline "Not a game.^";
 
-Release 7;
+Release 8;
 
 Global mainwin = 0;
 Constant BUFLEN = 80;
@@ -32,7 +32,7 @@ Constant ROM_GAMESERIAL    $36;     ! six ASCII characters
 
   RunOpenModeTest();
   print "This test should have created a set of files, named
-    ~testfile1.glkdata~ to ~testfile14.glkdata~.
+    ~testfile1.glkdata~ to ~testfile15.glkdata~.
     (The file suffixes might be different, but ~.glkdata~ is recommended
     by the current Glk spec.)
     These files should be identical -- each 26 bytes long, containing the
@@ -198,6 +198,13 @@ Constant ROM_GAMESERIAL    $36;     ! six ASCII characters
             errorcount++;
             return;
         }
+    }
+];
+
+[ check_result label val target;
+    if (val ~= target) {
+        print "ERROR: ", (string) label, " was wrong: ", val, ", not ", target, "^";
+        errorcount++;
     }
 ];
 
@@ -381,7 +388,7 @@ Constant filemode_WriteAppend = 5;
     }
 ];
 
-[ RunOpenModeTest name fref str len;
+[ RunOpenModeTest name fref str len pos;
     print "* RunOpenModeTest^";
 
     ! Write once, close, then read.
@@ -647,6 +654,43 @@ Constant filemode_WriteAppend = 5;
     compare_string(buffer, len, "Purple monkey dishwasher.^");
     glk($0044, str, gg_result); ! stream_close
     check_result_counts(32, 20);
+
+    ! Write, seek, write, seek, write, seek, write, then close and read.
+    
+    name = "testfile15";
+    print "Testing: ", (string) name, "^";
+    fref = make_fref(name);
+    delete_if_exists(fref, name);
+    str = open_file(fref, name, filemode_Write);
+	pos = glk($0046, str); ! stream_get_position
+	check_result("seek", pos, 0);
+    write_stream(str, "P**ple m**key dishwash**.^");
+	pos = glk($0046, str); ! stream_get_position
+	check_result("seek", pos, 26);
+    glk($0045, str, 1, 0); ! stream_set_position (start)
+    write_stream(str, "ur");
+	pos = glk($0046, str); ! stream_get_position
+	check_result("seek", pos, 3);
+    glk($0045, str, 5, 1); ! stream_set_position (current)
+	pos = glk($0046, str); ! stream_get_position
+	check_result("seek", pos, 8);
+    write_stream(str, "on");
+	pos = glk($0046, str); ! stream_get_position
+	check_result("seek", pos, 10);
+    glk($0045, str, -4, 2); ! stream_set_position (end)
+	pos = glk($0046, str); ! stream_get_position
+	check_result("seek", pos, 22);
+    write_stream(str, "er");
+	pos = glk($0046, str); ! stream_get_position
+	check_result("seek", pos, 24);
+    glk($0044, str, gg_result); ! stream_close
+    check_result_counts(0, 32);
+
+    str = open_file(fref, name, filemode_Read);
+    len = glk($0092, str, buffer, BUFLEN); ! get_buffer_stream
+    compare_string(buffer, len, "Purple monkey dishwasher.^");
+    glk($0044, str, gg_result); ! stream_close
+    check_result_counts(26, 0);
 
 
     if (errorcount)
