@@ -1,0 +1,150 @@
+Constant Story "AutoSave";
+Constant Headline "^Not a game.^";
+
+Release 1;
+
+! Unit test for interpreter autosave.
+
+Include "Parser";
+Include "VerbLib";
+
+[ Initialise;
+  location = Kitchen;
+];
+
+Object Kitchen "Autosave Room"
+  with
+	description [;
+		print "A voice booooms out: Welcome to the test chamber.^^";
+		print "This test is a little bit weird. Type ~run test~ (or
+			~run all~). Each test will pause in the middle with a
+			~Kill and hit a key>~ prompt. (Or, for some tests,
+			~Kill and enter a line>~.)
+			At that point, kill the interpreter and then restart it --
+			hopefully reloading to that point.
+			Hit a key (or line of text) to continue the test.^";
+	],
+  has light;
+
+Global errorcount;
+
+[ RunTestSub;
+	if (~~(noun ofclass TestObj))
+		"That's not a test.";
+	print "Running ", (the) noun, ".^";
+
+	errorcount = 0;
+	
+	noun.testfunc();
+
+	if (errorcount)
+		print "^FAILED: Total errors: ", errorcount, ".^";
+	else
+		print "^Passed.^";
+];
+
+[ WaitKey res;
+	print "^Kill and hit a key>";
+	
+	glk($00D2, gg_mainwin); ! request_char_event
+	while (true) {
+		glk($00C0, gg_event); ! select
+		if (gg_event-->0 == 2 && gg_event-->1 == gg_mainwin) {
+			res = gg_event-->2;
+			break;
+		}
+	}
+
+	print "...", (charname) res, ".^";
+];
+
+[ charname ch;
+	if (ch < 0) {
+		SpecialKeyName(ch);
+		return;
+	}
+	if (ch == 32) {
+		print "<space>";
+		return;
+	}
+	if (ch < 32) {
+		print "<ctrl-", (char) (ch+64), ">";
+		return;
+	}
+	if (ch <= 126) {
+		print "'", (char) ch, "'";
+		return;
+	}
+	print "<???>";
+];
+
+[ SpecialKeyName res;
+	print "<";
+	switch (res) {
+		$ffffffff: print "unknown";
+		$fffffffe: print "left";
+		$fffffffd: print "right";
+		$fffffffc: print "up";
+		$fffffffb: print "down";
+		$fffffffa: print "return";
+		$fffffff9: print "delete";
+		$fffffff8: print "escape";
+		$fffffff7: print "tab";
+		$fffffff6: print "page-up";
+		$fffffff5: print "page-down";
+		$fffffff4: print "home";
+		$fffffff3: print "end";
+		$ffffffef: print "f1";
+		$ffffffee: print "f2";
+		$ffffffed: print "f3";
+		$ffffffec: print "f4";
+		$ffffffeb: print "f5";
+		$ffffffea: print "f6";
+		$ffffffe9: print "f7";
+		$ffffffe8: print "f8";
+		$ffffffe7: print "f9";
+		$ffffffe6: print "f10";
+		$ffffffe5: print "f11";
+		$ffffffe4: print "f12";
+		default: print "???";
+	}
+	print ">";
+];
+	
+[ check val wanted;
+	if (val == wanted) {
+		print val;
+		rtrue;
+	}
+	errorcount++;
+	print val, " (should be ", wanted, " FAIL)";
+	rfalse;
+];
+
+Class TestObj
+  with name 'test' 'tests//p',
+	before [;
+		Enter: <<RunTest self>>;
+		Examine:
+			"This tests ", (string) self.testdesc, ".";
+	],
+	testdesc 0,
+	testfunc 0,
+  has static;
+
+Global glob;
+
+TestObj -> Base "base test"
+  with
+	name 'base' 'basic',
+	testdesc "basic autosave functionality",
+	testfunc [ loc;
+		loc = 97;
+		glob = 86;
+		WaitKey();
+		print "loc="; check(loc, 97); print "; ";
+		print "glob="; check(glob, 86); print "^";
+	];
+
+Include "Grammar";
+
