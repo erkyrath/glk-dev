@@ -5899,7 +5899,7 @@ TestClass ExtUndoTest
 
 		@gestalt 12 0 val; ! ExtUndo
 		if (~~val) {
-			print "Interpreter claims to not support extended. Skipping test.^^";
+			print "Interpreter claims to not support extended undo. Skipping test.^^";
 			count_failures();
 			return;
 		}
