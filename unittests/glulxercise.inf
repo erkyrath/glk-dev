@@ -2,8 +2,8 @@
 
 Constant Story "Glulxercise";
 Constant Headline "A Glulx interpreter unit test^";
-Release 7;
-Serial "150729";
+Release 8;
+Serial "160214";
 ! Written by Andrew Plotkin (erkyrath@eblong.com).
 ! This unit test suite, and its functions, are in the public domain.
 
@@ -18,9 +18,11 @@ Constant GG_MAINWIN_ROCK     201;
 Constant GG_SAVESTR_ROCK     301;
 Constant GG_SCRIPTSTR_ROCK   302;
 Constant GG_SCRIPTFREF_ROCK  401;
+Constant GG_SAVEFREF_ROCK    402;
 
 Global gg_mainwin = 0;
 Global gg_savestr = 0;
+Global gg_savefref = 0;
 Global gg_scriptfref = 0;
 Global gg_scriptstr = 0;
 
@@ -125,6 +127,7 @@ Global total_failures = 0;
 	gg_mainwin = 0;
 	gg_scriptfref = 0;
 	gg_scriptstr = 0;
+	gg_savefref = 0;
 	gg_savestr = 0;
 
 	id = glk($0040, 0, gg_arguments); ! stream_iterate
@@ -147,6 +150,7 @@ Global total_failures = 0;
 	id = glk($0064, 0, gg_arguments); ! fileref_iterate
 	while (id) {
 		switch (gg_arguments-->0) {
+			GG_SAVEFREF_ROCK: gg_savefref = id;
 			GG_SCRIPTFREF_ROCK: gg_scriptfref = id;
 		}
 		id = glk($0064, id, gg_arguments); ! fileref_iterate
@@ -6056,6 +6060,250 @@ TestClass ExtUndoTest
 
 		count_failures();
 	];
+
+TestClass RestoreTest
+	with name 'restore',
+	testfunc [ res loc1 loc2;
+		print "Restore:^^";
+
+		if (gg_savefref) {
+			print "gg_savefref already existed!^";
+			failures++;
+			count_failures();
+			return;
+		}
+
+		gg_savefref = glk($0060, 1, GG_SAVEFREF_ROCK); ! fileref_create_temp
+		if (~~gg_savefref) {
+			print "Unable to create fileref!^";
+			failures++;
+			jump cleanup;
+		}
+		delete_if_exists(gg_savefref);
+
+		print "Simple restore.^";
+		loc1 = 111;
+		loc2 = 222;
+		testglobal = 333;
+
+		gg_savestr = glk($0042, gg_savefref, $01, GG_SAVESTR_ROCK); ! stream_open_file
+		if (~~gg_savestr) {
+			print "Unable to open stream!^";
+			failures++;
+			jump cleanup;
+		}
+
+		print "Saving...^";
+		@save gg_savestr res;
+		if (res == -1) {
+			! Come back from @restore
+			print "Restore succeeded!^";
+			
+			print "loc1="; check(loc1, 111); print " loc2="; check(loc2, 222); print " glob="; check(testglobal, 333); print "^";
+			
+			GGRecoverObjects();
+			glk($0044, gg_savestr, 0); ! stream_close
+			gg_savestr = 0;
+		
+			jump restore_2;
+		}
+		if (res) {
+			print "Save failed!^";
+			failures++;
+			jump cleanup;
+		}
+
+		print "Saved.^";
+		glk($0044, gg_savestr, 0); ! stream_close
+		gg_savestr = 0;
+		
+		! These values will be restored over
+		loc1 = 5;
+		loc2 = 6;
+		testglobal = 7;
+		
+		gg_savestr = glk($0042, gg_savefref, $02, GG_SAVESTR_ROCK); ! stream_open_file
+		if (~~gg_savestr) {
+			print "Unable to open stream!^";
+			failures++;
+			jump cleanup;
+		}
+		
+		print "Restoring...^";
+		@restore gg_savestr res;
+		glk($0044, gg_savestr, 0); ! stream_close
+		gg_savestr = 0;
+		print "Restore failed!^";
+		failures++;
+		jump cleanup;
+
+		.restore_2;
+		print "Restore with stack.^";
+
+		loc1 = 55555;
+		loc2 = 6666;
+		testglobal = 777;
+		@push 888888;
+
+		gg_savestr = glk($0042, gg_savefref, $01, GG_SAVESTR_ROCK); ! stream_open_file
+		if (~~gg_savestr) {
+			print "Unable to open stream!^";
+			failures++;
+			jump cleanup;
+		}
+
+		print "Saving...^";
+		@save gg_savestr res;
+		if (res == -1) {
+			! Come back from @restore
+			print "Restore succeeded!^";
+
+			@pull testglobal2;
+			print "*sp="; check(testglobal2, 888888); print "^";
+			print "loc1="; check(loc1, 55555); print " loc2="; check(loc2, 6666); print " glob="; check(testglobal, 777); print "^";
+			
+			GGRecoverObjects();
+			glk($0044, gg_savestr, 0); ! stream_close
+			gg_savestr = 0;
+		
+			jump restore_3;
+		}
+		if (res) {
+			print "Save failed!^";
+			failures++;
+			jump cleanup;
+		}
+
+		print "Saved.^";
+		glk($0044, gg_savestr, 0); ! stream_close
+		gg_savestr = 0;
+
+		! These values will be restored over
+		loc1 = 1;
+		loc2 = 2;
+		testglobal = 3;
+		
+		gg_savestr = glk($0042, gg_savefref, $02, GG_SAVESTR_ROCK); ! stream_open_file
+		if (~~gg_savestr) {
+			print "Unable to open stream!^";
+			failures++;
+			jump cleanup;
+		}
+		
+		print "Restoring...^";
+		@restore gg_savestr res;
+		glk($0044, gg_savestr, 0); ! stream_close
+		gg_savestr = 0;
+		print "Restore failed!^";
+		failures++;
+		jump cleanup;
+
+		.restore_3;
+		print "Restore nested.^";
+
+		loc1 = 1;
+		loc2 = 2;
+		testglobal = 3;
+
+		gg_savestr = glk($0042, gg_savefref, $01, GG_SAVESTR_ROCK); ! stream_open_file
+		if (~~gg_savestr) {
+			print "Unable to open stream!^";
+			failures++;
+			jump cleanup;
+		}
+
+		print "Saving...^";
+		res = save_nested();
+		if (res == -1) {
+			! Come back from @restore
+			print "Restore succeeded!^";
+			
+			print "loc1="; check(loc1, 1); print " loc2="; check(loc2, 2); print " glob="; check(testglobal, 3); print "^";
+			
+			GGRecoverObjects();
+			glk($0044, gg_savestr, 0); ! stream_close
+			gg_savestr = 0;
+		
+			jump restore_4;
+		}
+		if (res) {
+			print "Save failed!^";
+			failures++;
+			jump cleanup;
+		}
+
+		print "Saved.^";
+		glk($0044, gg_savestr, 0); ! stream_close
+		gg_savestr = 0;
+		
+		! These values will be restored over
+		loc1 = 5;
+		loc2 = 6;
+		testglobal = 7;
+		
+		gg_savestr = glk($0042, gg_savefref, $02, GG_SAVESTR_ROCK); ! stream_open_file
+		if (~~gg_savestr) {
+			print "Unable to open stream!^";
+			failures++;
+			jump cleanup;
+		}
+		
+		print "Restoring...^";
+		res = restore_nested();
+		glk($0044, gg_savestr, 0); ! stream_close
+		gg_savestr = 0;
+		print "Restore failed!^";
+		failures++;
+		jump cleanup;
+
+		.restore_4;
+		print "Done.^";
+
+		.cleanup;
+		print "Cleaning up fileref.^";
+		if (gg_savefref) {
+			delete_if_exists(gg_savefref);
+			glk($0063, gg_savefref); ! fileref_destroy
+			gg_savefref = 0;
+		}
+
+		count_failures();
+	];
+
+[ save_nested res locx locy;
+	locx = 10;
+	locy = 41;
+	
+	@save gg_savestr res;
+	if (res == -1) {
+		! Come back from @restore
+		print "locx="; check(locx, 10); print " locy="; check(locy, 41); print "^";
+		return res;
+	}
+	if (res) {
+		print "Save failed! (inner)^";
+		return res;
+	}
+
+	locx = 1;
+	locy = 1;
+
+	return res;
+];
+
+[ restore_nested res;
+	@restore gg_savestr res;
+	print "Restore failed! (inner)^";
+	return res;
+];
+
+[ delete_if_exists fref   val;
+    val = glk($0067, fref); ! fileref_does_file_exist
+    if (val) {
+        print "(Deleting existing save file)^";
+        glk($0066, fref); ! fileref_delete_file
+    }
+];
 
 TestClass VerifyTest
 	with name 'verify',
