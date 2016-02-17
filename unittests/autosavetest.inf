@@ -69,6 +69,18 @@ Object Kitchen "Autosave Room"
 	print "...", (charname) res, ".^";
 ];
 
+[ WaitKeySilent res;
+	glk($00D2, gg_mainwin); ! request_char_event
+	while (true) {
+		glk($00C0, gg_event); ! select
+		if (gg_event-->0 == 2 && gg_event-->1 == gg_mainwin) {
+			res = gg_event-->2;
+			break;
+		}
+	}
+	return res;
+];
+
 [ charname ch;
 	if (ch < 0) {
 		SpecialKeyName(ch);
@@ -132,6 +144,57 @@ Object Kitchen "Autosave Room"
 	rfalse;
 ];
 
+[ check_str str buf len  newlen ix good ch;
+	good = true;
+	newlen = string_to_array(str, cbuffer2, BUFFER_SIZE);
+	if (newlen ~= len) {
+		good = false;
+	}
+	else {
+		for (ix=0 : ix<len : ix++) {
+			if (buf->ix ~= cbuffer2->ix)
+				good = false;
+		}
+	}
+	print "~";
+	for (ix=0 : ix<len : ix++) {
+		ch = buf->ix;
+		@streamchar ch;
+	}
+	print "~ len ", len;
+	if (~~good) {
+		errorcount++;
+		print " (should be ~";
+		for (ix=0 : ix<newlen : ix++) {
+			ch = cbuffer2->ix;
+			@streamchar ch;
+		}
+		print "~ len ", newlen, ", FAIL)";
+	}
+];
+
+[ string_to_array val arr arrlen    str oldstr len;
+	oldstr = glk($0048); ! stream_get_current
+	str = glk($0043, arr, arrlen, 1, 0); ! stream_open_memory
+	if (str == 0) return 0;
+
+	glk($0047, str); ! stream_set_current
+
+	if (val->0 == $c0 or $c1)
+		val();
+	else
+		@streamstr val;
+
+	glk($0047, oldstr); ! stream_set_current
+	@copy $ffffffff sp;
+	@copy str sp;
+	@glk $0044 2 0; ! stream_close
+	@copy sp len;
+	@copy sp 0;
+
+	return len;
+];
+
 Class TestObj
   with name 'test' 'tests//p',
 	before [;
@@ -147,6 +210,8 @@ Class TestObj
 Global glob;
 Global glob2;
 Constant BUFFER_SIZE 256;
+Array cbuffer  -> BUFFER_SIZE;
+Array cbuffer2 -> BUFFER_SIZE;
 Array ubuffer --> BUFFER_SIZE;
 
 TestObj -> Base "base test"
@@ -206,9 +271,62 @@ TestObj -> Randomize "random test"
 			ubuffer-->ix = val;
 		}
 		new_line;
-		
 	];
-	
+
+TestObj -> IoSys "iosys test"
+  with
+	name 'iosys',
+	testdesc "iosys test",
+	testfunc [ len res;
+		print "iosys 0:^";
+		print "^Kill and hit a key>";
+		@setiosys 0 0;
+		res = WaitKeySilent();
+		len = string_to_array("static null", cbuffer, BUFFER_SIZE);
+		@setiosys 2 0;
+		print "...", (charname) res, ".^";
+		check_str("", cbuffer, len); print "^";
+		new_line;
+
+		print "iosys 1 array:^";
+		print "^Kill and hit a key>";
+		glob = 0;
+		@setiosys 1 parenthesize_array;
+		res = WaitKeySilent();
+		print "Parens.^";
+		len = 24;
+		@setiosys 2 0;
+		print "...", (charname) res, ".^";
+		check_str("(P)(a)(r)(e)(n)(s)(.)(^)", cbuffer, len); print "^";
+		new_line;
+
+		print "iosys 1 stream:^";
+		print "^Kill and hit a key>";
+		glob = 0;
+		@setiosys 1 bracketize_stream;
+		res = WaitKeySilent();
+		len = string_to_array("Bra-cket.", cbuffer, BUFFER_SIZE);
+		@setiosys 2 0;
+		print "...", (charname) res, ".^";
+		check_str("<B><r><a><-><c><k><e><t><.>", cbuffer, len); print "^";
+		new_line;
+		];
+
+[ parenthesize_array ch;
+	cbuffer->glob = '(';
+	glob++;
+	cbuffer->glob = ch;
+	glob++;
+	cbuffer->glob = ')';
+	glob++;
+];
+		
+[ bracketize_stream ch;
+	glk($0080, '<'); ! put_char
+	glk($0080, ch); ! put_char
+	glk($0080, '>'); ! put_char
+];
+
 ! ### all the various @glk operand modes
 ! ### timer input
 ! ### line input
@@ -218,9 +336,7 @@ TestObj -> Randomize "random test"
 ! ### window stream writecounts
 ! ### an open transcript file
 ! ### the heap
-! ### iosys
 ! ### memprotect
-! ### deterministic RNG state
 ! ### accelerated funcs
 
 Include "Grammar";
