@@ -144,6 +144,25 @@ Object Kitchen "Autosave Room"
 	rfalse;
 ];
 
+[ check_bytelist _vararg_count    arr ix wanted val;
+	@copy sp arr;
+	_vararg_count--;
+	
+	for (ix=0 : ix<_vararg_count : ix++) {
+		@copy sp wanted;
+		if (ix)
+			print ", ";
+		@aloadb arr ix val;
+		if (wanted == val) {
+			print wanted;
+		}
+		else {
+			errorcount++;
+			print val, " (should be ", wanted, " FAIL)";
+		}
+	}
+];
+
 [ check_str str buf len  newlen ix good ch;
 	good = true;
 	newlen = string_to_array(str, cbuffer2, BUFFER_SIZE);
@@ -327,6 +346,57 @@ TestObj -> IoSys "iosys test"
 	glk($0080, '>'); ! put_char
 ];
 
+TestObj -> Protect "protect test"
+  with
+	name 'protect',
+	testdesc "memory-range protect test",
+	testfunc [ val addr ix;
+		@gestalt 3 0 val; ! Undo
+		if (~~val)
+			print "Interpreter claims to not support undo. (Continuing test anyway...)^^";
+
+		addr = cbuffer+3;
+		@protect addr 6;
+		for (ix=0 : ix<15 : ix++)
+			cbuffer->ix = ix+1;
+		WaitKey();
+		cbuffer->15 = 20;
+		@saveundo val;
+		if (val == 1) {
+			print "@@64saveundo failed!^";
+			errorcount++;
+			return;
+		}
+		if (val == 0) {
+			print "Undo saved...^";
+			! The following changes will be undone.
+			for (ix=0 : ix<16 : ix++)
+				cbuffer->ix = 99;
+			errorcount++;
+			print "Restoring undo...^";
+			@restoreundo val;
+			if (val == 1) {
+				print "@@64restoreundo failed (value 1)!^";
+			}
+			else {
+				print "@@64restoreundo failed with unknown return value: ", val, "^";
+			}
+			errorcount++;
+			return;
+		}
+		else if (val ~= -1) {
+			print "Unknown @@64saveundo return value: ", val, "^";
+			errorcount++;
+			return;
+		}
+		print "Undo succeeded, return value "; check(val, -1); print ".^";
+		
+		print "Protected 3,6: ";
+		check_bytelist(cbuffer, 1,2,3,99,99,99,99,99,99,10,11,12,13,14,15,20); print "^";
+
+		@protect 0 0;
+	];
+
 ! ### all the various @glk operand modes
 ! ### timer input
 ! ### line input
@@ -336,7 +406,6 @@ TestObj -> IoSys "iosys test"
 ! ### window stream writecounts
 ! ### an open transcript file
 ! ### the heap
-! ### memprotect
 ! ### accelerated funcs
 
 Include "Grammar";
