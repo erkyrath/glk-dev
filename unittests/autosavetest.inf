@@ -8,8 +8,12 @@ Release 1;
 Include "Parser";
 Include "VerbLib";
 
+Global totalfailures;
+Global errorcount;
+
 [ Initialise;
-  location = Kitchen;
+	location = Kitchen;
+	StartDaemon(Kitchen);
 ];
 
 Object Kitchen "Autosave Room"
@@ -24,9 +28,13 @@ Object Kitchen "Autosave Room"
 			hopefully reloading to that point.
 			Hit a key (or line of text) to continue the test.^";
 	],
+	daemon [;
+		if (totalfailures) {
+			print "Total failures: ", totalfailures, "^";
+			totalfailures = 0;
+		}
+	],
   has light;
-
-Global errorcount;
 
 [ RunTestSub;
 	if (~~(noun ofclass TestObj))
@@ -37,10 +45,13 @@ Global errorcount;
 	
 	noun.testfunc();
 
+	totalfailures = totalfailures + errorcount;
+
 	if (errorcount)
 		print "^FAILED: Total errors: ", errorcount, ".^";
 	else
 		print "^Passed.^";
+	new_line;
 ];
 
 [ WaitKey res;
@@ -125,6 +136,7 @@ Class TestObj
   with name 'test' 'tests//p',
 	before [;
 		Enter: <<RunTest self>>;
+		Take: <<RunTest self>>;
 		Examine:
 			"This tests ", (string) self.testdesc, ".";
 	],
@@ -133,6 +145,9 @@ Class TestObj
   has static;
 
 Global glob;
+Global glob2;
+Constant BUFFER_SIZE 256;
+Array ubuffer --> BUFFER_SIZE;
 
 TestObj -> Base "base test"
   with
@@ -141,10 +156,75 @@ TestObj -> Base "base test"
 	testfunc [ loc;
 		loc = 97;
 		glob = 86;
+		@push 123;
 		WaitKey();
+		@pull glob2;
+		print "*sp="; check(glob2, 123); print "; ";
 		print "loc="; check(loc, 97); print "; ";
 		print "glob="; check(glob, 86); print "^";
 	];
 
+TestObj -> Randomize "random test"
+  with
+	name 'random' 'randomize',
+	testdesc "random number generator",
+	testfunc [ ix val;
+		print "Deterministic...^";
+		@setrandom 1;
+		for (ix=0 : ix<16 : ix++) {
+			@random 0 val;
+			ubuffer-->ix = val;
+		}
+
+		WaitKey();
+
+		print "Array:";
+		@setrandom 1;
+		for (ix=0 : ix<16 : ix++) {
+			@random 0 val;
+			print " ", ix, "="; check(val, ubuffer-->ix);
+			ubuffer-->ix = val;
+		}
+		new_line;
+		
+		print "Nondeterministic...^";
+
+		WaitKey();
+
+		print "Array:";
+		@setrandom 0;
+		for (ix=0 : ix<16 : ix++) {
+			@random 0 val;
+			print " ", ix, "!=";
+			if (val ~= ubuffer-->ix) {
+				print val;
+			}
+			else {
+				errorcount++;
+				print val, " (should NOT be ", ubuffer-->ix, " FAIL)";
+			}
+			ubuffer-->ix = val;
+		}
+		new_line;
+		
+	];
+	
+! ### all the various @glk operand modes
+! ### timer input
+! ### line input
+! ### line input with funny terminator and echo flags
+! ### an open file stream (read and write)
+! ### an open memory stream (read and write)
+! ### window stream writecounts
+! ### an open transcript file
+! ### the heap
+! ### iosys
+! ### memprotect
+! ### deterministic RNG state
+! ### accelerated funcs
+
 Include "Grammar";
+
+Extend only 'run' replace
+	* multi -> RunTest;
 
