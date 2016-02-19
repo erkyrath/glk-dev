@@ -731,11 +731,6 @@ def make_infglk():
     print '! Generated for Glk API version %s' % (glkversion,)
     print
 
-    print '#ifndef INFGLK_H;'
-    print 'Constant INFGLK_H = 1;'
-    print '#ifdef TARGET_GLULX;'
-    print
-
     print '! Declare as a system header unless we are in the I7 environment.'
     print '! (I7 does not use the System_file directive.)'
     print '#ifndef NI_BUILD_COUNT;'
@@ -743,6 +738,11 @@ def make_infglk():
     print '#endif;  ! NI_BUILD_COUNT'
     print
     
+    print '#ifndef INFGLK_H;'
+    print 'Constant INFGLK_H = 1;'
+    print '#ifdef TARGET_GLULX;'
+    print
+
     for key in constantlist:
         val = constants[key]
         print 'Constant %s = %d;' % (key, val)
