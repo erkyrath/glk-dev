@@ -666,12 +666,86 @@ TestObj -> GlkOp "glkop test"
 	
 	];
 
+
+TestObj -> GlkCommon "common glk test"
+  with
+	name 'common' 'glk',
+	testdesc "common glk state",
+	testfunc [ id total streamcount windowcount filerefcount str origstr origpar val;
+	
+	    id = glk($0040, 0, gg_arguments); ! stream_iterate
+		total = 0;
+	    while (id) {
+			total++;
+	        id = glk($0040, id, gg_arguments); ! stream_iterate
+	    }
+		streamcount = total;
+		
+	    id = glk($0020, 0, gg_arguments); ! window_iterate
+		total = 0;
+	    while (id) {
+			total++;
+	        id = glk($0020, id, gg_arguments); ! window_iterate
+	    }
+		windowcount = total;
+		
+	    id = glk($0064, 0, gg_arguments); ! fileref_iterate
+		total = 0;
+	    while (id) {
+			total++;
+	        id = glk($0064, id, gg_arguments); ! fileref_iterate
+	    }
+		filerefcount = total;
+
+		print "Counts: ", streamcount, " streams, ",
+			windowcount, " windows, ", filerefcount, " filerefs.^";
+			
+		origstr = glk($002C, gg_mainwin); ! window_get_stream
+		origpar = glk($0029, gg_mainwin); ! window_get_parent
+
+		WaitKey();
+
+	    id = glk($0040, 0, gg_arguments); ! stream_iterate
+		total = 0;
+	    while (id) {
+			total++;
+	        id = glk($0040, id, gg_arguments); ! stream_iterate
+	    }
+		print "Streams: "; check(total, streamcount); new_line;
+		
+	    id = glk($0020, 0, gg_arguments); ! window_iterate
+		total = 0;
+	    while (id) {
+			total++;
+	        id = glk($0020, id, gg_arguments); ! window_iterate
+	    }
+		print "Windows: "; check(total, windowcount); new_line;
+		
+	    id = glk($0064, 0, gg_arguments); ! fileref_iterate
+		total = 0;
+	    while (id) {
+			total++;
+	        id = glk($0064, id, gg_arguments); ! fileref_iterate
+	    }
+		print "Filerefs: "; check(total, filerefcount); new_line;
+
+		val = glk($0028, gg_mainwin); ! window_get_type
+		print "Mainwin type: "; check(val, 3); new_line;
+		
+		val = glk($0029, gg_mainwin); ! window_get_parent
+		print "Mainwin parent: "; check(val, origpar); new_line;
+
+		str = glk($002C, gg_mainwin); ! glk_window_get_stream
+		print "Mainwin stream: "; check(str, origstr); print " "; check_nonzero(str);
+		val = glk($0041, str); ! stream_get_rock
+		print ", rock="; check(val, 0); new_line;
+	];
+
 ! ### timer input
 ! ### line input
 ! ### line input with funny terminator and echo flags
 ! ### an open file stream (read and write)
 ! ### an open memory stream (read and write)
-! ### window stream writecounts
 ! ### an open transcript file
 ! ### accelerated funcs
 
