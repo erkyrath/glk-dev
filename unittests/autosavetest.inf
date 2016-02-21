@@ -181,6 +181,19 @@ Object Kitchen "Autosave Room"
 	rfalse;
 ];
 
+Array gg_result --> 2;
+
+[ check_result_counts readcount writecount;
+    if (gg_result-->0 ~= readcount) {
+        print "ERROR: Read count was wrong: ", gg_result-->0, ", not ", readcount, "^";
+        errorcount++;
+    }
+    if (gg_result-->1 ~= writecount) {
+        print "ERROR: Read count was wrong: ", gg_result-->1, ", not ", writecount, "^";
+        errorcount++;
+    }
+];
+
 [ check_bytelist _vararg_count    arr ix wanted val;
 	@copy sp arr;
 	_vararg_count--;
@@ -740,6 +753,117 @@ TestObj -> GlkCommon "common glk test"
 		val = glk($0041, str); ! stream_get_rock
 		print ", rock="; check(val, 0); new_line;
 	];
+
+	
+Constant filemode_Write = 1;
+Constant filemode_Read = 2;
+!Constant filemode_ReadWrite = 3;
+!Constant filemode_WriteAppend = 5;
+
+TestObj -> Fileref "fileref test"
+  with
+	name 'fileref' 'glk',
+	testdesc "filerefs",
+	testfunc [ len fref str name val;
+
+		name = "autofref";
+		print "Named file: ", (string) name, "^";
+		
+		len = name.print_to_array(cbuffer, BUFFER_SIZE);
+		cbuffer->3 = $E0;
+		cbuffer->(4+len) = 0;
+		fref = glk($0061, $102, cbuffer+3, 888); ! fileref_create_by_name
+		! text transcript file
+		if (~~fref) {
+			print "Unable to create fileref^";
+			errorcount++;
+			return;
+		}
+
+		delete_if_exists(fref, name);
+
+		WaitKey();
+
+		val = glk($0065, fref); ! fileref_get_rock
+		print "fileref rock="; check(val, 888); new_line;
+
+		str = open_file(fref, name, filemode_Write);
+		write_stream(str, "Locomotive.^");
+		glk($0044, str, gg_result); ! stream_close
+		check_result_counts(0, 12);
+
+		WaitKey();
+
+		val = glk($0065, fref); ! fileref_get_rock
+		print "fileref rock="; check(val, 888); new_line;
+
+		str = open_file(fref, name, filemode_Read);
+		len = glk($0092, str, cbuffer, BUFFER_SIZE); ! get_buffer_stream
+		glk($0044, str, gg_result); ! stream_close
+		check_result_counts(12, 0);
+		check_str("Locomotive.^", cbuffer, len); new_line;
+
+		glk($0063, fref); ! fileref_destroy
+
+		
+		print "Temporary file:^";		
+		fref = glk($0060, $102, 999); ! fileref_create_temp
+		! text transcript file
+		if (~~fref) {
+			print "Unable to create fileref^";
+			errorcount++;
+			return;
+		}
+
+		delete_if_exists(fref, name);
+
+		WaitKey();
+
+		val = glk($0065, fref); ! fileref_get_rock
+		print "fileref rock="; check(val, 999); new_line;
+
+		str = open_file(fref, name, filemode_Write);
+		write_stream(str, "Caboose.^");
+		glk($0044, str, gg_result); ! stream_close
+		check_result_counts(0, 9);
+
+		WaitKey();
+
+		val = glk($0065, fref); ! fileref_get_rock
+		print "fileref rock="; check(val, 999); new_line;
+
+		str = open_file(fref, name, filemode_Read);
+		len = glk($0092, str, cbuffer, BUFFER_SIZE); ! get_buffer_stream
+		glk($0044, str, gg_result); ! stream_close
+		check_result_counts(9, 0);
+		check_str("Caboose.^", cbuffer, len); new_line;
+
+		glk($0063, fref); ! fileref_destroy
+
+	];
+	
+[ delete_if_exists fref name   val;
+    val = glk($0067, fref); ! fileref_does_file_exist
+    if (val) {
+        print "(Deleting existing file: ", (string) name, ")^";
+        glk($0066, fref); ! fileref_delete_file
+    }
+];
+
+[ open_file fref name mode   str;
+    str = glk($0042, fref, mode, 0); ! stream_open_file
+    if (~~str) {
+        print "Unable to open stream: ", (string) name, "^";
+        quit;
+    }
+    return str;
+];
+
+[ write_stream str val   len;
+    len = val.print_to_array(cbuffer, BUFFER_SIZE);
+    glk($0085, str, cbuffer+4, len); ! put_buffer_stream
+];
+
 
 ! ### timer input
 ! ### line input
