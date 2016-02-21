@@ -295,7 +295,7 @@ TestObj -> Randomize "random test"
 TestObj -> IoSys "iosys test"
   with
 	name 'iosys',
-	testdesc "iosys test",
+	testdesc "iosys",
 	testfunc [ len res;
 		print "iosys 0:^";
 		print "^Kill and hit a key>";
@@ -349,7 +349,7 @@ TestObj -> IoSys "iosys test"
 TestObj -> Protect "protect test"
   with
 	name 'protect',
-	testdesc "memory-range protect test",
+	testdesc "memory-range protection",
 	testfunc [ val addr ix;
 		@gestalt 3 0 val; ! Undo
 		if (~~val)
@@ -395,6 +395,97 @@ TestObj -> Protect "protect test"
 		check_bytelist(cbuffer, 1,2,3,99,99,99,99,99,99,10,11,12,13,14,15,20); print "^";
 
 		@protect 0 0;
+	];
+
+TestObj -> GlkOp "glkop test"
+  with
+	name 'glkop' 'operand' 'glk',
+	testdesc "various glk operands",
+	testfunc [ res val arg1 opres;
+
+	print "Two static args:^";
+	print "^Kill and hit a key>";
+	glk($00D2, gg_mainwin); ! request_char_event
+	while (true) {
+		opres = 99;
+		@push 123;
+		@push gg_event;
+		@glk $00C0 1 opres;
+		@pull val;
+		if (gg_event-->0 == 2 && gg_event-->1 == gg_mainwin) {
+			res = gg_event-->2;
+			break;
+		}
+	}
+	print "...", (charname) res, ".^";
+	print "*sp="; check(val, 123); print ", ";
+	print "@@glk return "; check(opres, 0); new_line;
+
+	print "^Two stack args:^";
+	print "^Kill and hit a key>";
+	glk($00D2, gg_mainwin); ! request_char_event
+	while (true) {
+		opres = 99;
+		@push 124;
+		@push gg_event;
+		@push 1;
+		@push $00C0;
+		@glk sp sp sp;
+		@pull opres;
+		@pull val;
+		if (gg_event-->0 == 2 && gg_event-->1 == gg_mainwin) {
+			res = gg_event-->2;
+			break;
+		}
+	}
+	print "...", (charname) res, ".^";
+	print "*sp="; check(val, 124); print ", ";
+	print "@@glk return "; check(opres, 0); new_line;
+
+	print "^Local, stack args:^";
+	print "^Kill and hit a key>";
+	glk($00D2, gg_mainwin); ! request_char_event
+	while (true) {
+		opres = 99;
+		arg1 = $00C0;
+		@push 321;
+		@push gg_event;
+		@push 1;
+		@glk arg1 sp opres;
+		@pull val;
+		if (gg_event-->0 == 2 && gg_event-->1 == gg_mainwin) {
+			res = gg_event-->2;
+			break;
+		}
+	}
+	print "...", (charname) res, ".^";
+	print "*sp="; check(val, 321); print ", ";
+	print "arg1="; check(arg1, $00C0); print ", ";
+	print "@@glk return "; check(opres, 0); new_line;
+
+	print "^Stack, global args:^";
+	print "^Kill and hit a key>";
+	glk($00D2, gg_mainwin); ! request_char_event
+	while (true) {
+		opres = 99;
+		arg1 = 987;
+		glob = 1;
+		@push (-2);
+		@push gg_event;
+		@push $00C0;
+		@glk sp glob opres;
+		@pull val;
+		if (gg_event-->0 == 2 && gg_event-->1 == gg_mainwin) {
+			res = gg_event-->2;
+			break;
+		}
+	}
+	print "...", (charname) res, ".^";
+	print "*sp="; check(val, -2); print ", ";
+	print "arg1="; check(arg1, 987); print ", ";
+	print "glob="; check(glob, 1); print ", ";
+	print "@@glk return "; check(opres, 0); new_line;
+	
 	];
 
 ! ### all the various @glk operand modes
