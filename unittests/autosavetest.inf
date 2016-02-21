@@ -134,6 +134,23 @@ Object Kitchen "Autosave Room"
 	print ">";
 ];
 	
+[ Hex val   byte initial ix;
+	print "$";
+	initial = true;
+	for (ix=0 : ix<8 : ix++) {
+		@ushiftr val 28 byte;
+		@shiftl val 4 val;
+		byte = byte & $0F;
+		if (byte == 0 && initial && ix < 7)
+			continue;
+		initial = false;
+		if (byte <= 9)
+			print (char) (byte+'0');
+		else
+			print (char) (byte-10+'A');
+	}
+];
+
 [ check val wanted;
 	if (val == wanted) {
 		print val;
@@ -141,6 +158,26 @@ Object Kitchen "Autosave Room"
 	}
 	errorcount++;
 	print val, " (should be ", wanted, " FAIL)";
+	rfalse;
+];
+
+[ check_hex val wanted;
+	if (val == wanted) {
+		print (Hex) val;
+		rtrue;
+	}
+	errorcount++;
+	print (Hex) val, " (should be ", (Hex) wanted, " FAIL)";
+	rfalse;
+];
+
+[ check_nonzero val;
+	if (val) {
+		print (Hex) val;
+		rtrue;
+	}
+	errorcount++;
+	print val, " (should be nonzero FAIL)";
 	rfalse;
 ];
 
@@ -397,6 +434,147 @@ TestObj -> Protect "protect test"
 		@protect 0 0;
 	];
 
+TestObj -> Heap "heap test"
+  with
+	name 'heap',
+	testdesc "memory heap",
+	testfunc [ val blk1 blk2 blk3 endmem newendmem;
+		@gestalt 7 0 val; ! MAlloc
+		if (~~val) {
+			print "Interpreter claims to not support heap allocation. Skipping test.^^";
+			return;
+		}
+
+		endmem = HDR_ENDMEM-->0;
+		@getmemsize val;
+		print "Original memsize="; check_hex(val, endmem); print "^";
+		
+		@gestalt 8 0 val; ! MAllocHeap
+		print "Current heap: "; check_hex(val, 0); print "^";
+
+		print "Allocating 16...^";
+		@malloc 16 blk1;
+		if (blk1 == 0) {
+			errorcount++;
+			print "Allocation failed.^";
+			return;
+		}
+
+		@gestalt 8 0 val; ! MAllocHeap
+		print "Heap starts at "; check_hex(val, endmem);
+		@getmemsize newendmem;
+		print ", ends at ", (Hex) newendmem, "^";
+		if (newendmem <= endmem) {
+			errorcount++;
+			print "Heap size is not positive.^";
+		}
+		if (blk1 < endmem || blk1+16 > newendmem) {
+			errorcount++;
+			print "Block is outside heap.^";
+		}
+
+		print "Allocating 512...^";
+		@malloc 512 blk2;
+		if (blk2 == 0) {
+			errorcount++;
+			print "Allocation failed.^";
+			return;
+		}
+		
+		@gestalt 8 0 val; ! MAllocHeap
+		print "Heap starts at "; check_hex(val, endmem);
+		@getmemsize newendmem;
+		print ", ends at ", (Hex) newendmem, "^";
+		if (newendmem <= endmem) {
+			errorcount++;
+			print "Heap size is not positive.^";
+		}
+		if (blk2 < endmem || blk2+512 > newendmem) {
+			errorcount++;
+			print "Block is outside heap.^";
+		}
+
+		print "Freeing 16...^";
+		@mfree blk1;
+		
+		@getmemsize newendmem;
+		print "Heap ends at ", (Hex) newendmem, "^";
+		@gestalt 8 0 val; ! MAllocHeap
+		if (val == 0) {
+			errorcount++;
+			print "Heap is inactive.^";
+		}
+		if (blk2 < endmem || blk2+512 > newendmem) {
+			errorcount++;
+			print "Block is outside heap.^";
+		}
+		
+		print "Freeing 512...^";
+		@mfree blk2;
+		
+		@gestalt 8 0 val; ! MAllocHeap
+		print "Final heap: "; check_hex(val, 0); print "^";
+		endmem = HDR_ENDMEM-->0;
+		@getmemsize val;
+		print "Final memsize="; check_hex(val, endmem); print "^";
+
+		@malloc 19 blk1;
+		print "blk1(19)="; check_nonzero(blk1); print ", ";
+		@malloc 23 blk2;
+		print "blk2(23)="; check_nonzero(blk2); print ", ";
+		@malloc 17 blk3;
+		print "blk3(17)="; check_nonzero(blk3); print "^";
+
+		WaitKey();
+
+		@mfree blk2;
+		print "free blk2, ";
+		@malloc 23 blk2;
+		print "blk2(23)="; check_nonzero(blk2); print "^";
+
+		@mfree blk1;
+		print "free blk1, ";
+		@malloc 19 blk1;
+		print "blk1(19)="; check_nonzero(blk1); print "^";
+
+		@mfree blk2;
+		print "free blk2, ";
+		@malloc 23 blk2;
+		print "blk2(23)="; check_nonzero(blk2); print "^";
+
+		@mfree blk1;
+		print "free blk1, ";
+		@mfree blk2;
+		print "free blk2^";
+
+		@malloc 25 blk1;
+		print "blk1(25)="; check_nonzero(blk1); print ", ";
+		@malloc 17 blk2;
+		print "blk2(17)="; check_nonzero(blk2); print "^";
+		
+		WaitKey();
+
+		@mfree blk2;
+		print "free blk2, ";
+		@malloc 41 blk2;
+		print "blk2(41)="; check_nonzero(blk2); print "^";
+
+		@mfree blk1;
+		print "free blk1, ";
+		@mfree blk2;
+		print "free blk2, ";
+		@mfree blk3;
+		print "free blk3^";
+		
+		
+		@gestalt 8 0 val; ! MAllocHeap
+		print "Final heap: "; check_hex(val, 0); print "^";
+		endmem = HDR_ENDMEM-->0;
+		@getmemsize val;
+		print "Final memsize="; check_hex(val, endmem); print "^";
+
+	];
+
 TestObj -> GlkOp "glkop test"
   with
 	name 'glkop' 'operand' 'glk',
@@ -488,7 +666,6 @@ TestObj -> GlkOp "glkop test"
 	
 	];
 
-! ### all the various @glk operand modes
 ! ### timer input
 ! ### line input
 ! ### line input with funny terminator and echo flags
@@ -496,7 +673,6 @@ TestObj -> GlkOp "glkop test"
 ! ### an open memory stream (read and write)
 ! ### window stream writecounts
 ! ### an open transcript file
-! ### the heap
 ! ### accelerated funcs
 
 Include "Grammar";
