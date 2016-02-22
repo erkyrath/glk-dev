@@ -242,9 +242,60 @@ Array gg_result --> 2;
 	}
 ];
 
+[ check_ustr str ubuf len  newlen ix good ch;
+	good = true;
+	newlen = string_to_uarray(str, ubuffer2, BUFFER_SIZE);
+	if (newlen ~= len) {
+		good = false;
+	}
+	else {
+		for (ix=0 : ix<len : ix++) {
+			if (ubuf-->ix ~= ubuffer2-->ix)
+				good = false;
+		}
+	}
+	print "~";
+	for (ix=0 : ix<len : ix++) {
+		ch = ubuf-->ix;
+		@streamunichar ch;
+	}
+	print "~ len ", len;
+	if (~~good) {
+		errorcount++;
+		print " (should be ~";
+		for (ix=0 : ix<newlen : ix++) {
+			ch = ubuffer2-->ix;
+			@streamunichar ch;
+		}
+		print "~ len ", newlen, ", FAIL)";
+	}
+];
+
 [ string_to_array val arr arrlen    str oldstr len;
 	oldstr = glk($0048); ! stream_get_current
 	str = glk($0043, arr, arrlen, 1, 0); ! stream_open_memory
+	if (str == 0) return 0;
+
+	glk($0047, str); ! stream_set_current
+
+	if (val->0 == $c0 or $c1)
+		val();
+	else
+		@streamstr val;
+
+	glk($0047, oldstr); ! stream_set_current
+	@copy $ffffffff sp;
+	@copy str sp;
+	@glk $0044 2 0; ! stream_close
+	@copy sp len;
+	@copy sp 0;
+
+	return len;
+];
+
+[ string_to_uarray val arr arrlen    str oldstr len;
+	oldstr = glk($0048); ! stream_get_current
+	str = glk($0139, arr, arrlen, 1, 0); ! stream_open_memory_uni
 	if (str == 0) return 0;
 
 	glk($0047, str); ! stream_set_current
@@ -282,6 +333,7 @@ Constant BUFFER_SIZE 256;
 Array cbuffer  -> BUFFER_SIZE;
 Array cbuffer2 -> BUFFER_SIZE;
 Array ubuffer --> BUFFER_SIZE;
+Array ubuffer2 --> BUFFER_SIZE;
 
 TestObj -> Base "base test"
   with
@@ -810,6 +862,103 @@ TestObj -> LineInput "line input test"
 		print "~ (", len, " unichars)^";
 	];
 
+TestObj -> MemStream "memstream test"
+  with
+	name 'memstream' 'memory' 'stream' 'glk',
+	testdesc "memory stream I/O",
+	testfunc [ len str val oldstr;
+		print "Char stream:^";
+		
+		str = glk($0043, cbuffer, BUFFER_SIZE, filemode_Write, 444); ! stream_open_memory
+		if (~~str) {
+			print "Unable to create stream^";
+			errorcount++;
+			return;
+		}
+
+		WaitKey();
+
+		val = glk($0041, str); ! stream_get_rock
+		print "stream rock="; check(val, 444); new_line;
+
+		glk($0081, str, '+'); ! put_char_stream
+		
+		oldstr = glk($0048); ! stream_get_current
+		glk($0047, str); ! stream_set_current
+		print "Floop.";
+		glk($0047, oldstr); ! stream_set_current
+		
+		WaitKey();
+
+		val = glk($0041, str); ! stream_get_rock
+		print "stream rock="; check(val, 444); new_line;
+		
+		glk($0044, str, gg_result); ! stream_close
+		len = gg_result-->1;
+		check_result_counts(0, 7);
+		check_str("+Floop.", cbuffer, len); new_line;
+
+		str = glk($0043, cbuffer, BUFFER_SIZE, filemode_Read, 555); ! stream_open_memory
+		if (~~str) {
+			print "Unable to create stream^";
+			errorcount++;
+			return;
+		}
+
+		WaitKey();
+
+		val = glk($0041, str); ! stream_get_rock
+		print "stream rock="; check(val, 555); new_line;
+		
+		val = glk($0090, str); ! get_char_stream
+		print "Char 0: "; check(val, '+'); print ", ";
+		val = glk($0090, str); ! get_char_stream
+		print "Char 1: "; check(val, 'F'); print "^";
+
+		WaitKey();
+		
+		val = glk($0041, str); ! stream_get_rock
+		print "stream rock="; check(val, 555); new_line;
+		
+		val = glk($0090, str); ! get_char_stream
+		print "Char 2: "; check(val, 'l'); print ", ";
+		val = glk($0090, str); ! get_char_stream
+		print "Char 3: "; check(val, 'o'); print "^";
+		
+		glk($0044, str, gg_result); ! stream_close
+		check_result_counts(4, 0);
+
+		print "^Unicode stream:^";
+		
+		str = glk($0139, ubuffer, BUFFER_SIZE, filemode_Write, 666); ! stream_open_memory_uni
+		if (~~str) {
+			print "Unable to create stream^";
+			errorcount++;
+			return;
+		}
+
+		glk($012B, str, $203B); ! put_char_stream_uni
+		
+		oldstr = glk($0048); ! stream_get_current
+		glk($0047, str); ! stream_set_current
+		print "Fl@{F6}p-";
+		glk($0047, oldstr); ! stream_set_current
+
+		WaitKey();
+
+		glk($0047, str); ! stream_set_current
+		print "@{3A9}.";
+		glk($0047, oldstr); ! stream_set_current
+
+		val = glk($0041, str); ! stream_get_rock
+		print "stream rock="; check(val, 666); new_line;
+		
+		glk($0044, str, gg_result); ! stream_close
+		len = gg_result-->1;
+		check_result_counts(0, 8);
+		check_ustr("@{203B}Fl@{F6}p-@{3A9}.", ubuffer, len); new_line;
+		
+	];
 	
 Constant filemode_Write = 1;
 Constant filemode_Read = 2;
