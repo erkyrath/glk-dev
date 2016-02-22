@@ -941,8 +941,10 @@ TestObj -> MemStream "memstream test"
 		
 		oldstr = glk($0048); ! stream_get_current
 		glk($0047, str); ! stream_set_current
-		print "Fl@{F6}p-";
+		print "Fl@{F6}p-noodles";
 		glk($0047, oldstr); ! stream_set_current
+
+		glk($0045, str, 6, 0); ! stream_set_position
 
 		WaitKey();
 
@@ -955,8 +957,8 @@ TestObj -> MemStream "memstream test"
 		
 		glk($0044, str, gg_result); ! stream_close
 		len = gg_result-->1;
-		check_result_counts(0, 8);
-		check_ustr("@{203B}Fl@{F6}p-@{3A9}.", ubuffer, len); new_line;
+		check_result_counts(0, 15);
+		check_ustr("@{203B}Fl@{F6}p-@{3A9}.odles", ubuffer, 13); new_line;
 		
 	];
 	
