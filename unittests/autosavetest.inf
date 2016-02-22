@@ -755,6 +755,62 @@ TestObj -> GlkCommon "common glk test"
 	];
 
 	
+
+TestObj -> LineInput "line input test"
+  with
+	name 'line' 'input' 'lineinput' 'glk',
+	testdesc "char and unichar line input",
+	testfunc [ len;
+		print "Normal line input...^";
+		print "^Kill and enter a line>>";
+		
+		glk($00D0, gg_mainwin, cbuffer, BUFFER_SIZE, 0); ! request_line_event
+		while (true) {
+			glk($00C0, gg_event); ! select
+			if (gg_event-->0 == 3 && gg_event-->1 == gg_mainwin) {
+				len = gg_event-->2;
+				break;
+			}
+		}
+		
+		print "...~";
+		glk($0084, cbuffer, len); ! put_buffer
+		print "~ (", len, " chars)^";
+		
+		print "^Short line input (6 chars)...^";
+		print "^Kill and enter a line>>";
+		
+		glk($00D0, gg_mainwin, cbuffer, 6, 0); ! request_line_event
+		while (true) {
+			glk($00C0, gg_event); ! select
+			if (gg_event-->0 == 3 && gg_event-->1 == gg_mainwin) {
+				len = gg_event-->2;
+				break;
+			}
+		}
+		
+		print "...~";
+		glk($0084, cbuffer, len); ! put_buffer
+		print "~ (", len, " chars)^";
+		
+		print "^Unicode line input...^";
+		print "^Kill and enter a line>>";
+		
+		glk($0141, gg_mainwin, ubuffer, BUFFER_SIZE, 0); ! request_line_event_uni
+		while (true) {
+			glk($00C0, gg_event); ! select
+			if (gg_event-->0 == 3 && gg_event-->1 == gg_mainwin) {
+				len = gg_event-->2;
+				break;
+			}
+		}
+		
+		print "...~";
+		glk($012A, ubuffer, len); ! put_buffer_uni
+		print "~ (", len, " unichars)^";
+	];
+
+	
 Constant filemode_Write = 1;
 Constant filemode_Read = 2;
 !Constant filemode_ReadWrite = 3;
