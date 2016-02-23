@@ -1081,7 +1081,8 @@ TestObj -> Timer "timer test"
 			print "This interpreter does not support timer events.^";
 			return;
 		}
-  	
+
+  		print "Timer events on...^";
 		glk($00D6, 250); ! request_timer_events
 
 		print "^Kill and hit a key>";
@@ -1123,6 +1124,7 @@ TestObj -> Timer "timer test"
 			print "...", (charname) res, "; FAILED.^";
 		}
 
+  		print "Timer events off...^";
 		glk($00D6, 0); ! request_timer_events
 
 		print "^Kill and hit a key>";
