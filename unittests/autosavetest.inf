@@ -1071,13 +1071,66 @@ TestObj -> Fileref "fileref test"
     glk($0085, str, cbuffer+4, len); ! put_buffer_stream
 ];
 
+TestObj -> Timer "timer test"
+  with
+	name 'timer' 'glk',
+	testdesc "timer events",
+	testfunc [ res val;
+		val = glk($0004, 5, 0); ! gestalt_Timer
+		if (~~val) {
+			print "This interpreter does not support timer events.^";
+			return;
+		}
+  	
+		glk($00D6, 250); ! request_timer_events
+
+		print "^Kill and hit a key>";
+	
+		glk($00D2, gg_mainwin); ! request_char_event
+		while (true) {
+			glk($00C0, gg_event); ! select
+			if (gg_event-->0 == 2 && gg_event-->1 == gg_mainwin) {
+				res = gg_event-->2;
+				break;
+			}
+			! Ignore timer events
+		}
+
+		print "...", (charname) res, ".^";
+
+		print "^Wait for a timer event>";
+
+		res = 0;
+		glk($00D2, gg_mainwin); ! request_char_event
+		while (true) {
+			glk($00C0, gg_event); ! select
+			if (gg_event-->0 == 2 && gg_event-->1 == gg_mainwin) {
+				res = gg_event-->2;
+				break;
+			}
+			if (gg_event-->0 == 1) {
+				glk($00D3, gg_mainwin); ! cancel_char_event
+				res = -1;
+				break;
+			}
+		}
+
+		if (res == -1) {
+			print "...timer event.^";
+		}
+		else {
+			errorcount++;
+			print "...", (charname) res, "; FAILED.^";
+		}
+
+		glk($00D6, 0); ! request_timer_events
+	];
 
 ! ### timer input
-! ### line input
 ! ### line input with funny terminator and echo flags
 ! ### an open file stream (read and write)
-! ### an open memory stream (read and write)
 ! ### an open transcript file
+! ### an open resource stream (read)
 ! ### accelerated funcs
 
 Include "Grammar";
