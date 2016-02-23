@@ -1124,9 +1124,33 @@ TestObj -> Timer "timer test"
 		}
 
 		glk($00D6, 0); ! request_timer_events
+
+		print "^Kill and hit a key>";
+	
+		glk($00D2, gg_mainwin); ! request_char_event
+		while (true) {
+			glk($00C0, gg_event); ! select
+			if (gg_event-->0 == 2 && gg_event-->1 == gg_mainwin) {
+				res = gg_event-->2;
+				break;
+			}
+			if (gg_event-->0 == 1) {
+				glk($00D3, gg_mainwin); ! cancel_char_event
+				res = -1;
+				break;
+			}
+		}
+
+		if (res == -1) {
+			errorcount++;
+			print "...timer event; FAILED.^";
+		}
+		else {
+			print "...", (charname) res, ".^";
+		}
+
 	];
 
-! ### timer input
 ! ### line input with funny terminator and echo flags
 ! ### an open file stream (read and write)
 ! ### an open transcript file
