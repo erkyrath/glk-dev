@@ -1016,6 +1016,11 @@ TestObj -> ResStream "resstream test"
 
 		WaitKey();
 		
+		val = glk($0041, str); ! stream_get_rock
+		print "stream rock="; check(val, 113); new_line;
+		val = glk($0041, ustr); ! stream_get_rock
+		print "stream rock="; check(val, 115); new_line;
+		
 		len = glk($0092, str, cbuffer, BUFFER_SIZE); ! get_buffer_stream
 		check_str("Az@{E1}l@{EB}@{E5}@{DF}.^", cbuffer, len); new_line;
 
@@ -1025,6 +1030,10 @@ TestObj -> ResStream "resstream test"
 		glk($0044, str, gg_result); ! stream_close
 		len = gg_result-->1;
 		check_result_counts(9, 0);
+		
+		glk($0044, ustr, gg_result); ! stream_close
+		len = gg_result-->1;
+		check_result_counts(16, 0);
 		
 	];
 
