@@ -961,7 +961,73 @@ TestObj -> MemStream "memstream test"
 		check_ustr("@{203B}Fl@{F6}p-@{3A9}.odles", ubuffer, 13); new_line;
 		
 	];
-	
+
+TestObj -> ResStream "resstream test"
+  with
+	name 'resstream' 'resource' 'stream' 'glk',
+	testdesc "resource stream input",
+	testfunc [ len str ustr val;
+		val = glk($0004, 22, 0); ! gestalt_ResourceStream
+		if (~~val) {
+			print "This interpreter does not support resource streams.^";
+			return;
+		}
+
+		print "Data 1...^";
+		str = glk($0049, 1, 111); ! stream_open_resource
+		if (~~str) {
+			print "Unable to create stream -- perhaps you are running autosavetest.ulx instead of autosavetest.gblorb^";
+			errorcount++;
+			return;
+		}
+
+		WaitKey();
+		
+		val = glk($0041, str); ! stream_get_rock
+		print "stream rock="; check(val, 111); new_line;
+
+		len = glk($0092, str, cbuffer, 5); ! get_buffer_stream
+		check_str("Magic", cbuffer, len); new_line;
+		
+		WaitKey();
+		
+		len = glk($0092, str, cbuffer+5, BUFFER_SIZE-5); ! get_buffer_stream
+		check_str("Magic purple people eater.", cbuffer, len+5); new_line;
+		
+		glk($0044, str, gg_result); ! stream_close
+		len = gg_result-->1;
+		check_result_counts(26, 0);
+		
+		print "Data 3 and 5...^";
+		
+		str = glk($0049, 3, 113); ! stream_open_resource
+		if (~~str) {
+			print "Unable to create stream^";
+			errorcount++;
+			return;
+		}
+
+		ustr = glk($013A, 5, 115); ! stream_open_resource_uni
+		if (~~ustr) {
+			print "Unable to create stream^";
+			errorcount++;
+			return;
+		}
+
+		WaitKey();
+		
+		len = glk($0092, str, cbuffer, BUFFER_SIZE); ! get_buffer_stream
+		check_str("Az@{E1}l@{EB}@{E5}@{DF}.^", cbuffer, len); new_line;
+
+		len = glk($0131, ustr, ubuffer, BUFFER_SIZE); ! get_buffer_stream_uni
+		check_ustr("A @{E5}@{3C9} @{5D0}@{5EA} @{201C}@{201D} @{304A}@{3059}@{3082}.^", ubuffer, len); new_line;
+
+		glk($0044, str, gg_result); ! stream_close
+		len = gg_result-->1;
+		check_result_counts(9, 0);
+		
+	];
+
 Constant filemode_Write = 1;
 Constant filemode_Read = 2;
 !Constant filemode_ReadWrite = 3;
