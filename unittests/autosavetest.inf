@@ -189,7 +189,7 @@ Array gg_result --> 2;
         errorcount++;
     }
     if (gg_result-->1 ~= writecount) {
-        print "ERROR: Read count was wrong: ", gg_result-->1, ", not ", writecount, "^";
+        print "ERROR: Write count was wrong: ", gg_result-->1, ", not ", writecount, "^";
         errorcount++;
     }
 ];
@@ -1043,7 +1043,7 @@ TestObj -> FileStream "filestream test"
 	testdesc "file stream I/O",
 	testfunc [ len fref str name val;
 
-		name = "autofref";
+		name = "autofile";
 		print "Named file (writeappend): ", (string) name, "^";
 		
 		len = name.print_to_array(cbuffer, BUFFER_SIZE);
@@ -1104,9 +1104,45 @@ TestObj -> FileStream "filestream test"
 		}
 
 		str = open_file(fref, name, filemode_ReadWrite, 878);
+
+		glk($0081, str, '+'); ! put_char_stream
+		
+		WaitKey();
+
+		val = glk($0041, str); ! stream_get_rock
+		print "fileref rock="; check(val, 878); new_line;
+		
+		write_stream(str, "Elephant-pants.");
+		glk($0045, str, 9, 0); ! stream_set_position
+
+		WaitKey();
+		
+		len = glk($0092, str, cbuffer, BUFFER_SIZE); ! get_buffer_stream
+		check_str("-pants.", cbuffer, len); new_line;
+		
+		glk($0045, str, 9, 0); ! stream_set_position
+		write_stream(str, " knickers.");
+		
+		WaitKey();
+
+		val = glk($0046, str); ! stream_get_position
+		print "Getpos="; check(val, 19); new_line;
+		
+		glk($0045, str, 0, 0); ! stream_set_position
+
+		WaitKey();
+
+		val = glk($0041, str); ! stream_get_rock
+		print "fileref rock="; check(val, 878); new_line;
+		
+		val = glk($0046, str); ! stream_get_position
+		print "Getpos="; check(val, 0); new_line;
+		
+		len = glk($0092, str, cbuffer, BUFFER_SIZE); ! get_buffer_stream
+		check_str("+Elephant knickers.", cbuffer, len); new_line;
 		
 		glk($0044, str, gg_result); ! stream_close
-		check_result_counts(0, 0);
+		check_result_counts(26, 26);
 
 		glk($0063, fref); ! fileref_destroy
 	];
