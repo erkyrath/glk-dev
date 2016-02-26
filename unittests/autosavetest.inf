@@ -1037,10 +1037,68 @@ TestObj -> ResStream "resstream test"
 		
 	];
 
+TestObj -> FileStream "filestream test"
+  with
+	name 'filestream' 'file' 'stream' 'glk',
+	testdesc "file stream I/O",
+	testfunc [ len fref str name val;
+
+		name = "autofref";
+		print "Named file (writeappend): ", (string) name, "^";
+		
+		len = name.print_to_array(cbuffer, BUFFER_SIZE);
+		cbuffer->3 = $E0;
+		cbuffer->(4+len) = 0;
+		fref = glk($0061, $102, cbuffer+3, 0); ! fileref_create_by_name
+		! text transcript file
+		if (~~fref) {
+			print "Unable to create fileref^";
+			errorcount++;
+			return;
+		}
+
+		delete_if_exists(fref, name);
+
+		str = open_file(fref, name, filemode_WriteAppend, 876);
+
+		WaitKey();
+
+		val = glk($0041, str); ! stream_get_rock
+		print "stream rock="; check(val, 876); new_line;
+
+		write_stream(str, "Loco");
+		
+		WaitKey();
+
+		val = glk($0041, str); ! stream_get_rock
+		print "stream rock="; check(val, 876); new_line;
+
+		write_stream(str, "motive.^");
+		
+		glk($0044, str, gg_result); ! stream_close
+		check_result_counts(0, 12);
+
+		str = open_file(fref, name, filemode_Read, 877);
+	
+		WaitKey();
+
+		val = glk($0041, str); ! stream_get_rock
+		print "fileref rock="; check(val, 877); new_line;
+
+		len = glk($0092, str, cbuffer, BUFFER_SIZE); ! get_buffer_stream
+		glk($0044, str, gg_result); ! stream_close
+		check_result_counts(12, 0);
+		check_str("Locomotive.^", cbuffer, len); new_line;
+
+		glk($0063, fref); ! fileref_destroy
+
+
+	];
+
 Constant filemode_Write = 1;
 Constant filemode_Read = 2;
 !Constant filemode_ReadWrite = 3;
-!Constant filemode_WriteAppend = 5;
+Constant filemode_WriteAppend = 5;
 
 TestObj -> Fileref "fileref test"
   with
@@ -1132,8 +1190,8 @@ TestObj -> Fileref "fileref test"
     }
 ];
 
-[ open_file fref name mode   str;
-    str = glk($0042, fref, mode, 0); ! stream_open_file
+[ open_file fref name mode rock   str;
+    str = glk($0042, fref, mode, rock); ! stream_open_file
     if (~~str) {
         print "Unable to open stream: ", (string) name, "^";
         quit;
