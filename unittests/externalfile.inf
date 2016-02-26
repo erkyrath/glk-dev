@@ -214,7 +214,7 @@ Constant ROM_GAMESERIAL    $36;     ! six ASCII characters
         errorcount++;
     }
     if (gg_result-->1 ~= writecount) {
-        print "ERROR: Read count was wrong: ", gg_result-->1, ", not ", writecount, "^";
+        print "ERROR: Write count was wrong: ", gg_result-->1, ", not ", writecount, "^";
         errorcount++;
     }
 ];
