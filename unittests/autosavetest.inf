@@ -1092,12 +1092,28 @@ TestObj -> FileStream "filestream test"
 
 		glk($0063, fref); ! fileref_destroy
 
+		
+		name = "(temp)";
+		print "Temporary file (readwrite):^";		
+		fref = glk($0060, $102, 0); ! fileref_create_temp
+		! text transcript file
+		if (~~fref) {
+			print "Unable to create fileref^";
+			errorcount++;
+			return;
+		}
 
+		str = open_file(fref, name, filemode_ReadWrite, 878);
+		
+		glk($0044, str, gg_result); ! stream_close
+		check_result_counts(0, 0);
+
+		glk($0063, fref); ! fileref_destroy
 	];
 
 Constant filemode_Write = 1;
 Constant filemode_Read = 2;
-!Constant filemode_ReadWrite = 3;
+Constant filemode_ReadWrite = 3;
 Constant filemode_WriteAppend = 5;
 
 TestObj -> Fileref "fileref test"
@@ -1145,7 +1161,8 @@ TestObj -> Fileref "fileref test"
 
 		glk($0063, fref); ! fileref_destroy
 
-		
+
+		name = "(temp)";
 		print "Temporary file:^";		
 		fref = glk($0060, $102, 999); ! fileref_create_temp
 		! text transcript file
