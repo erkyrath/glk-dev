@@ -16,26 +16,6 @@ Global errorcount;
 	StartDaemon(Kitchen);
 ];
 
-Object Kitchen "Autosave Room"
-  with
-	description [;
-		print "A voice booooms out: Welcome to the test chamber.^^";
-		print "This test is a little bit weird. Type ~run test~ (or
-			~run all~). Each test will pause in the middle with a
-			~Kill and hit a key>~ prompt. (Or, for some tests,
-			~Kill and enter a line>~.)
-			At that point, kill the interpreter and then restart it --
-			hopefully reloading to that point.
-			Hit a key (or line of text) to continue the test.^";
-	],
-	daemon [;
-		if (totalfailures) {
-			print "Total failures: ", totalfailures, "^";
-			totalfailures = 0;
-		}
-	],
-  has light;
-
 [ RunTestSub;
 	if (~~(noun ofclass TestObj))
 		"That's not a test.";
@@ -315,6 +295,18 @@ Array gg_result --> 2;
 	return len;
 ];
 
+Class TopClass;
+
+Class MidClass
+  class TopClass;
+
+Class BotClass
+  class MidClass;
+
+TopClass topobj;
+MidClass midobj;
+BotClass botobj;
+
 Class TestObj
   with name 'test' 'tests//p',
 	before [;
@@ -334,6 +326,26 @@ Array cbuffer  -> BUFFER_SIZE;
 Array cbuffer2 -> BUFFER_SIZE;
 Array ubuffer --> BUFFER_SIZE;
 Array ubuffer2 --> BUFFER_SIZE;
+
+Object Kitchen "Autosave Room"
+  with
+	description [;
+		print "A voice booooms out: Welcome to the test chamber.^^";
+		print "This test is a little bit weird. Type ~run test~ (or
+			~run all~). Each test will pause in the middle with a
+			~Kill and hit a key>~ prompt. (Or, for some tests,
+			~Kill and enter a line>~.)
+			At that point, kill the interpreter and then restart it --
+			hopefully reloading to that point.
+			Hit a key (or line of text) to continue the test.^";
+	],
+	daemon [;
+		if (totalfailures) {
+			print "Total failures: ", totalfailures, "^";
+			totalfailures = 0;
+		}
+	],
+  has light;
 
 TestObj -> Base "base test"
   with
@@ -639,6 +651,41 @@ TestObj -> Heap "heap test"
 		print "Final memsize="; check_hex(val, endmem); print "^";
 
 	];
+
+TestObj -> Accel "accel test"
+  with
+	name 'accel' 'accelerat',
+	testdesc "acceleration opcodes",
+	testfunc [ val;
+		accel_params();
+
+		val = OC__Cl(TopClass, String);
+		print "TopClass ofclass String: "; check(val, 0); print ", ";
+
+		new_line;
+	];
+
+Global params_accelerated;
+
+[ accel_params   addr;
+	if (params_accelerated)
+		return;
+	
+	addr = #classes_table;
+	@accelparam 0 addr;
+	@accelparam 1 INDIV_PROP_START;
+	@accelparam 2 Class;
+	@accelparam 3 Object;
+	@accelparam 4 Routine;
+	@accelparam 5 String;
+	addr = #globals_array + WORDSIZE * #g$self;
+	@accelparam 6 addr;
+	@accelparam 7 NUM_ATTR_BYTES;
+	addr = #cpv__start;
+	@accelparam 8 addr;
+
+	params_accelerated = true;
+];
 
 TestObj -> GlkOp "glkop test"
   with
