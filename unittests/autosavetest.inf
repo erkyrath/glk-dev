@@ -1340,9 +1340,7 @@ TestObj -> Timer "timer test"
 	];
 
 ! ### line input with funny terminator and echo flags
-! ### an open file stream (read and write)
 ! ### an open transcript file
-! ### an open resource stream (read)
 ! ### accelerated funcs
 
 Include "Grammar";
