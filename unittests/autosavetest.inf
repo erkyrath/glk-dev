@@ -656,13 +656,99 @@ TestObj -> Accel "accel test"
   with
 	name 'accel' 'accelerat',
 	testdesc "acceleration opcodes",
-	testfunc [ val;
+	testfunc [ val ix;
 		accel_params();
 
 		val = OC__Cl(TopClass, String);
 		print "TopClass ofclass String: "; check(val, 0); print ", ";
+		val = OC__Cl(TopClass, Routine);
+		print "TopClass ofclass Routine: "; check(val, 0); print "^";
+		val = OC__Cl(TopClass, Object);
+		print "TopClass ofclass Object: "; check(val, 0); print ", ";
+		
+		val = OC__Cl(topobj, String);
+		print "topobj ofclass String: "; check(val, 0); print ", ";
+		val = OC__Cl(topobj, Routine);
+		print "topobj ofclass Routine: "; check(val, 0); print ", ";
+		val = OC__Cl(topobj, Object);
+		print "topobj ofclass Object: "; check(val, 1); print ", ";
+		val = OC__Cl(topobj, TopClass);
+		print "topobj ofclass TopClass: "; check(val, 1); print ", ";
+		val = OC__Cl(topobj, MidClass);
+		print "topobj ofclass MidClass: "; check(val, 0); print ", ";
+		val = OC__Cl(topobj, BotClass);
+		print "topobj ofclass BotClass: "; check(val, 0); print "^";
 
-		new_line;
+		val = OC__Cl(midobj, String);
+		print "midobj ofclass String: "; check(val, 0); print ", ";
+		val = OC__Cl(midobj, Routine);
+		print "midobj ofclass Routine: "; check(val, 0); print ", ";
+		val = OC__Cl(midobj, Object);
+		print "midobj ofclass Object: "; check(val, 1); print ", ";
+		val = OC__Cl(midobj, TopClass);
+		print "midobj ofclass TopClass: "; check(val, 1); print ", ";
+		val = OC__Cl(midobj, MidClass);
+		print "midobj ofclass MidClass: "; check(val, 1); print ", ";
+		val = OC__Cl(midobj, BotClass);
+		print "midobj ofclass BotClass: "; check(val, 0); print "^";
+
+		val = OC__Cl(botobj, String);
+		print "botobj ofclass String: "; check(val, 0); print ", ";
+		val = OC__Cl(botobj, Routine);
+		print "botobj ofclass Routine: "; check(val, 0); print ", ";
+		val = OC__Cl(botobj, Object);
+		print "botobj ofclass Object: "; check(val, 1); print ", ";
+		val = OC__Cl(botobj, TopClass);
+		print "botobj ofclass TopClass: "; check(val, 1); print ", ";
+		val = OC__Cl(botobj, MidClass);
+		print "botobj ofclass MidClass: "; check(val, 1); print ", ";
+		val = OC__Cl(botobj, BotClass);
+		print "botobj ofclass BotClass: "; check(val, 1); print "^";
+
+		print "^WARNING: The rest of test cannot detect errors. You must observe profiling information and see whether the run speed changes.^^";
+
+		WaitKey();
+
+		print "Not accelerated:^";
+
+		for (ix=0 : ix<5000 : ix++) {
+			val = OC__Cl(botobj, TopClass);
+		}
+		
+		WaitKey();
+
+		print "Acceleration on...^";
+
+		@accelfunc 1 Z__Region;
+		@accelfunc 8 CP__Tab;
+		@accelfunc 9 RA__Pr;
+		@accelfunc 10 RL__Pr;
+		@accelfunc 11 OC__Cl;
+		@accelfunc 12 RV__Pr;
+		@accelfunc 13 OP__Pr;
+		
+		WaitKey();
+
+		print "Accelerated:^";
+
+		for (ix=0 : ix<5000 : ix++) {
+			val = OC__Cl(botobj, TopClass);
+		}
+		
+		WaitKey();
+
+		print "Acceleration off...^";
+
+		@accelfunc 0 Z__Region;
+		@accelfunc 0 CP__Tab;
+		@accelfunc 0 RA__Pr;
+		@accelfunc 0 RL__Pr;
+		@accelfunc 0 OC__Cl;
+		@accelfunc 0 RV__Pr;
+		@accelfunc 0 OP__Pr;
+		
+		WaitKey();
+
 	];
 
 Global params_accelerated;
@@ -1481,7 +1567,6 @@ TestObj -> Timer "timer test"
 
 ! ### line input with funny terminator flags
 ! ### an open transcript file
-! ### accelerated funcs
 
 Include "Grammar";
 
