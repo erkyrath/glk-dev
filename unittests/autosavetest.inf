@@ -862,6 +862,99 @@ TestObj -> LineInput "line input test"
 		print "~ (", len, " unichars)^";
 	];
 
+TestObj -> EchoInput "echo input test"
+  with
+	name 'echo'  'input' 'echoinput' 'glk',
+	testdesc "echo flag for line input",
+	testfunc [ len val;
+		val = glk($0004, 17, 0); ! gestalt_LineInputEcho
+		if (~~val) {
+			print "This interpreter does not support noecho mode.^";
+			return;
+		}
+
+		print "WARNING: This test cannot detect errors. You must watch the screen and look for missing or duplicated input commands.^^";
+	
+		print "Normal line input...^";
+		print "^Kill and enter a line>>";
+		
+		glk($00D0, gg_mainwin, cbuffer, BUFFER_SIZE, 0); ! request_line_event
+		while (true) {
+			glk($00C0, gg_event); ! select
+			if (gg_event-->0 == 3 && gg_event-->1 == gg_mainwin) {
+				len = gg_event-->2;
+				break;
+			}
+		}
+		
+		print "...~";
+		glk($0084, cbuffer, len); ! put_buffer
+		print "~ (", len, " chars)^";
+		
+		print "^Noecho line input...^";
+		print "^Kill and enter a line>>";
+
+		glk($0150, gg_mainwin, 0); ! set_echo_line_event
+		glk($00D0, gg_mainwin, cbuffer, BUFFER_SIZE, 0); ! request_line_event
+		while (true) {
+			glk($00C0, gg_event); ! select
+			if (gg_event-->0 == 3 && gg_event-->1 == gg_mainwin) {
+				len = gg_event-->2;
+				glk($0086, 8); ! set_style
+				glk($0084, cbuffer, len); ! put_buffer
+				glk($0086, 0); ! set_style
+				new_line;
+				break;
+			}
+		}
+		
+		print "...~";
+		glk($0084, cbuffer, len); ! put_buffer
+		print "~ (", len, " chars)^";
+		
+		print "^Noecho mode line input (echo set after request)...^";
+		print "^Kill and enter a line>>";
+		
+		glk($0150, gg_mainwin, 0); ! set_echo_line_event
+		glk($00D0, gg_mainwin, cbuffer, BUFFER_SIZE, 0); ! request_line_event
+		glk($0150, gg_mainwin, 1); ! set_echo_line_event
+		while (true) {
+			glk($00C0, gg_event); ! select
+			if (gg_event-->0 == 3 && gg_event-->1 == gg_mainwin) {
+				len = gg_event-->2;
+				glk($0086, 8); ! set_style
+				glk($0084, cbuffer, len); ! put_buffer
+				glk($0086, 0); ! set_style
+				new_line;
+				break;
+			}
+		}
+		
+		print "...~";
+		glk($0084, cbuffer, len); ! put_buffer
+		print "~ (", len, " chars)^";
+		
+		print "^Normal mode line input (echo cleared after request)...^";
+		print "^Kill and enter a line>>";
+		
+		glk($0150, gg_mainwin, 1); ! set_echo_line_event
+		glk($00D0, gg_mainwin, cbuffer, BUFFER_SIZE, 0); ! request_line_event
+		glk($0150, gg_mainwin, 0); ! set_echo_line_event
+		while (true) {
+			glk($00C0, gg_event); ! select
+			if (gg_event-->0 == 3 && gg_event-->1 == gg_mainwin) {
+				len = gg_event-->2;
+				break;
+			}
+		}
+		
+		print "...~";
+		glk($0084, cbuffer, len); ! put_buffer
+		print "~ (", len, " chars)^";
+		
+		glk($0150, gg_mainwin, 1); ! set_echo_line_event
+	];
+	
 TestObj -> MemStream "memstream test"
   with
 	name 'memstream' 'memory' 'stream' 'glk',
@@ -1339,7 +1432,7 @@ TestObj -> Timer "timer test"
 
 	];
 
-! ### line input with funny terminator and echo flags
+! ### line input with funny terminator flags
 ! ### an open transcript file
 ! ### accelerated funcs
 
