@@ -1,6 +1,8 @@
 Constant Story "UnicodeTest";
 Constant Headline "^Not a game.^";
 
+Release 2;
+
 ! Unit test for the @streamunichar opcode.
 
 Include "Parser";
@@ -76,6 +78,17 @@ Sign katakana "katakana sign" Kitchen
 		print "Katakana: @{30AA}@{30B9}@{30E2} (O SU MO)^";
 	];
 
+Sign emoji "emoji sign" Kitchen
+  with
+	name 'emoji',
+	description [;
+		print "Emoji: ";
+		@streamunichar $1F600;
+		print "@{1F680}@{1F6B2}";
+		@streamunichar $1F344;
+		print " (GRINNING FACE, ROCKET, BICYCLE, MUSHROOM)^";
+	];
+
 Sign bigsign "big sign" Kitchen
   with
 	name 'big',
@@ -88,6 +101,7 @@ Sign bigsign "big sign" Kitchen
 		<Examine ligature>;
 		<Examine hirigana>;
 		<Examine katakana>;
+		<Examine emoji>;
 	];
 	  
 Include "Grammar";
