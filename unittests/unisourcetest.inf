@@ -1,7 +1,7 @@
 Constant Story "UniSourceTest";
 Constant Headline "Not a game.^";
 
-Release 1;
+Release 2;
 
 Global mainwin;
 Global errorcount;
@@ -178,6 +178,8 @@ Array string_literals -->
     "Katakana: @{30AA}@{30B9}@{30E2} (O SU MO)"
     "CJK ideographs: 丂倀惿矢腄饧"
     "CJK ideographs: @{4E02}@{5000}@{60FF}@{77E2}@{8144}@{9967}"
+	"Emoji: 😀🚀🚲🍄 (GRINNING FACE, ROCKET, BICYCLE, MUSHROOM)"
+	"Emoji: @{1F600}@{1F680}@{1F6B2}@{1F344} (GRINNING FACE, ROCKET, BICYCLE, MUSHROOM)"
     0 0;
 
 ! I'm not including any characters beyond $FF here. If I did, I'd have to
