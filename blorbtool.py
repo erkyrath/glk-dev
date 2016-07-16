@@ -368,17 +368,17 @@ class BlorbFile:
         self.canonicalize()
         tmpfilename = self.outfilename + '~TEMP'
         fl = open(tmpfilename, 'wb')
-        fl.write('FORM----IFRS')
+        fl.write(b'FORM----IFRS')
         pos = 12
         for chunk in self.chunks:
-            typ = chunk.type
-            fl.write(struct.pack('>4cI', typ[0], typ[1], typ[2], typ[3], chunk.len))
+            fl.write(chunk.type)
+            fl.write(struct.pack('>I', chunk.len))
             pos = pos+8
             dat = chunk.data()
             fl.write(dat)
             pos = pos+len(dat)
             if (pos % 2):
-                fl.write('\0')
+                fl.write(b'\0')
                 pos = pos+1
         fl.seek(4)
         fl.write(struct.pack('>I', pos-8))
