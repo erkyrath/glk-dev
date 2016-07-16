@@ -348,7 +348,8 @@ class BlorbFile:
         ls = []
         ls.append(struct.pack('>I', len(self.usages)))
         for (typ, num, chunk) in self.usages:
-            ls.append(struct.pack('>4cII', typ[0], typ[1], typ[2], typ[3], num, chunk.savestart))
+            ls.append(typ)
+            ls.append(struct.pack('>II', num, chunk.savestart))
         dat = b''.join(ls)
         if (len(dat) != indexchunk.len):
             print('Warning: index chunk length does not match!')
@@ -611,7 +612,7 @@ class BlorbTool:
         fl.close()
         if (filestart):
             filelen = filelen - 8
-        fakestart = min(blorbfile.chunkatpos.keys() + [0]) - 1
+        fakestart = min(list(blorbfile.chunkatpos.keys()) + [0]) - 1
         if origchunk:
             # Replace existing chunk
             pos = blorbfile.chunk_position(origchunk)
