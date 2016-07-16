@@ -84,7 +84,7 @@ class BlorbChunk:
         self.filestart = None
         
     def __repr__(self):
-        return '<BlorbChunk %s at %d, len %d>' % (repr(self.type), self.start, self.len)
+        return '<BlorbChunk %s at %d, len %d>' % (typestring(self.type), self.start, self.len)
     
     def data(self, max=None):
         if (self.literaldata):
@@ -220,9 +220,9 @@ class BlorbChunk:
         else:
             dat = self.data(16)
             if (len(dat) == self.len):
-                print('contents: %s' % (repr(dat,)))
+                print('contents: %s' % (typestring(dat,)))
             else:
-                print('beginning: %s' % (repr(dat,)))
+                print('beginning: %s' % (typestring(dat,)))
 
 class BlorbFile:
     def __init__(self, filename, outfilename=None):
@@ -298,7 +298,7 @@ class BlorbFile:
                 start = struct.unpack('>I', subdat[8:12])[0]
                 subchunk = self.chunkatpos.get(start)
                 if (not subchunk):
-                    print('Warning: resource (%s, %d) refers to a nonexistent chunk!' % (repr(typ), num))
+                    print('Warning: resource (%s, %d) refers to a nonexistent chunk!' % (typestring(typ), num))
                 self.usages.append( (typ, num, subchunk) )
                 self.usagemap[(typ, num)] = subchunk
 
@@ -511,7 +511,7 @@ class BlorbTool:
             raise CommandError('usage: index')
         print(len(blorbfile.usages), 'resources:')
         for (use, num, chunk) in blorbfile.usages:
-            print('  %s %d: %s' % (repr(use), num, chunk.describe()))
+            print('  %s %d: %s' % (typestring(use), num, chunk.describe()))
 
     def cmd_display(self, args):
         if (not args):
@@ -520,13 +520,13 @@ class BlorbTool:
             typ = self.parse_chunk_type(args[0], 'display')
             ls = [ chunk for chunk in blorbfile.chunks if chunk.type == typ ]
             if (not ls):
-                raise CommandError('No chunks of type %s' % (repr(typ),))
+                raise CommandError('No chunks of type %s' % (typestring(typ),))
         elif (len(args) == 2):
             use = self.parse_chunk_type(args[0], 'display')
             num = self.parse_int(args[1], 'display (second argument)')
             chunk = blorbfile.usagemap.get( (use, num) )
             if (not chunk):
-                raise CommandError('No resource with usage %s, number %d' % (repr(use), num))
+                raise CommandError('No resource with usage %s, number %d' % (typestring(use), num))
             ls = [ chunk ]
         else:
             raise CommandError('usage: display | display TYPE | display USE NUM')
@@ -538,16 +538,16 @@ class BlorbTool:
             typ = self.parse_chunk_type(args[0], 'export')
             ls = [ chunk for chunk in blorbfile.chunks if chunk.type == typ ]
             if (not ls):
-                raise CommandError('No chunks of type %s' % (repr(typ),))
+                raise CommandError('No chunks of type %s' % (typestring(typ),))
             if (len(ls) != 1):
-                raise CommandError('%d chunks of type %s' % (len(ls), repr(typ),))
+                raise CommandError('%d chunks of type %s' % (len(ls), typestring(typ),))
             chunk = ls[0]
         elif (len(args) == 3):
             use = self.parse_chunk_type(args[0], 'export')
             num = self.parse_int(args[1], 'export (second argument)')
             chunk = blorbfile.usagemap.get( (use, num) )
             if (not chunk):
-                raise CommandError('No resource with usage %s, number %d' % (repr(use), num))
+                raise CommandError('No resource with usage %s, number %d' % (typestring(use), num))
         else:
             raise CommandError('usage: export TYPE FILENAME | export USE NUM FILENAME')
         outfilename = args[-1]
@@ -639,7 +639,7 @@ class BlorbTool:
         
         chunk = blorbfile.usagemap.get( (b'Exec', 0) )
         if (not chunk):
-            raise CommandError('No resource with usage %s, number %d' % (repr(use), num))
+            raise CommandError('No resource with usage %s, number %d' % (typestring(use), num))
         chunkdat = chunk.data()
         if (chunk.formtype and chunk.formtype != b'FORM'):
             chunkdat = b'FORM' + struct.pack('>I', chunk.len) + chunkdat
@@ -698,13 +698,13 @@ class BlorbTool:
             typ = self.parse_chunk_type(args[0], 'delete')
             ls = [ chunk for chunk in blorbfile.chunks if chunk.type == typ ]
             if (not ls):
-                raise CommandError('No chunks of type %s' % (repr(typ),))
+                raise CommandError('No chunks of type %s' % (typestring(typ),))
         elif (len(args) == 2):
             use = self.parse_chunk_type(args[0], 'delete')
             num = self.parse_int(args[1], 'delete (second argument)')
             chunk = blorbfile.usagemap.get( (use, num) )
             if (not chunk):
-                raise CommandError('No resource with usage %s, number %d' % (repr(use), num))
+                raise CommandError('No resource with usage %s, number %d' % (typestring(use), num))
             ls = [ chunk ]
         else:
             raise CommandError('usage: delete TYPE | delete USE NUM')
