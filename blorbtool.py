@@ -125,11 +125,12 @@ class BlorbChunk:
             while (dat):
                 (subdat, dat) = (dat[:12], dat[12:])
                 subls = struct.unpack('>4c2I', subdat)
-                print('  \'%c%c%c%c\' %d: starts at %d' % subls)
+                usage = b''.join(subls[0:4])
+                print('  %s %d: starts at %d' % (typestring(usage), subls[-2], subls[-1]))
         elif (self.type == b'IFmd'):
             # Metadata chunk
             dat = self.data()
-            print(dat)
+            print(dat.decode())
         elif (self.type == b'Fspc'):
             # Frontispiece chunk
             dat = self.data()
