@@ -16,6 +16,8 @@
 # The AIFF data implicitly includes the eight-byte header, which is why the
 # length says "+8". Start at byte 324266 and read 8544 bytes.
 
+from __future__ import print_function
+
 import sys
 import os
 import optparse
@@ -105,114 +107,114 @@ class BlorbChunk:
             return '%s/%s (%d+8 bytes, start %d)' % (repr(self.type), repr(self.formtype), self.len, self.start)
     
     def display(self):
-        print '* %s' % (self.describe(),)
+        print('* %s' % (self.describe(),))
         if (self.type == 'RIdx'):
             # Index chunk
             dat = self.data()
             (subdat, dat) = (dat[:4], dat[4:])
             num = struct.unpack('>I', subdat)[0]
-            print '%d resources:' % (num,)
+            print('%d resources:' % (num,))
             while (dat):
                 (subdat, dat) = (dat[:12], dat[12:])
                 subls = struct.unpack('>4c2I', subdat)
-                print '  \'%c%c%c%c\' %d: starts at %d' % subls
+                print('  \'%c%c%c%c\' %d: starts at %d' % subls)
         elif (self.type == 'IFmd'):
             # Metadata chunk
             dat = self.data()
-            print dat
+            print(dat)
         elif (self.type == 'Fspc'):
             # Frontispiece chunk
             dat = self.data()
             if (len(dat) != 4):
-                print 'Warning: invalid contents!'
+                print('Warning: invalid contents!')
             else:
                 num = struct.unpack('>I', dat[0:4])[0]
-                print 'Frontispiece is pict number', num
+                print('Frontispiece is pict number', num)
         elif (self.type == 'RDes'):
             # Resource description chunk
             dat = self.data()
             (subdat, dat) = (dat[:4], dat[4:])
             count = struct.unpack('>I', subdat)[0]
-            print '%d entries:' % (count,)
+            print('%d entries:' % (count,))
             for ix in range(count):
                 if (len(dat) < 12):
-                    print 'Warning: contents too short!'
+                    print('Warning: contents too short!')
                     break
                 (subdat, dat) = (dat[:12], dat[12:])
                 subls = struct.unpack('>4c2I', subdat)
                 strlen = subls[-1]
                 num = subls[-2]
                 if (len(dat) < strlen):
-                    print 'Warning: contents too short!'
+                    print('Warning: contents too short!')
                     break
                 (subdat, dat) = (dat[:strlen], dat[strlen:])
-                print '  \'%c%c%c%c\' resource %d: "%s"' % (subls[0:4] + (num, subdat))
+                print('  \'%c%c%c%c\' resource %d: "%s"' % (subls[0:4] + (num, subdat)))
             if (len(dat) > 0):
-                print 'Warning: contents too long!'
+                print('Warning: contents too long!')
         elif (self.type == 'APal'):
             # Adaptive palette
             dat = self.data()
             if (len(dat) % 4 != 0):
-                print 'Warning: invalid contents!'
+                print('Warning: invalid contents!')
             else:
                 ls = []
                 while (dat):
                     (subdat, dat) = (dat[:4], dat[4:])
                     num = struct.unpack('>I', subdat)[0]
                     ls.append(str(num))
-                print 'Picts using adaptive palette:', ' '.join(ls)
+                print('Picts using adaptive palette:', ' '.join(ls))
         elif (self.type == 'Loop'):
             # Looping
             dat = self.data()
             if (len(dat) % 8 != 0):
-                print 'Warning: invalid contents!'
+                print('Warning: invalid contents!')
             else:
                 while (dat):
                     (subdat, dat) = (dat[:8], dat[8:])
                     (num, count) = struct.unpack('>II', subdat)
-                    print 'Sound %d repeats %d times' % (num, count)
+                    print('Sound %d repeats %d times' % (num, count))
         elif (self.type == 'RelN'):
             # Release number
             dat = self.data()
             if (len(dat) != 2):
-                print 'Warning: invalid contents!'
+                print('Warning: invalid contents!')
             else:
                 num = struct.unpack('>H', dat)[0]
-                print 'Release number', num
+                print('Release number', num)
         elif (self.type == 'SNam'):
             # Story name (obsolete)
             dat = self.data()
             if (len(dat) % 2 != 0):
-                print 'Warning: invalid contents!'
+                print('Warning: invalid contents!')
             else:
                 ls = []
                 while (dat):
                     (subdat, dat) = (dat[:2], dat[2:])
                     num = struct.unpack('>H', subdat)[0]
                     ls.append(chr(num))
-                print 'Story name:', ''.join(ls)
+                print('Story name:', ''.join(ls))
         elif (self.type in ('TEXT', 'ANNO', 'AUTH', '(c) ')):
             dat = self.data()
-            print dat
+            print(dat)
         elif (self.type == 'Reso'):
             # Resolution chunk
             dat = self.data()
             if (len(dat)-24) % 28 != 0:
-                print 'Warning: invalid contents!'
+                print('Warning: invalid contents!')
             else:
                 (subdat, dat) = (dat[:24], dat[24:])
                 subls = struct.unpack('>6I', subdat)
-                print 'Standard window size %dx%d, min %dx%d, max %dx%d' % subls
+                print('Standard window size %dx%d, min %dx%d, max %dx%d' % subls)
                 while (dat):
                     (subdat, dat) = (dat[:28], dat[28:])
                     subls = struct.unpack('>7I', subdat)
-                    print 'Pict %d: standard ratio: %d/%d, min %d/%d, max %d/%d' % subls
+                    print('Pict %d: standard ratio: %d/%d, min %d/%d, max %d/%d' % subls)
         else:
             dat = self.data(16)
             if (len(dat) == self.len):
-                print 'contents: %s' % (repr(dat,))
+                print('contents: %s' % (repr(dat,)))
             else:
-                print 'beginning: %s' % (repr(dat,))
+                print('beginning: %s' % (repr(dat,)))
 
 class BlorbFile:
     def __init__(self, filename, outfilename=None):
@@ -271,15 +273,15 @@ class BlorbFile:
         if (not ls):
             raise Exception('No resource index chunk!')
         elif (len(ls) != 1):
-            print 'Warning: too many resource index chunks!'
+            print('Warning: too many resource index chunks!')
         else:
             chunk = ls[0]
             if (self.chunks[0] is not chunk):
-                print 'Warning: resource index chunk is not first!'
+                print('Warning: resource index chunk is not first!')
             dat = chunk.data()
             numres = struct.unpack('>I', dat[0:4])[0]
             if (numres*12+4 != chunk.len):
-                print 'Warning: resource index chunk has wrong size!'
+                print('Warning: resource index chunk has wrong size!')
             for ix in range(numres):
                 subdat = dat[4+ix*12 : 16+ix*12]
                 typ = struct.unpack('>4c', subdat[0:4])
@@ -288,7 +290,7 @@ class BlorbFile:
                 start = struct.unpack('>I', subdat[8:12])[0]
                 subchunk = self.chunkatpos.get(start)
                 if (not subchunk):
-                    print 'Warning: resource (%s, %d) refers to a nonexistent chunk!' % (repr(typ), num)
+                    print('Warning: resource (%s, %d) refers to a nonexistent chunk!' % (repr(typ), num))
                 self.usages.append( (typ, num, subchunk) )
                 self.usagemap[(typ, num)] = subchunk
 
@@ -302,9 +304,9 @@ class BlorbFile:
 
     def sanity_check(self):
         if (len(self.usages) != len(self.usagemap)):
-            print 'Warning: internal mismatch (usages)!'
+            print('Warning: internal mismatch (usages)!')
         if (len(self.chunks) != len(self.chunkatpos)):
-            print 'Warning: internal mismatch (chunks)!'
+            print('Warning: internal mismatch (chunks)!')
 
     def chunk_position(self, chunk):
         try:
@@ -316,8 +318,8 @@ class BlorbFile:
         if self.changed:
             try:
                 self.save()
-            except CommandError, ex:
-                print str(ex)
+            except CommandError as ex:
+                print(str(ex))
 
     def canonicalize(self):
         self.sanity_check()
@@ -339,7 +341,7 @@ class BlorbFile:
             ls.append(struct.pack('>4cII', typ[0], typ[1], typ[2], typ[3], num, chunk.savestart))
         dat = ''.join(ls)
         if (len(dat) != indexchunk.len):
-            print 'Warning: index chunk length does not match!'
+            print('Warning: index chunk length does not match!')
         indexchunk.literaldata = dat
 
     def save(self, outfilename=None):
@@ -349,7 +351,7 @@ class BlorbFile:
             raise CommandError('No changes need saving.')
         if (os.path.exists(self.outfilename) and not opts.force):
             if (not confirm_input('File %s exists. Rewrite?' % (self.outfilename,))):
-                print 'Cancelled.'
+                print('Cancelled.')
                 return
         self.canonicalize()
         tmpfilename = self.outfilename + '~TEMP'
@@ -370,7 +372,7 @@ class BlorbFile:
         fl.write(struct.pack('>I', pos-8))
         fl.close()
         os.rename(tmpfilename, self.outfilename)
-        print 'Wrote file:', self.outfilename
+        print('Wrote file:', self.outfilename)
         return self.outfilename
 
     def delete_chunk(self, delchunk):
@@ -405,22 +407,22 @@ class CommandError(Exception):
 
 class BlorbTool:
     def show_commands():
-        print 'blorbtool commands:'
-        print
-        print 'list -- list all chunks'
-        print 'index -- list all resources in the index chunk'
-        print 'display -- display contents of all chunks'
-        print 'display TYPE -- contents of chunk(s) of that type'
-        print 'display USE NUM -- contents of chunk by use and number (e.g., "display Exec 0")'
-        print 'export TYPE FILENAME -- export the chunk of that type to a file'
-        print 'export USE NUM FILENAME -- export a chunk by use and number'
-        print 'import TYPE FILENAME -- import a file as a chunk of that type'
-        print 'import USE NUM TYPE FILENAME -- import a file as a resource of that use, number, and type'
-        print 'delete TYPE -- delete chunk(s) of that type'
-        print 'delete USE NUM -- delete chunk by use and number'
-        print 'giload DIRECTORY -- export the Exec and Pict chunks for use with Quixe'
-        print 'save -- write out changes'
-        print 'reload -- discard changes and reload existing blorb file'
+        print('blorbtool commands:')
+        print()
+        print('list -- list all chunks')
+        print('index -- list all resources in the index chunk')
+        print('display -- display contents of all chunks')
+        print('display TYPE -- contents of chunk(s) of that type')
+        print('display USE NUM -- contents of chunk by use and number (e.g., "display Exec 0")')
+        print('export TYPE FILENAME -- export the chunk of that type to a file')
+        print('export USE NUM FILENAME -- export a chunk by use and number')
+        print('import TYPE FILENAME -- import a file as a chunk of that type')
+        print('import USE NUM TYPE FILENAME -- import a file as a resource of that use, number, and type')
+        print('delete TYPE -- delete chunk(s) of that type')
+        print('delete USE NUM -- delete chunk by use and number')
+        print('giload DIRECTORY -- export the Exec and Pict chunks for use with Quixe')
+        print('save -- write out changes')
+        print('reload -- discard changes and reload existing blorb file')
 
     show_commands = staticmethod(show_commands)
         
@@ -454,11 +456,11 @@ class BlorbTool:
         except EOFError:
             # EOF or interrupt. Pass it on.
             raise
-        except CommandError, ex:
-            print str(ex)
-        except Exception, ex:
+        except CommandError as ex:
+            print(str(ex))
+        except Exception as ex:
             # Unexpected exception: print it.
-            print ex.__class__.__name__+':', str(ex)
+            print(ex.__class__.__name__+':', str(ex))
             if (opts.verbose):
                 raise
 
@@ -492,16 +494,16 @@ class BlorbTool:
     def cmd_list(self, args):
         if (args):
             raise CommandError('usage: list')
-        print len(blorbfile.chunks), 'chunks:'
+        print(len(blorbfile.chunks), 'chunks:')
         for chunk in blorbfile.chunks:
-            print '  %s' % (chunk.describe(),)
+            print('  %s' % (chunk.describe(),))
 
     def cmd_index(self, args):
         if (args):
             raise CommandError('usage: index')
-        print len(blorbfile.usages), 'resources:'
+        print(len(blorbfile.usages), 'resources:')
         for (use, num, chunk) in blorbfile.usages:
-            print '  %s %d: %s' % (repr(use), num, chunk.describe())
+            print('  %s %d: %s' % (repr(use), num, chunk.describe()))
 
     def cmd_display(self, args):
         if (not args):
@@ -545,7 +547,7 @@ class BlorbTool:
             raise CommandError('You can\'t export a chunk over the original blorb file!')
         if (os.path.exists(outfilename) and not opts.force):
             if (not confirm_input('File %s exists. Overwrite?' % (outfilename,))):
-                print 'Cancelled.'
+                print('Cancelled.')
                 return
         outfl = open(outfilename, 'wb')
         if (chunk.formtype and chunk.formtype != 'FORM'):
@@ -556,7 +558,7 @@ class BlorbTool:
         outfl.write(chunk.data())
         finallen = outfl.tell()
         outfl.close()
-        print 'Wrote %d bytes to %s.' % (finallen, outfilename)
+        print('Wrote %d bytes to %s.' % (finallen, outfilename))
 
     def cmd_import(self, args):
         origchunk = None
@@ -611,9 +613,9 @@ class BlorbTool:
             chunk.formtype = formtype
         blorbfile.add_chunk(chunk, use, num, pos)
         if pos is None:
-            print 'Added chunk, length %d' % (filelen,)
+            print('Added chunk, length %d' % (filelen,))
         else:
-            print 'Replaced chunk, new length %d' % (filelen,)
+            print('Replaced chunk, new length %d' % (filelen,))
             
     def cmd_giload(self, args):
         prefix = ''
@@ -655,8 +657,8 @@ class BlorbTool:
         for (num, chunk) in usages:
             try:
                 (suffix, size) = analyze_pict(chunk)
-            except Exception, ex:
-                print 'Error on Pict chunk %d: %s' % (num, ex)
+            except Exception as ex:
+                print('Error on Pict chunk %d: %s' % (num, ex))
                 continue
             picfilename = 'pict-%d.%s' % (num, suffix)
             map = collections.OrderedDict()
@@ -681,7 +683,7 @@ class BlorbTool:
         outfl.write('};\n')
         outfl.close()
             
-        print 'Wrote Quixe-compatible data to directory "%s".' % (outdirname,)
+        print('Wrote Quixe-compatible data to directory "%s".' % (outdirname,))
             
     def cmd_delete(self, args):
         if (len(args) == 1):
@@ -700,7 +702,7 @@ class BlorbTool:
             raise CommandError('usage: delete TYPE | delete USE NUM')
         for chunk in ls:
             blorbfile.delete_chunk(chunk)
-        print 'Deleted %d chunk%s' % (len(ls), ('' if len(ls)==1 else 's'))
+        print('Deleted %d chunk%s' % (len(ls), ('' if len(ls)==1 else 's')))
 
     def cmd_reload(self, args):
         global blorbfile
@@ -709,7 +711,7 @@ class BlorbTool:
         filename = blorbfile.filename
         blorbfile.close()
         blorbfile = BlorbFile(filename)
-        print 'Reloaded %s.' % (filename,)
+        print('Reloaded %s.' % (filename,))
         
     def cmd_save(self, args):
         global blorbfile
@@ -728,11 +730,11 @@ class BlorbTool:
             blorbfile = BlorbFile(filename)
 
     def cmd_dump(self, args):
-        print '### chunks:', blorbfile.chunks
-        print '### chunkmap:', blorbfile.chunkmap
-        print '### chunkatpos:', blorbfile.chunkatpos
-        print '### usages:', blorbfile.usages
-        print '### usagemap:', blorbfile.usagemap
+        print('### chunks:', blorbfile.chunks)
+        print('### chunkmap:', blorbfile.chunkmap)
+        print('### chunkatpos:', blorbfile.chunkatpos)
+        print('### usages:', blorbfile.usages)
+        print('### usagemap:', blorbfile.usagemap)
 
 # Some utility functions.
 
@@ -776,7 +778,7 @@ def parse_png(dat):
         pos += 4
         ctyp = ''.join([ chr(val) for val in dat[pos:pos+4] ])
         pos += 4
-        #print 'Chunk:', ctyp, 'len', clen
+        #print('Chunk:', ctyp, 'len', clen)
         if ctyp == 'IHDR':
             width  = (dat[pos] << 24) | (dat[pos+1] << 16) | (dat[pos+2] << 8) | dat[pos+3]
             pos += 4
@@ -789,7 +791,7 @@ def parse_png(dat):
 
 def parse_jpeg(dat):
     dat = [ ord(val) for val in dat ]
-    #print 'Length:', len(dat)
+    #print('Length:', len(dat))
     pos = 0
     while pos < len(dat):
         if dat[pos] != 0xFF:
@@ -799,10 +801,10 @@ def parse_jpeg(dat):
         marker = dat[pos]
         pos += 1
         if marker == 0x01 or (marker >= 0xD0 and marker <= 0xD9):
-            #print 'FF%02X*' % (marker,)
+            #print('FF%02X*' % (marker,))
             continue
         clen = (dat[pos] << 8) | dat[pos+1]
-        #print 'FF%02X, len %d' % (marker, clen)
+        #print('FF%02X, len %d' % (marker, clen))
         if (marker >= 0xC0 and marker <= 0xCF and marker != 0xC8):
             if clen <= 7:
                 raise Exception('SOF block is too small')
@@ -832,8 +834,8 @@ if (args):
         
 try:
     blorbfile = BlorbFile(filename, opts.output)
-except Exception, ex:
-    print ex.__class__.__name__+':', str(ex)
+except Exception as ex:
+    print(ex.__class__.__name__+':', str(ex))
     if (opts.verbose):
         raise
     sys.exit(-1)
@@ -854,10 +856,10 @@ try:
             tool.handle()
             blorbfile.sanity_check()
         blorbfile.save_if_needed()
-        print '<exiting>'
+        print('<exiting>')
 except KeyboardInterrupt:
-    print '<interrupted>'
+    print('<interrupted>')
 except EOFError:
-    print '<eof>'
+    print('<eof>')
 
 blorbfile.close()
