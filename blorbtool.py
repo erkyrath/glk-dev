@@ -151,13 +151,14 @@ class BlorbChunk:
                     break
                 (subdat, dat) = (dat[:12], dat[12:])
                 subls = struct.unpack('>4c2I', subdat)
+                restype = b''.join(subls[0:4])
                 strlen = subls[-1]
                 num = subls[-2]
                 if (len(dat) < strlen):
                     print('Warning: contents too short!')
                     break
                 (subdat, dat) = (dat[:strlen], dat[strlen:])
-                print('  \'%c%c%c%c\' resource %d: "%s"' % (subls[0:4] + (num, subdat)))
+                print('  %s resource %d: "%s"' % (typestring(restype), num, subdat.decode()))
             if (len(dat) > 0):
                 print('Warning: contents too long!')
         elif (self.type == b'APal'):
