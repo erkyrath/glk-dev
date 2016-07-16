@@ -110,9 +110,9 @@ class BlorbChunk:
 
     def describe(self):
         if (not self.formtype):
-            return '%s (%d bytes, start %d)' % (repr(self.type), self.len, self.start)
+            return '%s (%d bytes, start %d)' % (typestring(self.type), self.len, self.start)
         else:
-            return '%s/%s (%d+8 bytes, start %d)' % (repr(self.type), repr(self.formtype), self.len, self.start)
+            return '%s/%s (%d+8 bytes, start %d)' % (typestring(self.type), typestring(self.formtype), self.len, self.start)
     
     def display(self):
         print('* %s' % (self.describe(),))
@@ -746,6 +746,9 @@ class BlorbTool:
 
 # Some utility functions.
 
+def typestring(dat):
+    return "'" + dat.decode() + "'"
+        
 def analyze_resourcedescs(chunk):
     res = {}
     dat = chunk.data()
