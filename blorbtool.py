@@ -29,6 +29,7 @@ except NameError:
 import sys
 import os
 import optparse
+import re
 import collections
 import struct
 import base64
@@ -221,10 +222,13 @@ class BlorbChunk:
                     print('Pict %d: standard ratio: %d/%d, min %d/%d, max %d/%d' % subls)
         else:
             dat = self.data(16)
+            strdat = repr(dat)
+            if (re.match('[a-z][\'\"]', strdat)):
+                strdat = strdat[1:]
             if (len(dat) == self.len):
-                print('contents: %s' % (typestring(dat,)))
+                print('contents: %s' % (strdat,))
             else:
-                print('beginning: %s' % (typestring(dat,)))
+                print('beginning: %s' % (strdat,))
 
 class BlorbFile:
     def __init__(self, filename, outfilename=None):
