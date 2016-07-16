@@ -359,6 +359,8 @@ class BlorbFile:
             self.outfilename = outfilename
         if (not self.changed and (self.outfilename == self.filename)):
             raise CommandError('No changes need saving.')
+        if (not self.outfilename):
+            raise CommandError('No pathname supplied for saving.')        
         if (os.path.exists(self.outfilename) and not opts.force):
             if (not confirm_input('File %s exists. Rewrite?' % (self.outfilename,))):
                 print('Cancelled.')
