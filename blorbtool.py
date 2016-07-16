@@ -131,7 +131,7 @@ class BlorbChunk:
         elif (self.type == b'IFmd'):
             # Metadata chunk
             dat = self.data()
-            print(dat.decode())
+            print(dat.decode('utf-8'))
         elif (self.type == b'Fspc'):
             # Frontispiece chunk
             dat = self.data()
