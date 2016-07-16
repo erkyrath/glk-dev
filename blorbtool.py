@@ -652,7 +652,7 @@ class BlorbTool:
         chunkdat = chunk.data()
         if (chunk.formtype and chunk.formtype != b'FORM'):
             chunkdat = b'FORM' + struct.pack('>I', chunk.len) + chunkdat
-        outfl = open(os.path.join(outdirname, 'game.ulx.js'), 'wb')
+        outfl = open(os.path.join(outdirname, 'game.ulx.js'), 'w')
         chunkdatenc = base64.b64encode(chunkdat).decode()
         outfl.write('$(document).ready(function() {\n')
         outfl.write("  GiLoad.load_run(null, '%s', 'base64');\n" % (chunkdatenc,))
