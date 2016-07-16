@@ -16,7 +16,15 @@
 # The AIFF data implicitly includes the eight-byte header, which is why the
 # length says "+8". Start at byte 324266 and read 8544 bytes.
 
+# We use the print() function for Python 2/3 compatibility
 from __future__ import print_function
+
+# We use the Py2 raw_input() function. In Py3 there is no such function,
+# but we define a back-polyfill. (I'm lazy.)
+try:
+    raw_input
+except NameError:
+    raw_input = input
 
 import sys
 import os
