@@ -116,7 +116,7 @@ class BlorbChunk:
     
     def display(self):
         print('* %s' % (self.describe(),))
-        if (self.type == 'RIdx'):
+        if (self.type == b'RIdx'):
             # Index chunk
             dat = self.data()
             (subdat, dat) = (dat[:4], dat[4:])
@@ -126,11 +126,11 @@ class BlorbChunk:
                 (subdat, dat) = (dat[:12], dat[12:])
                 subls = struct.unpack('>4c2I', subdat)
                 print('  \'%c%c%c%c\' %d: starts at %d' % subls)
-        elif (self.type == 'IFmd'):
+        elif (self.type == b'IFmd'):
             # Metadata chunk
             dat = self.data()
             print(dat)
-        elif (self.type == 'Fspc'):
+        elif (self.type == b'Fspc'):
             # Frontispiece chunk
             dat = self.data()
             if (len(dat) != 4):
@@ -138,7 +138,7 @@ class BlorbChunk:
             else:
                 num = struct.unpack('>I', dat[0:4])[0]
                 print('Frontispiece is pict number', num)
-        elif (self.type == 'RDes'):
+        elif (self.type == b'RDes'):
             # Resource description chunk
             dat = self.data()
             (subdat, dat) = (dat[:4], dat[4:])
@@ -159,7 +159,7 @@ class BlorbChunk:
                 print('  \'%c%c%c%c\' resource %d: "%s"' % (subls[0:4] + (num, subdat)))
             if (len(dat) > 0):
                 print('Warning: contents too long!')
-        elif (self.type == 'APal'):
+        elif (self.type == b'APal'):
             # Adaptive palette
             dat = self.data()
             if (len(dat) % 4 != 0):
@@ -171,7 +171,7 @@ class BlorbChunk:
                     num = struct.unpack('>I', subdat)[0]
                     ls.append(str(num))
                 print('Picts using adaptive palette:', ' '.join(ls))
-        elif (self.type == 'Loop'):
+        elif (self.type == b'Loop'):
             # Looping
             dat = self.data()
             if (len(dat) % 8 != 0):
@@ -181,7 +181,7 @@ class BlorbChunk:
                     (subdat, dat) = (dat[:8], dat[8:])
                     (num, count) = struct.unpack('>II', subdat)
                     print('Sound %d repeats %d times' % (num, count))
-        elif (self.type == 'RelN'):
+        elif (self.type == b'RelN'):
             # Release number
             dat = self.data()
             if (len(dat) != 2):
@@ -189,7 +189,7 @@ class BlorbChunk:
             else:
                 num = struct.unpack('>H', dat)[0]
                 print('Release number', num)
-        elif (self.type == 'SNam'):
+        elif (self.type == b'SNam'):
             # Story name (obsolete)
             dat = self.data()
             if (len(dat) % 2 != 0):
@@ -201,10 +201,10 @@ class BlorbChunk:
                     num = struct.unpack('>H', subdat)[0]
                     ls.append(chr(num))
                 print('Story name:', ''.join(ls))
-        elif (self.type in ('TEXT', 'ANNO', 'AUTH', '(c) ')):
+        elif (self.type in (b'TEXT', b'ANNO', b'AUTH', b'(c) ')):
             dat = self.data()
-            print(dat)
-        elif (self.type == 'Reso'):
+            print(dat.decode())
+        elif (self.type == b'Reso'):
             # Resolution chunk
             dat = self.data()
             if (len(dat)-24) % 28 != 0:
@@ -242,7 +242,7 @@ class BlorbFile:
             self.file = None
             self.formchunk = None
             self.changed = True
-            chunk = BlorbChunk(self, 'RIdx', -1, 4)
+            chunk = BlorbChunk(self, b'RIdx', -1, 4)
             chunk.literaldata = struct.pack('>I', 0)
             self.add_chunk(chunk, None, None, 0)
             return
@@ -253,10 +253,10 @@ class BlorbFile:
         formchunk = Chunk(self.file)
         self.formchunk = formchunk
         
-        if (formchunk.getname() != 'FORM'):
+        if (formchunk.getname() != b'FORM'):
             raise Exception('This does not appear to be a Blorb file.')
         formtype = formchunk.read(4)
-        if (formtype != 'IFRS'):
+        if (formtype != b'IFRS'):
             raise Exception('This does not appear to be a Blorb file.')
         formlen = formchunk.getsize()
         while formchunk.tell() < formlen:
@@ -264,7 +264,7 @@ class BlorbFile:
             start = formchunk.tell()
             size = chunk.getsize()
             formtype = None
-            if chunk.getname() == 'FORM':
+            if chunk.getname() == b'FORM':
                 formtype = chunk.read(4)
             subchunk = BlorbChunk(self, chunk.getname(), start, size, formtype)
             self.chunks.append(subchunk)
@@ -277,7 +277,7 @@ class BlorbFile:
 
         # Sanity checks. Also get the usage list.
         
-        ls = self.chunkmap.get('RIdx')
+        ls = self.chunkmap.get(b'RIdx')
         if (not ls):
             raise Exception('No resource index chunk!')
         elif (len(ls) != 1):
@@ -293,7 +293,7 @@ class BlorbFile:
             for ix in range(numres):
                 subdat = dat[4+ix*12 : 16+ix*12]
                 typ = struct.unpack('>4c', subdat[0:4])
-                typ = ''.join(typ)
+                typ = b''.join(typ)
                 num = struct.unpack('>I', subdat[4:8])[0]
                 start = struct.unpack('>I', subdat[8:12])[0]
                 subchunk = self.chunkatpos.get(start)
@@ -332,7 +332,7 @@ class BlorbFile:
     def canonicalize(self):
         self.sanity_check()
         try:
-            indexchunk = self.chunkmap['RIdx'][0]
+            indexchunk = self.chunkmap[b'RIdx'][0]
         except:
             raise CommandError('There is no index chunk, so this cannot be a legal blorb file.')
         indexchunk.len = 4 + 12*len(self.usages)
@@ -347,7 +347,7 @@ class BlorbFile:
         ls.append(struct.pack('>I', len(self.usages)))
         for (typ, num, chunk) in self.usages:
             ls.append(struct.pack('>4cII', typ[0], typ[1], typ[2], typ[3], num, chunk.savestart))
-        dat = ''.join(ls)
+        dat = b''.join(ls)
         if (len(dat) != indexchunk.len):
             print('Warning: index chunk length does not match!')
         indexchunk.literaldata = dat
@@ -485,7 +485,7 @@ class BlorbTool:
             label = label+': '
         if len(val) > 4:
             raise CommandError(label+'chunk type must be 1-4 characters')
-        return val.ljust(4)
+        return val.ljust(4).encode()
 
     aliasmap = { '?':'help', 'q':'quit', 'write':'save', 'restart':'reload', 'restore':'reload' }
 
@@ -558,10 +558,10 @@ class BlorbTool:
                 print('Cancelled.')
                 return
         outfl = open(outfilename, 'wb')
-        if (chunk.formtype and chunk.formtype != 'FORM'):
+        if (chunk.formtype and chunk.formtype != b'FORM'):
             # For an AIFF file, we must include the FORM/length header.
             # (Unless it's an overly nested AIFF.)
-            outfl.write('FORM')
+            outfl.write(b'FORM')
             outfl.write(struct.pack('>I', chunk.len))
         outfl.write(chunk.data())
         finallen = outfl.tell()
@@ -591,17 +591,17 @@ class BlorbTool:
         filestart = None
         formtype = None
         dat = fl.read(5)
-        if (dat[0:4] == 'FORM' and ord(dat[4]) < 0x20):
+        if (dat[0:4] == b'FORM' and ord(dat[4]) < 0x20):
             # This is an AIFF file, and must be embedded
             filestart = 8
             fl.seek(8, 0)
             formtype = fl.read(4)
-            if (typ != 'FORM'):
+            if (typ != b'FORM'):
                 # We accept the formtype as a synonym here, if the user
                 # got it right.
                 if (typ != formtype):
                     raise CommandError('This IFF file has form type \'%s\', not \'%s\'.' % (formtype, typ))
-                typ = 'FORM'
+                typ = b'FORM'
         fl.seek(0, 2)
         filelen = fl.tell()
         fl.close()
@@ -637,12 +637,12 @@ class BlorbTool:
         if (not (os.path.exists(outdirname) and os.path.isdir(outdirname))):
             raise CommandError('Not a directory: %s' % (outdirname))
         
-        chunk = blorbfile.usagemap.get( ('Exec', 0) )
+        chunk = blorbfile.usagemap.get( (b'Exec', 0) )
         if (not chunk):
             raise CommandError('No resource with usage %s, number %d' % (repr(use), num))
         chunkdat = chunk.data()
-        if (chunk.formtype and chunk.formtype != 'FORM'):
-            chunkdat = 'FORM' + struct.pack('>I', chunk.len) + chunkdat
+        if (chunk.formtype and chunk.formtype != b'FORM'):
+            chunkdat = b'FORM' + struct.pack('>I', chunk.len) + chunkdat
         outfl = open(os.path.join(outdirname, 'game.ulx.js'), 'wb')
         chunkdatenc = base64.b64encode(chunkdat).decode()
         outfl.write('$(document).ready(function() {\n')
@@ -651,7 +651,7 @@ class BlorbTool:
         outfl.close()
 
         alttexts = {}
-        ls = blorbfile.chunkmap.get('RDes')
+        ls = blorbfile.chunkmap.get(b'RDes')
         if (ls):
             chunk = ls[0]
             alttexts = analyze_resourcedescs(chunk)
@@ -659,7 +659,7 @@ class BlorbTool:
         outfl = open(os.path.join(outdirname, 'resourcemap.js'), 'w')
         outfl.write('/* resourcemap.js generated by blorbtool.py */\n')
         outfl.write('StaticImageInfo = {\n')
-        usages = [ (num, chunk) for (use, num, chunk) in blorbfile.usages if (use == 'Pict') ]
+        usages = [ (num, chunk) for (use, num, chunk) in blorbfile.usages if (use == b'Pict') ]
         usages.sort()   # on num
         first = True
         for (num, chunk) in usages:
@@ -672,8 +672,8 @@ class BlorbTool:
             map = collections.OrderedDict()
             map['image'] = num
             map['url'] = os.path.join(prefix, picfilename)
-            if ('Pict', num) in alttexts:
-                map['alttext'] = alttexts.get( ('Pict',num) )
+            if (b'Pict', num) in alttexts:
+                map['alttext'] = alttexts.get( (b'Pict',num) )
             map['width'] = size[0]
             map['height'] = size[1]
             indexdat = json.dumps(map, indent=2)
@@ -683,8 +683,8 @@ class BlorbTool:
                 outfl.write(',\n')
             outfl.write('%d: %s\n' % (num, indexdat))
             outfl2 = open(os.path.join(outdirname, picfilename), 'wb')
-            if (chunk.formtype and chunk.formtype != 'FORM'):
-                outfl2.write('FORM')
+            if (chunk.formtype and chunk.formtype != b'FORM'):
+                outfl2.write(b'FORM')
                 outfl2.write(struct.pack('>I', chunk.len))
             outfl2.write(chunk.data())
             outfl2.close()
@@ -756,7 +756,7 @@ def analyze_resourcedescs(chunk):
             break
         (subdat, dat) = (dat[:12], dat[12:])
         subls = struct.unpack('>4c2I', subdat)
-        usage = ''.join(subls[0:4])
+        usage = b''.join(subls[0:4])
         strlen = subls[-1]
         num = subls[-2]
         if (len(dat) < strlen):
@@ -766,10 +766,10 @@ def analyze_resourcedescs(chunk):
     return res
     
 def analyze_pict(chunk):
-    if (chunk.type == 'JPEG'):
+    if (chunk.type == b'JPEG'):
         size = parse_jpeg(chunk.data())
         return ('jpeg', size)
-    if (chunk.type == 'PNG '):
+    if (chunk.type == b'PNG '):
         size = parse_png(chunk.data())
         return ('png', size)
     raise Exception('Unrecognized Pict type: %s' % (chunk.type,))
@@ -784,10 +784,10 @@ def parse_png(dat):
     while pos < len(dat):
         clen = (dat[pos] << 24) | (dat[pos+1] << 16) | (dat[pos+2] << 8) | dat[pos+3]
         pos += 4
-        ctyp = ''.join([ chr(val) for val in dat[pos:pos+4] ])
+        ctyp = b''.join([ chr(val) for val in dat[pos:pos+4] ])
         pos += 4
         #print('Chunk:', ctyp, 'len', clen)
-        if ctyp == 'IHDR':
+        if ctyp == b'IHDR':
             width  = (dat[pos] << 24) | (dat[pos+1] << 16) | (dat[pos+2] << 8) | dat[pos+3]
             pos += 4
             height = (dat[pos] << 24) | (dat[pos+1] << 16) | (dat[pos+2] << 8) | dat[pos+3]
