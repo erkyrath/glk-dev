@@ -682,7 +682,7 @@ class BlorbTool:
             map['image'] = num
             map['url'] = os.path.join(prefix, picfilename)
             if (b'Pict', num) in alttexts:
-                map['alttext'] = alttexts.get( (b'Pict',num) )
+                map['alttext'] = alttexts.get( (b'Pict',num) ).decode('utf-8')
             map['width'] = size[0]
             map['height'] = size[1]
             indexdat = json.dumps(map, indent=2)
@@ -757,7 +757,23 @@ class BlorbTool:
 
 def typestring(dat):
     return "'" + dat.decode() + "'"
-        
+
+def bytes_to_intarray(dat):
+    if (bytes is str):
+        # Python 2
+        return [ ord(val) for val in dat ]
+    else:
+        # Python 3
+        return [ val for val in dat ]
+
+def intarray_to_bytes(arr):
+    if (bytes is str):
+        # Python 2
+        return b''.join([ chr(val) for val in arr ])
+    else:
+        # Python 3
+        return bytes(arr)
+    
 def analyze_resourcedescs(chunk):
     res = {}
     dat = chunk.data()
@@ -787,7 +803,7 @@ def analyze_pict(chunk):
     raise Exception('Unrecognized Pict type: %s' % (chunk.type,))
 
 def parse_png(dat):
-    dat = [ ord(val) for val in dat ]
+    dat = bytes_to_intarray(dat)
     pos = 0
     sig = dat[pos:pos+8]
     pos += 8
@@ -796,7 +812,7 @@ def parse_png(dat):
     while pos < len(dat):
         clen = (dat[pos] << 24) | (dat[pos+1] << 16) | (dat[pos+2] << 8) | dat[pos+3]
         pos += 4
-        ctyp = b''.join([ chr(val) for val in dat[pos:pos+4] ])
+        ctyp = intarray_to_bytes(dat[pos:pos+4])
         pos += 4
         #print('Chunk:', ctyp, 'len', clen)
         if ctyp == b'IHDR':
@@ -810,7 +826,7 @@ def parse_png(dat):
     raise Exception('No PNG header block found')
 
 def parse_jpeg(dat):
-    dat = [ ord(val) for val in dat ]
+    dat = bytes_to_intarray(dat)
     #print('Length:', len(dat))
     pos = 0
     while pos < len(dat):
