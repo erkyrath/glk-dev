@@ -41,6 +41,22 @@ try:
 except:
     pass
 
+try:
+    # Python 3.3 and up
+    os_replace = os.replace
+except AttributeError:
+    if (os.name != 'nt'):
+        # Older Python (on Unix)
+        os_replace = os.rename
+    else:
+        # On Windows, os.rename can't replace an existing file.
+        def os_replace(src, dst):
+            try:
+                os.remove(dst)
+            except:
+                pass
+            os.rename(src, dst)
+
 popt = optparse.OptionParser(usage='blorbtool.py BLORBFILE [ command ]')
 
 popt.add_option('-n', '--new',
@@ -388,7 +404,7 @@ class BlorbFile:
         fl.seek(4)
         fl.write(struct.pack('>I', pos-8))
         fl.close()
-        os.rename(tmpfilename, self.outfilename)
+        os_replace(tmpfilename, self.outfilename)
         print('Wrote file:', self.outfilename)
         return self.outfilename
 
