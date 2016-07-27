@@ -1,7 +1,7 @@
 Constant Story "UnicodeTest";
 Constant Headline "^Not a game.^";
 
-Release 2;
+Release 3;
 
 ! Unit test for the @streamunichar opcode.
 
@@ -36,6 +36,13 @@ Sign latin1 "latin-1 sign" Kitchen
 		print "^";
 	];
 
+Sign atsign "at sign" Kitchen
+  with
+	name 'at' '@{40}//',
+	description [;
+		print "At signs: @@64 @{40} @{0040}^";
+	];
+	
 Sign greek "greek sign" Kitchen
   with
 	name 'greek',
@@ -95,6 +102,7 @@ Sign bigsign "big sign" Kitchen
 	description [;
 		print "This is all the signs in sequence:^^";
 		<Examine latin1>;
+		<Examine atsign>;
 		<Examine greek>;
 		<Examine hebrew>;
 		<Examine punctuation>;
