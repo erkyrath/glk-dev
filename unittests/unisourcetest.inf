@@ -1,7 +1,7 @@
 Constant Story "UniSourceTest";
 Constant Headline "Not a game.^";
 
-Release 2;
+Release 3;
 
 Global mainwin;
 Global errorcount;
@@ -180,6 +180,8 @@ Array string_literals -->
     "CJK ideographs: @{4E02}@{5000}@{60FF}@{77E2}@{8144}@{9967}"
 	"Emoji: 😀🚀🚲🍄 (GRINNING FACE, ROCKET, BICYCLE, MUSHROOM)"
 	"Emoji: @{1F600}@{1F680}@{1F6B2}@{1F344} (GRINNING FACE, ROCKET, BICYCLE, MUSHROOM)"
+	"At signs: @@64 @{40} @{040} @{0040} @{00040}."
+	"At signs: @@64 @@64 @@64 @@64 @@64."
     0 0;
 
 ! I'm not including any characters beyond $FF here. If I did, I'd have to
@@ -190,4 +192,6 @@ Array dict_literals -->
     'ascii'
     'hwæt'
     'hw@{E6}t'
+	'xy@{40}z'
+	'xy@{040}z'
     0 0;
