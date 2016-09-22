@@ -106,13 +106,17 @@ Global testglob;
 
 	print "Calls to double-replaced function:^";
 	testglob = 0;
-	testglob = 0;
 	tricall0();
 	tricall1();
 	tricall2();
 	tricall3();
 	tricall4();
-	print "  ...called "; check_value(testglob, 5); print " times.^";
+	print "  ...called "; check_value(testglob, 5); print " times.^^";
+
+	print "Calls to never-replaced function:^";
+	testglob = 0;
+	unicall0();
+	print "  ...called "; check_value(testglob, 1); print " times.^";
 	
 	new_line;
 	if (failures == 0)
@@ -198,6 +202,20 @@ Replace tripfunc;
 [ tricall4;
 	print "Tricall4: ";
 	tripfunc();
+];
+
+! -----------------------------
+
+Replace unifunc;
+
+[ unifunc;
+	print "Unreplaced original.^";
+	testglob++;
+];
+
+[ unicall0;
+	print "Unicall0: ";
+	unifunc();
 ];
 
 ! -----------------------------
