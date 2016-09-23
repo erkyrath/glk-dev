@@ -278,3 +278,7 @@ Include "replacerename_inc2sys";
 ! Can't replace two different functions to the same target.
 !Replace Func Orig;
 !Replace Bar Orig;
+
+! Can't call a replaced function with no definition at all.
+!Replace Func2;
+![ Func1; Func2(); ];
