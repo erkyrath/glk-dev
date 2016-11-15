@@ -3866,6 +3866,45 @@ TestClass ThrowTest
 	return 99;
 ];
 
+TestClass StreamNumTest
+	with name 'streamnum',
+	testfunc [ val;
+		print "Printing integers:^^";
+		
+		testglobal = 0;
+		val = string_to_array(numberprint, bigbuffer, BIGBUFSIZE);
+		check_str("0", val); print "^";
+		testglobal = 1;
+		val = string_to_array(numberprint, bigbuffer, BIGBUFSIZE);
+		check_str("1", val); print "^";
+		testglobal = -1;
+		val = string_to_array(numberprint, bigbuffer, BIGBUFSIZE);
+		check_str("-1", val); print "^";
+		testglobal = 9999;
+		val = string_to_array(numberprint, bigbuffer, BIGBUFSIZE);
+		check_str("9999", val); print "^";
+		testglobal = -9999;
+		val = string_to_array(numberprint, bigbuffer, BIGBUFSIZE);
+		check_str("-9999", val); print "^";
+		testglobal = 1234579;
+		val = string_to_array(numberprint, bigbuffer, BIGBUFSIZE);
+		check_str("1234579", val); print "^";
+		testglobal = -97654321;
+		val = string_to_array(numberprint, bigbuffer, BIGBUFSIZE);
+		check_str("-97654321", val); print "^";
+		testglobal = $7FFFFFFF;
+		val = string_to_array(numberprint, bigbuffer, BIGBUFSIZE);
+		check_str("2147483647", val); print "^";
+		testglobal = $80000001;
+		val = string_to_array(numberprint, bigbuffer, BIGBUFSIZE);
+		check_str("-2147483647", val); print "^";
+		testglobal = $80000000;
+		val = string_to_array(numberprint, bigbuffer, BIGBUFSIZE);
+		check_str("-2147483648", val); print "^";
+		
+		count_failures();
+	];
+
 ! The following is imported from encode-table.
 ! -----------
 Array encoding_table -> 0 0 3 178 0 0 0 133 0 0 0 12 0 0 0 0 21 0 0 0
@@ -4143,6 +4182,10 @@ TestClass StringsTest
 		@streamstr sp;
 	}
 	@setstringtbl encoding_table;
+];
+
+[ numberprint;
+	@streamnum testglobal;
 ];
 
 [ counterprint;
