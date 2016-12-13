@@ -1,0 +1,36 @@
+** game: unicodetest.ulx
+** interpreter: glulxer
+** remformat: yes
+
+* test
+
+Unicode Room
+
+>x at sign
+At signs: @ @ @
+
+>x latin-1
+AEIOU with umlauts: ÄËÏÖÜ
+aeiou with umlauts: äëïöü
+
+>x greek
+Greek: αβγδε (abgde)
+/α[β]γδ+ε
+
+>x hebrew
+Hebrew: אבגדמ (abgdm... the aleph should be on the right)
+
+>x punctuation
+Punctuation: ‘single curly quotes’ “double curly quotes”
+
+>x ligatures
+Ligatures: æ (ae) œ (oe) ŋ (nj) ﬀ (ff) ﬁ (fi) ﬃ (ffi) ﬄ (ffl)
+
+>x hirigana
+Hirigana: おすも (O SU MO)
+
+>x katakana
+Katakana: オスモ (O SU MO)
+
+>x emoji
+Emoji: 😀🚀🚲🍄 (GRINNING FACE, ROCKET, BICYCLE, MUSHROOM)
