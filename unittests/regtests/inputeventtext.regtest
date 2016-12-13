@@ -1,0 +1,95 @@
+** game: inputeventtext.ulx
+** interpreter: glulxer
+** remformat: yes
+
+* basic
+
+Input Room
+This is an input room.
+
+> jump
+You jump on the spot, fruitlessly.
+
+* lines
+
+> get line input
+Enter line:
+> hello
+Got 5 characters:
+h e l l o 
+Hex: $68 $65 $6C $6C $6F 
+
+> get unicode line input
+Enter line (uni):
+> hello
+Got 5 characters:
+h e l l o 
+Hex: $68 $65 $6C $6C $6F 
+
+> get unicode line input
+Enter line (uni):
+> äëïöü
+Got 5 characters:
+ä ë ï ö ü 
+Hex: $E4 $EB $EF $F6 $FC 
+
+> get unicode line input
+Enter line (uni):
+> αβγδε
+Got 5 characters:
+α β γ δ ε 
+Hex: $3B1 $3B2 $3B3 $3B4 $3B5 
+
+> get unicode line input
+Enter line (uni):
+> オスモ
+Got 3 characters:
+オ ス モ 
+Hex: $30AA $30B9 $30E2 
+
+* chars
+
+> get char input
+Enter character:
+>{char}f
+Got character (dec) 102, (hex) $66: f
+
+> get char input
+Enter character:
+>{char}
+Got character (dec) -6, (hex) $FFFFFFFA: <return>
+
+> get char input
+Enter character:
+>{char} 0xEB
+Got character (dec) 235, (hex) $EB: ë
+
+> get char input
+Enter character:
+>{char} escape
+Got character (dec) -8, (hex) $FFFFFFF8: <escape>
+
+> get unicode char input
+Enter character (uni):
+>{char}f
+Got character (dec) 102, (hex) $66: f
+
+> get unicode char input
+Enter character (uni):
+>{char} 0xEB
+Got character (dec) 235, (hex) $EB: ë
+
+> get unicode char input
+Enter character (uni):
+>{char} 0x3B1
+Got character (dec) 945, (hex) $3B1: α
+
+> get unicode char input
+Enter character (uni):
+>{char} 0x30AA
+Got character (dec) 12458, (hex) $30AA: オ
+
+> get unicode char input
+Enter character (uni):
+>{char} escape
+Got character (dec) -8, (hex) $FFFFFFF8: <escape>

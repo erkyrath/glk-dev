@@ -1,0 +1,50 @@
+** game: windowtest.ulx
+** interpreter: glulxer
+** remformat: yes
+
+* basic
+
+Welcome to the test chamber.
+
+> help
+Type "help" to repeat this message
+
+
+* status
+
+> split
+{status} This is a new grid window, size 80 by 1
+Created window
+rock 101
+
+
+* timer
+
+> timer
+!This library claims to not support timer events
+Timer will fire every 1 seconds.
+
+>{timer}
+Input interrupted by timer event. (Input line was empty.)
+
+>{timer}
+Input interrupted by timer event. (Input line was empty.)
+
+
+* links
+
+> link
+{hyperlink=1} link 1
+{hyperlink=2} italics
+!{hyperlink=3} link
+!{hyperlink=1} link 2
+!{hyperlink=2} link 1
+
+>{hyperlink} 1
+Input interrupted by hyperlink event, link 1, in main window.
+Input line was empty.
+
+>{hyperlink} 2
+Input interrupted by hyperlink event, link 2, in main window.
+Input line was empty.
+
