@@ -1,0 +1,14 @@
+** game: glulxercise.ulx
+** interpreter: glulxer
+** remformat: yes
+
+* basic
+
+Glulxercise: A Glulx interpreter unit test
+Welcome to the test chamber.
+
+* all
+
+> all
+!FAIL
+All tests passed.
