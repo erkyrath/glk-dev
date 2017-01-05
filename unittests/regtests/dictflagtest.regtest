@@ -1,0 +1,9 @@
+** game: dictflagtest.ulx
+** interpreter: glulxer
+** remformat: yes
+
+* test
+DictFlagTest
+
+Passed.
+!FAIL

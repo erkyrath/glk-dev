@@ -1,0 +1,43 @@
+** game: chinesedicttest.ulx
+** interpreter: glulxer
+** remformat: yes
+
+* test
+ChineseDictTest
+
+Type "help" or "帮助" to repeat this message
+
+> dict
+'?'
+'adj' (adj)
+'adjective' (adj)
+'verb' (verb) (action 254)
+'verb2' (verb) (action 253)
+'x' (verb) (action 255)
+'äëïöü'
+'αβγδε'
+'λαμβάνω'
+'брать' (verb) (action 251)
+'אבגדמ'
+'おすも'
+'东西'
+'帮助'
+
+> tablet
+天地玄黄　宇宙洪荒　日月盈昃　辰宿列张　寒来暑往　秋收冬藏
+闰馀成岁　律吕调阳　云腾致雨　露结为霜　金生丽水　玉出昆冈
+剑号巨阙　珠称夜光　果珍李柰　菜重芥姜　海咸河淡　鳞潜羽翔
+龙师火帝　鸟官人皇　始制文字　乃服衣裳　推位让国　有虞陶唐
+
+>x adj
+Divided up: x adj
+Tokenized: 'x' 'adj'
+
+>x αβγδε äëïöü
+Divided up: x αβγδε äëïöü
+Tokenized: 'x' 'αβγδε' 'äëïöü'
+
+>брать 帮助
+Divided up: брать 帮助
+Tokenized: 'брать' '帮助'
+
