@@ -1,0 +1,73 @@
+** game: graphwintest.gblorb
+** interpreter: glulxer
+** remformat: yes
+
+
+* base
+
+GraphWinTest
+Image Room
+!unable to create a graphics window
+
+
+* colors
+
+> fill red 5,6 7x8
+Filled rectangle with color $FF0000 at 5,6 7x8.
+{graphics} {json special:'fill' color:'#FF0000' width:7 height:8 x:5 y:6}
+
+> fill blue 10x10
+Filled rectangle with color $0000FF at 0,0 10x10.
+!{graphics} {json special:'fill' color:'#FF0000' width:7 height:8 x:5 y:6}
+{graphics} {json special:'fill' color:'#0000FF' width:10 height:10 x:0 y:0}
+
+>{refresh}
+{graphics} {json special:'fill' color:'#FF0000' width:7 height:8 x:5 y:6}
+{graphics} {json special:'fill' color:'#0000FF' width:10 height:10 x:0 y:0}
+
+> color yellow
+Set default window color to $FFFF00.
+!{graphics} {json special:'fill'}
+{graphics} {json special:'setcolor' color:'#FFFF00'}
+
+> clear
+You erase the window.
+{graphics} {json special:'fill'}
+{graphics} {json special:'setcolor' color:'#FFFF00'}
+
+> clear
+You erase the window.
+{graphics} {json special:'fill'}
+{graphics} {json special:'setcolor' color:'#FFFF00'}
+
+>{refresh}
+{graphics} {json special:'fill'}
+!{graphics} {json special:'fill' color:'#FF0000'}
+!{graphics} {json special:'fill' color:'#0000FF'}
+{graphics} {json special:'setcolor' color:'#FFFF00'}
+
+
+* images
+
+> image 5
+{graphics} {image=5 width=47 height=62 x=0 y=0}
+
+> image 10 5,6
+{graphics} {image=10 width=128 height=128 x=5 y=6}
+
+> image 10 8,9 64x64
+{graphics} {image=10 width=64 height=64 x=8 y=9}
+
+>{refresh}
+{graphics} {image=5 width=47 height=62 x=0 y=0}
+{graphics} {image=10 width=128 height=128 x=5 y=6}
+{graphics} {image=10 width=64 height=64 x=8 y=9}
+
+> clear
+You erase the window.
+{graphics} {json special:'fill'}
+!{graphics} {json special:'image'}
+
+>{refresh}
+{graphics} {json special:'fill'}
+!{graphics} {json special:'image'}
