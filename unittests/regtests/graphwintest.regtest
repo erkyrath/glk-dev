@@ -33,12 +33,12 @@ Set default window color to $FFFF00.
 > clear
 You erase the window.
 {graphics} {json special:'fill'}
-{graphics} {json special:'setcolor' color:'#FFFF00'}
+!{graphics} {json special:'setcolor'}
 
 > clear
 You erase the window.
 {graphics} {json special:'fill'}
-{graphics} {json special:'setcolor' color:'#FFFF00'}
+!{graphics} {json special:'setcolor'}
 
 >{refresh}
 {graphics} {json special:'fill'}
