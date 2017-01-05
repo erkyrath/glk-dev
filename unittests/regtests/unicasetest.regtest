@@ -1,0 +1,11 @@
+** game: unicasetest.ulx
+** interpreter: glulxer
+** remformat: yes
+
+* test
+UniCaseTest
+
+> all
+All tests okay.
+!FAIL
+

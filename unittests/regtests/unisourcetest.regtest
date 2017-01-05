@@ -1,0 +1,24 @@
+** game: unisourcetest.ulx
+** interpreter: glulxer
+** remformat: yes
+
+* test
+UniSourceTest
+
+"Simple ASCII" (12 chars)
+"AEIOU with umlauts: äëïöü ÄËÏÖÜ" (31 chars)
+"Greek: αβγδε (abgde)" (20 chars)
+"Hebrew: אבגדמ (abgdm)" (21 chars)
+"Punctuation: ‘single curly quotes’ “double curly quotes”" (56 chars)
+"Ligatures: æ (ae) œ (oe) ŋ (nj) ﬀ (ff) ﬁ (fi) ﬃ (ffi) ﬄ (ffl)" (61 chars)
+"Hirigana: おすも (O SU MO)" (23 chars)
+"Katakana: オスモ (O SU MO)" (23 chars)
+"CJK ideographs: 丂倀惿矢腄饧" (22 chars)
+
+Dict literals:
+
+'ascii'
+'hwæt'
+
+All tests passed.
+

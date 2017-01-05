@@ -1,0 +1,27 @@
+** game: unidicttest.ulx
+** interpreter: glulxer
+** remformat: yes
+
+* test
+UniDictTest
+
+> dict
+Each entry is 48 bytes long, including 9 (4-byte) characters.
+'äëïöü'
+'αβγδε'
+'брать' (verb) (action 251)
+'אבגדמ'
+'おすも'
+> one two three
+Divided up: one two three
+Tokenized: (???) (???) (???)
+> x äëïöü
+Divided up: x äëïöü
+Tokenized: 'x' 'äëïöü'
+> брать αβγδε おすも
+Divided up: брать αβγδε おすも
+Tokenized: 'брать' 'αβγδε' 'おすも'
+> tenletterz version x
+Divided up: tenletterz version x
+Tokenized: 'tenletter' 'version' 'x'
+
