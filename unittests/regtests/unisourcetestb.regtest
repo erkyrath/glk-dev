@@ -1,0 +1,30 @@
+** game: unisourcetestb.ulx
+** interpreter: glulxer
+** remformat: yes
+
+* test
+UniSourceTest
+
+Lit: Simple ASCII
+Esc: Simple ASCII
+Lit: AEIOU with umlauts: äëïöü ÄËÏÖÜ
+Esc: AEIOU with umlauts: äëïöü ÄËÏÖÜ
+Lit: Greek: αβγδε (abgde)
+Esc: Greek: αβγδε (abgde)
+Lit: Hebrew: אבגדמ (abgdm)
+Esc: Hebrew: אבגדמ (abgdm)
+Lit: Punctuation: ‘single curly quotes’ “double curly quotes”
+Esc: Punctuation: ‘single curly quotes’ “double curly quotes”
+Lit: Ligatures: æ (ae) œ (oe) ŋ (nj) ﬀ (ff) ﬁ (fi) ﬃ (ffi) ﬄ (ffl)
+Esc: Ligatures: æ (ae) œ (oe) ŋ (nj) ﬀ (ff) ﬁ (fi) ﬃ (ffi) ﬄ (ffl)
+Lit: Hirigana: おすも (O SU MO)
+Esc: Hirigana: おすも (O SU MO)
+Lit: Katakana: オスモ (O SU MO)
+Esc: Katakana: オスモ (O SU MO)
+Lit: ascii
+Esc: ascii
+Lit: hwæt
+Esc: hwæt
+Lit: Foo ä æ!
+Esc: Foo ä æ!
+
