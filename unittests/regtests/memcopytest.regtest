@@ -1,0 +1,26 @@
+** game: memcopytest.ulx
+** interpreter: glulxer
+** remformat: yes
+
+* test
+MemCopyTest
+
+Array: (0)(0)(0)(0)(0)(0)(0)(0)(0)(0)(0)(0)(0)(0)(0)(0)(0)(0)(0)(0)
+
+> say hello
+Array: hello(0)(0)(0)(0)(0)(0)(0)(0)(0)(0)(0)(0)(0)(0)(0)
+
+> copy 1 10 3
+Array: hello(0)(0)(0)(0)(0)ell(0)(0)(0)(0)(0)(0)(0)
+
+> zero 2 2
+Array: he(0)(0)o(0)(0)(0)(0)(0)ell(0)(0)(0)(0)(0)(0)(0)
+
+> say ABCEDFGHIJKL
+Array: ABCEDFGHIJKL(0)(0)(0)(0)(0)(0)(0)(0)
+
+> copy 6 4 3
+Array: ABCEGHIHIJKL(0)(0)(0)(0)(0)(0)(0)(0)
+
+> copy 0 1 5
+Array: AABCEGIHIJKL(0)(0)(0)(0)(0)(0)(0)(0)

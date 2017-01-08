@@ -1,0 +1,44 @@
+** game: memheaptest.ulx
+** interpreter: glulxer
+** remformat: yes
+
+* test
+MemHeapTest
+
+> status
+Heap inactive.
+>alloc 15
+Allocating 15 bytes...
+Allocated block at 114432.
+> alloc 9
+Allocating 9 bytes...
+Allocated block at 114447.
+> alloc 27
+Allocating 27 bytes...
+Allocated block at 114456.
+> free 114447
+Freeing block at 114447...
+> status
+Heap exists from 114432 to 114688.
+> alloc 2
+Allocating 2 bytes...
+Allocated block at 114447.
+> alloc 9
+Allocating 9 bytes...
+Allocated block at 114483.
+> free 114456
+Freeing block at 114456...
+> alloc 11
+Allocating 11 bytes...
+Allocated block at 114449.
+> free 114432
+Freeing block at 114432...
+> free 114447
+Freeing block at 114447...
+> free 114483
+Freeing block at 114483...
+> free 114449
+Freeing block at 114449...
+> status
+Heap inactive.
+
