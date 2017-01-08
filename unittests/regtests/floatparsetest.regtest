@@ -1,0 +1,22 @@
+** game: floatparsetest.ulx
+** interpreter: glulxer
+** remformat: yes
+
+* test
+FloatParseTest
+
+> read chart
+All tests passed.
+
+> read tape
+All tests passed.
+
+> type 1.2345
+You type the number 1.2345.
+
+> type 0.005123
+You type the number 0.00512.
+
+> type 1.1e2
+You type the number 110.0.
+

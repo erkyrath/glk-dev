@@ -1,0 +1,9 @@
+** game: floatconsttest.ulx
+** interpreter: glulxer
+** remformat: yes
+
+* test
+FloatConstTest
+
+All tests passed.
+!FAIL

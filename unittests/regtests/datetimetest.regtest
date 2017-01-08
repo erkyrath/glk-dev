@@ -1,0 +1,15 @@
+** game: datetimetest.ulx
+** interpreter: glulxer
+** remformat: yes
+
+* test
+DateTimeTest
+
+> x calendar
+
+The first Moon landing: Sunday, Jul 20, 1969 at 8:17:40 pm (utc)
+The Unix epoch: Thursday, Jan 1, 1970 at 12:00:00 midnight (utc)
+Einstein's first time journey: Sunday, Oct 26, 1986 at 8:20:00 am (utc)
+The birthday of Inform 7: Sunday, Apr 30, 2006 at 5:48:09 pm (utc)
+The American Tricentennial: Saturday, Jul 4, 2076 at 12:00:00 noon (utc)
+The longest solar eclipse of the millennium: Sunday, Jul 16, 2186 at 3:08:05 pm (utc)
