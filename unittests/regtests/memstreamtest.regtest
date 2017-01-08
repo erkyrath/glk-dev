@@ -1,0 +1,122 @@
+** game: memstreamtest.ulx
+** interpreter: glulxer
+** remformat: yes
+
+* test
+MemStreamTest
+
+>stream grape
+Sent to char stream: 14 chars
+It's a grape.
+
+Character by character:  I t ' s   a   g r a p e . (newline)
+
+>stream umlauts
+Sent to char stream: 34 chars
+Capital AEIOU with umlauts: ÄËÏÖÜ
+
+Character by character:  C a p i t a l   A E I O U   w i t h   u m l a u t s :   (196) (203) (207) (214) (220) (newline)
+
+>stream pie
+Sent to char stream: 40 chars
+It's a Greek ?, made with feta and ink.
+
+Character by character:  I t ' s   a   G r e e k   ? ,   m a d e   w i t h   f e t a   a n d   i n k . (newline)
+
+>stream russian
+Sent to char stream: 47 chars
+It's a Russian ????????. The food smells good.
+
+Character by character:  I t ' s   a   R u s s i a n   ? ? ? ? ? ? ? ? .   T h e   f o o d   s m e l l s   g o o d . (newline)
+
+>stream quotes
+Sent to char stream: 73 chars
+Some text with curly quotes: ?single curly quotes? ?double curly quotes?
+
+Character by character:  S o m e   t e x t   w i t h   c u r l y   q u o t e s :   ? s i n g l e   c u r l y   q u o t e s ?   ? d o u b l e   c u r l y   q u o t e s ? (newline)
+
+>stream long
+Sent to char stream: 161 chars
+It's a very long piece of string. So long, in fact, that its description will certainly overflow the 128-character output array.
+Character by character:  I t ' s   a   v e r y   l o n g   p i e c e   o f   s t r i n g .   S o   l o n g ,   i n   f a c t ,   t h a t   i t s   d e s c r i p t i o n   w i l l   c e r t a i n l y   o v e r f l o w   t h e   1 2 8 - c h a r a c t e r   o u t p u t   a r r a y .
+
+>streamuni grape
+Sent to unicode char stream: 14 chars
+It's a grape.
+
+Character by character:  I t ' s   a   g r a p e . (newline)
+
+>streamuni umlauts
+Sent to unicode char stream: 34 chars
+Capital AEIOU with umlauts: ÄËÏÖÜ
+
+Character by character:  C a p i t a l   A E I O U   w i t h   u m l a u t s :   (196) (203) (207) (214) (220) (newline)
+
+>streamuni pie
+Sent to unicode char stream: 40 chars
+It's a Greek π, made with feta and ink.
+
+Character by character:  I t ' s   a   G r e e k   (960) ,   m a d e   w i t h   f e t a   a n d   i n k . (newline)
+
+>streamuni russian
+Sent to unicode char stream: 47 chars
+It's a Russian ресторан. The food smells good.
+
+Character by character:  I t ' s   a   R u s s i a n   (1088) (1077) (1089) (1090) (1086) (1088) (1072) (1085) .   T h e   f o o d   s m e l l s   g o o d . (newline)
+
+>streamuni quotes
+Sent to unicode char stream: 73 chars
+Some text with curly quotes: ‘single curly quotes’ “double curly quotes”
+
+Character by character:  S o m e   t e x t   w i t h   c u r l y   q u o t e s :   (8216) s i n g l e   c u r l y   q u o t e s (8217)   (8220) d o u b l e   c u r l y   q u o t e s (8221) (newline)
+
+>streamuni long
+Sent to unicode char stream: 161 chars
+It's a very long piece of string. So long, in fact, that its description will certainly overflow the 128-character output array.
+Character by character:  I t ' s   a   v e r y   l o n g   p i e c e   o f   s t r i n g .   S o   l o n g ,   i n   f a c t ,   t h a t   i t s   d e s c r i p t i o n   w i l l   c e r t a i n l y   o v e r f l o w   t h e   1 2 8 - c h a r a c t e r   o u t p u t   a r r a y .
+
+>nullstream russian
+Sent to char stream: 47 chars
+
+>uninullstream russian
+Sent to unicode char stream: 47 chars
+
+>nullstream long
+Sent to char stream: 161 chars
+
+>uninullstream long
+Sent to unicode char stream: 161 chars
+
+>pos
+Sent to char stream: 61 chars
+This line was assembled piecewise.
+
+Character by character:  T h i s   l i n e   w a s   a s s e m b l e d   p i e c e w i s e . (newline)
+
+>unipos
+Sent to unicode char stream: 61 chars
+This line was assembled piecewise.
+
+Character by character:  T h i s   l i n e   w a s   a s s e m b l e d   p i e c e w i s e . (newline)
+
+>read
+Read char '!'
+Read line of 10 chars: Line one.
+Read buffer of 13 chars: Line two.
+...
+Read buffer of 11 chars: Last line.
+
+Read char -1
+Read line of 0 chars
+(Read from char stream: 35 chars)
+
+>uniread
+Read char '!'
+Read line of 10 chars: Liηe one.
+Read buffer of 13 chars: Liηe two.
+...
+Read buffer of 11 chars: Last liηe.
+
+Read char -1
+Read line of 0 chars
+(Read from unicode char stream: 35 chars)
