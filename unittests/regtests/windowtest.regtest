@@ -48,3 +48,13 @@ Input line was empty.
 Input interrupted by hyperlink event, link 2, in main window.
 Input line was empty.
 
+
+* arrange
+
+Welcome to the test chamber.
+
+> i
+I didn't understand that.
+
+>{arrange} 900
+!Welcome to the test chamber.
