@@ -1,12 +1,15 @@
-Constant Story "UnicodeTest";
+Constant Story "InputEventTest";
 Constant Headline "^Not a game.^";
 
 ! Unit test for character and line input events.
+
+Release 2;
 
 Include "Parser";
 Include "VerbLib";
 
 Global has_unicode;
+Global has_timer;
 Global main_window = true;
 
 Constant BUFLEN = 80;
@@ -16,6 +19,7 @@ Array word_buf --> BUFLEN;
 [ Initialise;
 	location = Kitchen;
 	has_unicode = glk($0004, 15, 0); ! gestalt, Unicode
+	has_timer = glk($0004, 5, 0); ! gestalt, Timer
 ];
 
 Object Kitchen "Input Room"
@@ -210,6 +214,33 @@ Object -> UniLineObj "unicode line input"
 	],
   has static;
 
+Object -> TimerObj "timer input"
+  with
+	name 'timer' 'timed' 'input',
+	description "Wait for timer input, ignoring the keyboard.",
+	before [;
+		Examine:
+			if (verb_word == 'read')
+				<<Take self>>;
+		Take:
+			if (~~has_timer)
+				"This Glk library doesn't support timer input.";
+			print "Waiting two seconds...^";
+			! Ignore window selection
+			glk($00D6, 2000); ! request_timer_events
+			while (true) {
+				glk($00C0, gg_event); ! select
+				PrintEventType(); print "...^";
+				if (gg_event-->0 == 1) {
+					break;
+				}
+			}
+			glk($00D6, 0); ! request_timer_events
+			print "Done.^";
+			rtrue;
+	],
+  has static;
+
 [ SelectWindow;
 	if (main_window)
 		return gg_mainwin;
@@ -321,5 +352,21 @@ Object -> UniLineObj "unicode line input"
 	}
 	print ">";
 ];
-	
+
+[ PrintEventType;
+	switch (gg_event-->0) {
+		0: print "(no event)";
+		1: print "(timer event)";
+		2: print "(char event)";
+		3: print "(line event)";
+		4: print "(mouse event)";
+		5: print "(arrange event)";
+		6: print "(redraw event)";
+		7: print "(soundnotify event)";
+		8: print "(hyperlink event)";
+		9: print "(volumenotify event)";
+		default: print "(event type", gg_event-->0, ")";
+	}
+];
+
 Include "Grammar";
