@@ -93,3 +93,12 @@ Got character (dec) 12458, (hex) $30AA: オ
 Enter character (uni):
 >{char} escape
 Got character (dec) -8, (hex) $FFFFFFF8: <escape>
+
+* timer
+
+> get timer input
+Waiting
+
+>{timer}
+Done.
+
