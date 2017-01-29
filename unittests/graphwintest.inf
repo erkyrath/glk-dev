@@ -1,6 +1,6 @@
 Constant Story "GraphWinTest";
 Constant Headline "^Not a game.^";
-Release 3;
+Release 4;
 
 Constant GG_GRAPHWIN_ROCK 210;
 Global gg_graphwin = 0;
@@ -286,9 +286,11 @@ Array colornames -->
 ];
 
 [ ColorSpec   wd res ix;
-	parsed_number = 0;
+	parsed_number = -1;
 
 	wd = NextWordStopped();
+	if (wd == comma_word or THEN1__WD or -1)
+		return GPR_FAIL;
 	for (ix=0 : colornames-->ix : ix=ix+2) {
 		if (wd == colornames-->ix) {
 			parsed_number = colornames-->(ix+1);
@@ -315,7 +317,8 @@ Array colornames -->
 	while (1) {
 		wd = NextWordStopped();
 		if (wd == comma_word or THEN1__WD or -1) {
-			if (wn-1 == startwn) {
+			wn--;
+			if (wn == startwn) {
 				parsed_number = -1;
 				return GPR_NUMBER;
 			}
@@ -364,7 +367,8 @@ Array colornames -->
 	while (1) {
 		wd = NextWordStopped();
 		if (wd == comma_word or THEN1__WD or -1) {
-			if (wn-1 == startwn) {
+			wn--;
+			if (wn == startwn) {
 				parsed_number = -1;
 				return GPR_NUMBER;
 			}
@@ -398,7 +402,8 @@ Array colornames -->
 	while (1) {
 		wd = NextWordStopped();
 		if (wd == comma_word or THEN1__WD or -1) {
-			if (wn-1 == startwn) {
+			wn--;
+			if (wn == startwn) {
 				parsed_number = -1;
 				return GPR_NUMBER;
 			}
