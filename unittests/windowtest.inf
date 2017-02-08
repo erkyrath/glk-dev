@@ -16,6 +16,8 @@ Array gg_tokenbuf -> DICT_WORD_SIZE;
 Constant MAX_BUFFER_WORDS = 20;
 Constant PARSE_BUFFER_LEN = 244;    ! 4 + MAX_BUFFER_WORDS*4;
 Array parse_buffer --> PARSE_BUFFER_LEN/WORDSIZE;
+Array window_prefix string "window=";
+Array keywindow_prefix string "keywindow=";
 
 Global num_understood;
 Global dir_understood;
@@ -23,7 +25,9 @@ Global split_understood;
 Global border_understood;
 Global type_understood;
 Global size_understood;
+Global winref_understood;
 Global win_understood;
+Global keywin_understood;
 Global filemode_understood;
 Global operand_understood;
 
@@ -98,12 +102,8 @@ Constant ALTWIN_ROCK 101;
       show_windows();
 
     'open', 'split':
-      if (altwin) {
-        print "The window is already split.^";
-        continue;
-      }
-      parse_window_params();
-      altwin = glk($0023, mainwin, dir_understood+split_understood+border_understood, size_understood, type_understood, ALTWIN_ROCK); ! glk_window_open
+      parse_window_params(mainwin);
+      altwin = glk($0023, win_understood, dir_understood+split_understood+border_understood, size_understood, type_understood, ALTWIN_ROCK); ! glk_window_open
       if (~~altwin) {
         print "Failed.^";
         continue;
@@ -115,11 +115,12 @@ Constant ALTWIN_ROCK 101;
         glk($0102, altwin); ! request_hyperlink_event
 
     'close', 'unsplit':
-      if (~~altwin) {
-        print "The window is not split.^";
+      parse_window_params(altwin);
+      if (~~win_understood) {
+        print "No last created window.^";
         continue;
       }
-      glk($00D1, altwin, gg_event); ! cancel_line_event
+      glk($00D1, win_understood, gg_event); ! cancel_line_event
       if (gg_event-->0 == 3) {
         print "Window had line input pending";
         print " (", gg_event-->2, " chars)";
@@ -131,23 +132,25 @@ Constant ALTWIN_ROCK 101;
         }
         print ".^";
       }
-      glk($0024, altwin, gg_event); ! window_close
-      altwin = 0;
-      altwininput = false;
+      glk($0024, win_understood, gg_event); ! window_close
+      if (altwin == win_understood)  {
+        altwin = 0;
+        altwininput = false;
+      }
       print "Window closed; it had printed ", gg_event-->1,
         " characters and read in ", gg_event-->0, ".^";
 
     'setsize', 'resize', 'arrange', 'rearrange':
-      if (~~altwin) {
-        print "The window is not split.^";
+      parse_window_params(altwin);
+      if (~~win_understood) {
+        print "No last created window, specify a window.^";
         continue;
       }
-      win = glk($0029, altwin); ! window_get_parent
+      win = glk($0029, win_understood); ! window_get_parent
       if (~~win) {
-        print "Unable to locate parent of secondary window.^";
+        print "Unable to locate parent of window.^";
         continue;
       }
-      parse_window_params();
       glk($0027, win, gg_event+0, gg_event+4, gg_event+8); ! window_get_arrangement
       olddir = (gg_event-->0) & $0F;
       if ((olddir == 0 or 1) && (dir_understood == 2 or 3)) {
@@ -158,7 +161,7 @@ Constant ALTWIN_ROCK 101;
         print "Cannot change split axis to vertical.^";
         continue;
       }
-      glk($0026, win, dir_understood+split_understood+border_understood, size_understood, win_understood); ! glk_window_set_arrangement
+      glk($0026, win, dir_understood+split_understood+border_understood, size_understood, keywin_understood); ! glk_window_set_arrangement
       print "Changed the parameters of the window split.^";
       announce_window_sizes();
 
@@ -180,7 +183,7 @@ Constant ALTWIN_ROCK 101;
         continue;
       }
       if (altwininput) {
-        print "The secondary window is already reading line input.^";
+        print "The last created window is already reading line input.^";
         continue;
       }
       glk($002F, altwin); ! glk_set_window
@@ -191,7 +194,7 @@ Constant ALTWIN_ROCK 101;
       glk($002F, mainwin); ! glk_set_window
       glk($00D0, altwin, inputalt_buffer, BUFLEN, 0); ! request_line_event
       altwininput = true;
-      print "Requested line input from secondary window.^";
+      print "Requested line input from last created window.^";
 
     'dropline':
       if (~~altwin) {
@@ -199,7 +202,7 @@ Constant ALTWIN_ROCK 101;
         continue;
       }
       if (~~altwininput) {
-        print "The secondary window is not reading line input.^";
+        print "The last created window is not reading line input.^";
         continue;
       }
       glk($00D1, altwin, gg_event); ! cancel_line_event
@@ -218,7 +221,7 @@ Constant ALTWIN_ROCK 101;
       glk($002F, altwin); ! glk_set_window
       print "(cancel)^";
       glk($002F, mainwin); ! glk_set_window
-      print "Cancelled line input from secondary window.^";
+      print "Cancelled line input from last created window.^";
       
     'echoline':
       if (~~altwin) {
@@ -236,9 +239,9 @@ Constant ALTWIN_ROCK 101;
         val = num_understood;
       glk($0150, altwin, val); ! glk_set_echo_line_event
       if (val)
-        print "Future line input events in secondary window will auto-echo.^";
+        print "Future line input events in last created window will auto-echo.^";
       else
-        print "Future line input events in secondary window will NOT auto-echo.^";
+        print "Future line input events in last created window will NOT auto-echo.^";
 
     'dialog':
       parse_file_params();
@@ -380,6 +383,27 @@ Constant ALTWIN_ROCK 101;
     return true;
 ];
 
+[ iswindowref wx prefix  wlen wpos ix val ch;
+    wlen = parse_buffer-->(wx*3+2);
+    if (prefix->0 > wlen)
+        return false;
+    wpos = parse_buffer-->(wx*3+3);
+    val = 0;
+    for (ix=0 : ix< prefix->0 : ix++) {
+        ch = input_buffer->(wpos+ix);
+        if (ch ~= prefix->(ix + 1))
+            return false;
+    }
+    for (ix=prefix->0 : ix<wlen : ix++) {
+        ch = input_buffer->(wpos+ix);
+        if (ch < '0' || ch > '9')
+            return false;
+        val = val * 10 + (ch - '0');
+    }
+    winref_understood = val;
+    return true;
+];
+
 [ parse_number  numwords wx;
   num_understood = 0;
   numwords = parse_buffer-->0;
@@ -420,13 +444,15 @@ Constant ALTWIN_ROCK 101;
   }
 ];
 
-[ parse_window_params  numwords wx wd;
+[ parse_window_params default_win  numwords wx wd keywin_set;
   dir_understood = 2;
   split_understood = $10;
   type_understood = 4;
   size_understood = 1;
-  win_understood = mainwin;
+  keywin_understood = mainwin;
+  win_understood = default_win;
   border_understood = $0;
+  keywin_set = 0;
   
   numwords = parse_buffer-->0;
   for (wx=1 : wx<numwords : wx++) {
@@ -449,12 +475,16 @@ Constant ALTWIN_ROCK 101;
       'graphic', 'graphics': type_understood = 5;
       'pair': type_understood = 1;
 
-      'main': win_understood = mainwin;
-      'alt', 'second', 'other': win_understood = altwin;
+      'main': keywin_understood = mainwin; keywin_set = 1;
+      'alt', 'second', 'other': keywin_understood = altwin; keywin_set = 1;
 
       default:
         if (isnumber(wx))
           size_understood = num_understood;
+        else if (iswindowref(wx, window_prefix))
+          win_understood = winref_understood;
+        else if (keywin_set == 0 && iswindowref(wx, keywindow_prefix))
+          keywin_understood = winref_understood;
     }
   }
 ];
@@ -502,19 +532,24 @@ Constant ALTWIN_ROCK 101;
         or one of the following:^^";
     print "  ~windows~: List all open windows.^";
     print "  ~size~: Show the sizes of all open windows.^";
-    print "  ~open PARAMS~: Open a second window. PARAMS can include any of
+    print "  ~open PARAMS [window=NUM]~: Open another window. PARAMS can include any of
         left/right/top/bottom, fixed/proportional, border/noborder,
         grid/buffer/blank/graphic,
-        and a (numeric) size.^";
-    print "  ~close~: Close the second window.^";
-    print "  ~arrange PARAMS~: Change the second window arrangement. The
-        PARAMS are the same as above. (Note: not all parameters are legal,
-        so you can cause a Glk error with this command.)^";
-    print "  ~getline~: Request line input in the second window.^";
-    print "  ~dropline~: Cancel line input in the second window.^";
-    print "  ~echoline NUM~: Begin/end line-input echoing in the second window.^";
+        and a (numeric) size.
+        By default the split window is the main window. Use the optional window parameter
+        to specify a different one. NUM should be an opaque window reference. This is the
+        number shown by the windows command or when opening a new window.^";
+    print "  ~close [window=NUM]~: Closes the last created window. Use the optional window
+        parameter to specify a different one.^";
+    print "  ~arrange PARAMS [window=NUM] [keywindow=NUM]~: By default this will update the
+        main window, with the last created window as the key window. Use the optional window
+        and keywindow parameters to specify different ones. The PARAMS are the same as above.
+        (Note: not all parameters are legal, so you can cause a Glk error with this command.)^";
+    print "  ~getline~: Request line input in the last created window.^";
+    print "  ~dropline~: Cancel line input in the last created window.^";
+    print "  ~echoline NUM~: Begin/end line-input echoing in the last created window.^";
     print "  ~echo~: Begin echoing all output from the first window to
-        the second window. (Causes a Glk error if mixed with ~getline~.)^";
+        the last created window. (Causes a Glk error if mixed with ~getline~.)^";
     print "  ~streams~: List all open streams.^";
     print "  ~styles~: Display a sample line of each text style.^";
     print "  ~dialog MODE~: Open a file-selection dialog.^";
@@ -723,7 +758,7 @@ Constant ALTWIN_ROCK 101;
 
 [ echo_window str curstr;
     if (~~altwin) {
-        print "You must open a second window before using the ~echo~ command.^";
+        print "You must open another window before using the ~echo~ command.^";
         return;
     }
 
@@ -736,7 +771,7 @@ Constant ALTWIN_ROCK 101;
     
     str = glk($002C, altwin); ! window_get_stream
     glk($002D, mainwin, str); ! window_set_echo_stream
-    print "Everything printed to the main window will be echoed to the second window.^";
+    print "Everything printed to the main window will be echoed to the last created window.^";
 ];
 
 [ show_streams str  rock val;
