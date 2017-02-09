@@ -1,0 +1,8 @@
+** game: resstreamtest.gblorb
+** interpreter: glulxer
+** remformat: yes
+
+* test
+ResStream
+All tests passed.
+
