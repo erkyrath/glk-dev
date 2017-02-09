@@ -1,0 +1,14 @@
+** game: startsavetest.gblorb
+** interpreter: glulxer
+** remformat: yes
+
+* test
+StartSaveTest
+
+!No autorestore resource chunk
+!We now perform the slow, tedious set-up stage
+The autorestore chunk exists. We'll restore it now.
+The autorestore file has been restored successfully.
+SlowSetUpWork has been run correctly.
+You can see a table (on which is an apple) here.
+
