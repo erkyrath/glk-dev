@@ -1,0 +1,44 @@
+** game: localsavetest.ulx
+** interpreter: glulxer
+** remformat: yes
+
+* test
+LocalSave
+
+> savetest
+>{fileref_prompt} test
+Ok.
+glob=111
+loc0=2
+loc1=333
+loc2=55555
+
+> restore
+>{fileref_prompt} test
+Ok.
+glob=111
+loc0=2
+loc1=333
+loc2=55555
+
+
+* test2
+LocalSave
+
+> savetest2
+>{fileref_prompt} test
+Ok.
+sp=777
+glob=11
+loc0=2
+loc1=33
+loc2=555
+
+> restore
+>{fileref_prompt} test
+Ok.
+sp=777
+glob=11
+loc0=2
+loc1=33
+loc2=555
