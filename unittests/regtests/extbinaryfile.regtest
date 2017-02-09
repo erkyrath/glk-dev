@@ -1,0 +1,8 @@
+** game: extbinaryfile.ulx
+** interpreter: glulxer
+** remformat: yes
+
+* test
+ExtBinaryFile
+All tests passed.
+
