@@ -1,0 +1,8 @@
+** game: externalfile.ulx
+** interpreter: glulxer
+** remformat: yes
+
+* test
+ExternalFile
+All tests passed.
+
