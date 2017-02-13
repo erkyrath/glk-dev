@@ -1,6 +1,6 @@
 Constant Story "GraphWinTest";
 Constant Headline "^Not a game.^";
-Release 4;
+Release 5;
 
 Constant GG_GRAPHWIN_ROCK 210;
 Global gg_graphwin = 0;
@@ -258,19 +258,27 @@ Array colornames -->
 	return ((res * $10000) | val);
 ];
 
-[ TryPosition wordnum   ix addr len ch xcount val res;
+[ TryPosition wordnum   ix addr len ch xcount negflag val res;
 	addr = WordAddress(wordnum);
 	len = WordLength(wordnum);
 
 	res = 0;
 	xcount = 0;
 	val = 0;
+	negflag = false;
 	for (ix=0 : ix<len : ix++) {
 		ch = addr->ix;
 		if (ch == ',') {
 			xcount++;
+			if (negflag)
+				val = -val;
 			res = val;
 			val = 0;
+			negflag = false;
+			continue;
+		}
+		if (ch == '-' && val == 0 && ~~negflag) {
+			negflag = true;
 			continue;
 		}
 		if (ch >= '0' && ch <= '9') {
@@ -282,7 +290,11 @@ Array colornames -->
 
 	if (xcount ~= 1)
 		return 0;
-	return ((res * $10000) | val);
+
+	if (negflag)
+		val = -val;
+	@shiftl res 16 res;
+	return ((res & $FFFF0000) | (val & $FFFF));
 ];
 
 [ ColorSpec   wd res ix;
@@ -565,8 +577,8 @@ Array info_array --> 4;
 	if (~~gg_graphwin)
 		print_ret "There is no graphics window.";
 
-	posx = ((parsed_position / $10000) & $FFFF);
-	posy = (parsed_position & $FFFF);
+	posx = signext16(parsed_position, true);
+	posy = signext16(parsed_position, false);
 	wid = ((parsed_dimensions / $10000) & $FFFF);
 	hgt = (parsed_dimensions & $FFFF);
 
@@ -583,8 +595,8 @@ Array info_array --> 4;
 	if (~~gg_graphwin)
 		print_ret "There is no graphics window.";
 
-	posx = ((parsed_position / $10000) & $FFFF);
-	posy = (parsed_position & $FFFF);
+	posx = signext16(parsed_position, true);
+	posy = signext16(parsed_position, false);
 	wid = ((parsed_dimensions / $10000) & $FFFF);
 	hgt = (parsed_dimensions & $FFFF);
 
@@ -615,15 +627,17 @@ Array info_array --> 4;
 		parsed_number = 0;
 	}
 
-	xpos = ((parsed_position / $10000) & $FFFF);
-	ypos = (parsed_position & $FFFF);
+	xpos = signext16(parsed_position, true);
+	ypos = signext16(parsed_position, false);
 	if (parsed_dimensions == 0) {
 		glk_image_draw(gg_graphwin, parsed_number, xpos, ypos);
+		print_ret "Image ", parsed_number, " at ", xpos, ",", ypos, ".";
 	}
 	else {
 		wid = ((parsed_dimensions / $10000) & $FFFF);
 		hgt = (parsed_dimensions & $FFFF);
 		glk_image_draw_scaled(gg_graphwin, parsed_number, xpos, ypos, wid, hgt);
+		print_ret "Image ", parsed_number, " at ", xpos, ",", ypos, " ", wid, "x", hgt, ".";
 	}
 ];
 
@@ -632,6 +646,18 @@ Array info_array --> 4;
 		print_ret "There is no graphics window.";
 	glk_window_clear(gg_graphwin);
 	print_ret "You erase the window.";
+];
+
+! Return the top or bottom 16 bits of val as a signed number.
+! (Sign-extend negative values.)
+[ signext16 val usetop;
+	if (usetop)
+		@ushiftr val 16 val;
+	val = val & $FFFF;
+	if (val & $8000)
+		return (val | $FFFF0000);
+	else
+		return val;
 ];
 
 [ Hex6 val   byte ix;
