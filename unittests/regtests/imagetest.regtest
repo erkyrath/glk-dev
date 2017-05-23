@@ -57,7 +57,8 @@ Image 11 size: 128 by 128.
 * flowbreak
 
 > break
-
+# Regtest can't test for this. Run with -vv and observe the
+# {'flowbreak':True} in the text array.
 
 * clear
 
