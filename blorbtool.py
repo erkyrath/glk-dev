@@ -687,6 +687,7 @@ class BlorbTool:
         usages = [ (num, chunk) for (use, num, chunk) in blorbfile.usages if (use == b'Pict') ]
         usages.sort()   # on num
         first = True
+        wholemap = collections.OrderedDict()
         for (num, chunk) in usages:
             try:
                 (suffix, size) = analyze_pict(chunk)
@@ -701,6 +702,7 @@ class BlorbTool:
                 map['alttext'] = alttexts.get( (b'Pict',num) ).decode('utf-8')
             map['width'] = size[0]
             map['height'] = size[1]
+            wholemap['pict-%d' % (num,)] = map
             indexdat = json.dumps(map, indent=2)
             if (first):
                 first = False
@@ -716,6 +718,11 @@ class BlorbTool:
         outfl.write('};\n')
         outfl.close()
             
+        outfl = open(os.path.join(outdirname, 'resourcemap.json'), 'w')
+        json.dump(wholemap, outfl, indent=2)
+        outfl.write('\n')
+        outfl.close()
+        
         print('Wrote Quixe-compatible data to directory "%s".' % (outdirname,))
             
     def cmd_delete(self, args):
