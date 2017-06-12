@@ -175,7 +175,7 @@ class BlorbChunk:
                     print('Warning: contents too short!')
                     break
                 (subdat, dat) = (dat[:strlen], dat[strlen:])
-                print('  %s resource %d: "%s"' % (typestring(restype), num, subdat.decode()))
+                print('  %s resource %d: "%s"' % (typestring(restype), num, subdat.decode('utf-8')))
             if (len(dat) > 0):
                 print('Warning: contents too long!')
         elif (self.type == b'APal'):
