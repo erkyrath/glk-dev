@@ -1,6 +1,6 @@
 Constant Story "DateTimeTest";
 Constant Headline "^Not a game.^";
-Release 3;
+Release 4;
 
 ! Unit test for the Glk date-time functions
 
@@ -436,16 +436,9 @@ Extend 'adjust' replace
 	glk($016C, dv, timeval); ! date_to_time_utc
 	glk($0168, timeval, date); ! time_to_date_utc
 
-	if (ent has normalized) {
-		print_date(dv);
-		print " at ";
-		print_long_time(dv);
-	}
-	else {
-		print_date(date);
-		print " at ";
-		print_long_time(date);
-	}
+	print_date(date);
+	print " at ";
+	print_long_time(date);
 	print " (utc)";
 	new_line;
 
