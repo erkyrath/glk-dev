@@ -13,3 +13,31 @@ Einstein's first time journey: Sunday, Oct 26, 1986 at 8:20:00 am (utc)
 The birthday of Inform 7: Sunday, Apr 30, 2006 at 5:48:09 pm (utc)
 The American Tricentennial: Saturday, Jul 4, 2076 at 12:00:00 noon (utc)
 The longest solar eclipse of the millennium: Sunday, Jul 16, 2186 at 3:08:05 pm (utc)
+
+>set year to 2017
+You set the year wheel to 2017.
+>set month to 1
+You set the month wheel to 1.
+>set day to 1
+You set the day wheel to 1.
+>set hour to 12  
+You set the hour wheel to 12.
+>set minute to 10
+You set the minute wheel to 10.
+>set seconds to 0
+You set the second wheel to 0.
+>set microseconds to 0
+You set the microsecond wheel to 0.
+The readout says, "Sunday, Jan 1, 2017 at 12:10:00 pm plus 0 microseconds".
+
+>set minutes to -10
+You set the minute wheel to -10.
+The readout says, "Sunday, Jan 1, 2017 at 11:50:00 am plus 0 microseconds".
+
+>set hour to -60
+You set the hour wheel to -60.
+The readout says, "Thursday, Dec 29, 2016 at 11:50:00 am plus 0 microseconds".
+
+>set day to 50
+You set the day wheel to 50.
+The readout says, "Thursday, Feb 16, 2017 at 11:50:00 am plus 0 microseconds".
