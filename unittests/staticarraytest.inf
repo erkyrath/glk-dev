@@ -1,0 +1,247 @@
+Constant Story "StaticArrayTest";
+Constant Headline "Not a game.^";
+
+Release 1;
+
+! This is a compiler unit test for the ability to create arrays in
+! static memory.
+
+#ifdef TARGET_ZCODE;
+Constant HDR_GAMERELEASE      = $02;     ! word
+Constant HDR_GAMESERIAL       = $12;     ! six ASCII characters
+#ifnot;
+Global gg_mainwin;
+Constant HDR_GLULXVERSION  $04;     ! long word
+Constant ROM_GAMERELEASE   $34;     ! short word
+Constant ROM_GAMESERIAL    $36;     ! six ASCII characters
+#endif; ! TARGET_GLULX
+
+Global failures;
+
+! Comment this out to test only classical (dynamic) arrays. You can do
+! this if you're compiling with an older version of Inform.
+!Constant TEST_STATIC_ARRAYS 1;
+
+[ Main loc;
+    #Ifdef TARGET_GLULX;
+	@setiosys 2 0;
+	@push 201; @push 3; @push 0; @push 0; @push 0;
+	@glk $0023 5 gg_mainwin;
+
+	@push gg_mainwin;
+	@glk $002F 1 loc;
+    #Endif; ! TARGET_
+
+	loc = 0;
+
+	Banner();
+	new_line;
+	RunTest();
+];
+
+[ Banner  ix;
+    if (Story ~= 0) {
+        #ifdef TARGET_ZCODE;
+        #ifV5; style bold; #Endif;
+        print (string) Story;
+        #ifV5; style roman; #Endif;
+        #ifnot; ! TARGET_GLULX;
+        glk($0086, 3); ! set header style
+        print (string) Story;
+        glk($0086, 0); ! set normal style
+        #Endif; ! TARGET_
+    }
+    if (Headline ~= 0) print ": ", (string) Headline;
+    #ifdef TARGET_ZCODE;
+    print "Release ", (HDR_GAMERELEASE-->0) & $03ff, " / Serial number ";
+    for (ix=0 : ix<6 : ix++) print (char) HDR_GAMESERIAL->ix;
+    #ifnot; ! TARGET_GLULX;
+    print "Release ";
+    @aloads ROM_GAMERELEASE 0 ix;
+    print ix;
+    print " / Serial number ";
+    for (ix=0 : ix<6 : ix++) print (char) ROM_GAMESERIAL->ix;
+    #Endif; ! TARGET_
+    print " / Inform v"; inversion;
+    print ", compiler options ";
+    ix = false;
+    #ifdef STRICT_MODE;
+    print "S"; ix++;
+    #Endif; ! STRICT_MODE
+    #ifdef INFIX;
+    print "X"; ix++;
+    #ifnot;
+    #ifdef DEBUG;
+    print "D"; ix++;
+    #Endif; ! DEBUG
+    #Endif; ! INFIX
+    if (~~ix) print "(none)";
+    new_line;
+
+    #ifdef TARGET_GLULX;
+    @gestalt 1 0 ix;
+    print "Interpreter version ", ix / $10000, ".", (ix & $FF00) / $100,
+    ".", ix & $FF, " / ";
+    @gestalt 0 0 ix;
+    print "VM ", ix / $10000, ".", (ix & $FF00) / $100, ".", ix & $FF, " / ";
+    ix = HDR_GLULXVERSION-->0;
+    print "game file format ", ix / $10000, ".", (ix & $FF00) / $100, ".", ix & $FF, "^";
+    #ifnot;
+    print "Game file format ", 0->0, ".^";
+    #Endif; ! TARGET_GLULX
+];
+
+[ RunTest;
+	#ifdef TARGET_ZCODE;
+	print "Static memory begins at address ", 0-->7, ".^";;
+	#ifnot; ! TARGET_GLULX;
+	print "Dynamic memory begins at address ", 0-->2, ".^";;
+	#endif; ! TARGET;
+
+	TestDynamicArrays();
+	
+	#ifdef TEST_STATIC_ARRAYS;
+	TestStaticArrays();
+	#endif; ! TEST_STATIC_ARRAYS;
+	
+	new_line;
+	if (failures == 0)
+		print "All passed.^";
+	else
+		print failures, " errors!^";
+];
+
+Object testobj
+  with bufferarrayprop bufferarray;
+
+Global bytearrayref = bytearray;
+
+Array wordarray --> 10 testobj 'foo' check_value 14 propobj wordarray bytearray;
+Array bytearray -> 5 6 7 8;
+Array stringarray string "frotz";
+Array tablearray table 6;
+Array bufferarray buffer 11;
+Array bigarray -> 431;
+
+Global stringarrayref = stringarray;
+
+Object propobj
+  with tablearrayprop tablearray,
+  with wordarrayprop wordarray;
+
+[ TestDynamicArrays val;
+	print "wordarray-->0: "; check_value(wordarray-->0, 10); print "^";
+	print "wordarray-->1: "; check_value(wordarray-->1, testobj); print "^";
+	print "wordarray-->2: "; check_value(wordarray-->2, 'foo'); print "^";
+	print "wordarray-->3: "; check_value(wordarray-->3, check_value); print "^";
+	print "wordarray-->4: "; check_value(wordarray-->4, 14); print "^";
+	print "wordarray-->5: "; check_value(wordarray-->5, propobj); print "^";
+	print "wordarray-->6: "; check_value(wordarray-->6, wordarray); print "^";
+	print "wordarray-->7: "; check_value(wordarray-->7, bytearray); print "^";
+
+	print "bytearray->0: "; check_value(bytearray->0, 5); print "^";
+	print "bytearray->3: "; check_value(bytearray->3, 8); print "^";
+
+	print "stringarray->0: "; check_value(stringarray->0, 5); print "^";
+	print "stringarray->1: "; check_value(stringarray->1, 'f'); print "^";
+	print "stringarray->5: "; check_value(stringarray->5, 'z'); print "^";
+
+	print "tablearray-->0: "; check_value(tablearray-->0, 6); print "^";
+	print "tablearray-->1: "; check_value(tablearray-->1, 0); print "^";
+	print "tablearray-->6: "; check_value(tablearray-->6, 0); print "^";
+	tablearray-->6 = 33;
+	print "tablearray-->6: "; check_value(tablearray-->6, 33); print "^";
+
+	print "bufferarray-->0: "; check_value(bufferarray-->0, 11); print "^";
+	print "bufferarray->W+0: "; check_value(bufferarray->(WORDSIZE+0), 0); print "^";
+	print "bufferarray->W+10: "; check_value(bufferarray->(WORDSIZE+10), 0); print "^";
+	bufferarray->(WORDSIZE+10) = 'A';
+	print "bufferarray->W+10: "; check_value(bufferarray->(WORDSIZE+10), 'A'); print "^";
+
+	print "bytearrayref: "; check_value(bytearrayref, bytearray); print "^";
+	print "stringarrayref: "; check_value(stringarrayref, stringarray); print "^";
+	print "testobj.bufferarrayprop: "; check_value(testobj.bufferarrayprop, bufferarray); print "^";
+	print "propobj.tablearrayprop: "; check_value(propobj.tablearrayprop, tablearray); print "^";
+	print "propobj.wordarrayprop: "; check_value(propobj.wordarrayprop, wordarray); print "^";
+
+	print "bigarray->430: "; check_value(bigarray->430, 0); print "^";
+	bigarray->430 = 75;
+	print "bigarray->430: "; check_value(bigarray->430, 75); print "^";
+
+	! The random() function implicitly constructs an array.
+	val = random(8, 8, 8, 8, 8);
+	print "random(): "; check_value(val, 8); print "^";
+
+	print "wordarray: "; check_address_dynamic(wordarray);
+	print "bytearray: "; check_address_dynamic(bytearray);
+	print "stringarray: "; check_address_dynamic(stringarray);
+	print "tablearray: "; check_address_dynamic(tablearray);
+	print "bufferarray: "; check_address_dynamic(bufferarray);
+];
+
+#ifdef TEST_STATIC_ARRAYS;
+
+Array wordarrayst static --> 11 12 13 14 15;
+
+[ TestStaticArrays val;
+	print "wordarrayst-->0: "; check_value(wordarrayst-->0, 11); print "^";
+];
+
+#endif; ! TEST_STATIC_ARRAYS
+
+[ check_value val1 val2;
+	print val1;
+	if (val1 ~= val2) {
+		failures++;
+		print " (ERROR, should be ", val2, ")";
+	}
+];
+
+[ check_address_dynamic addr val;
+	#ifdef TARGET_ZCODE;
+	
+	val = 0-->7;  ! start of static memory
+	if (addr >= 0 && addr < val) {
+		print addr, " is dynamic.^";
+		rtrue;
+	}
+	failures++;
+	print "ERROR, address ", addr, " is not in dynamic memory.^";
+		
+	#ifnot; ! TARGET_GLULX;
+
+	val = 0-->2;  ! start of dynamic memory
+	if (addr >= val) {
+		print addr, " is dynamic.^";
+		rtrue;
+	}
+	failures++;
+	print "ERROR, address ", addr, " is not in dynamic memory.^";
+	
+	#endif; ! TARGET;
+];
+
+[ check_address_static addr val;
+	#ifdef TARGET_ZCODE;
+	
+	val = 0-->7;  ! start of static memory
+	if (addr >= val) {
+		print addr, " is static.^";
+		rtrue;
+	}
+	failures++;
+	print "ERROR, address ", addr, " is not in static memory.^";
+		
+	#ifnot; ! TARGET_GLULX;
+
+	val = 0-->2;  ! start of dynamic memory
+	if (addr >= 0 && addr < val) {
+		print addr, " is static.^";
+		rtrue;
+	}
+	failures++;
+	print "ERROR, address ", addr, " is not in static memory.^";
+	
+	#endif; ! TARGET;
+];
+
