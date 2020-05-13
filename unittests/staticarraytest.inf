@@ -129,7 +129,7 @@ Object propobj
   with tablearrayprop tablearray,
   with wordarrayprop wordarray;
 
-[ TestDynamicArrays val;
+[ TestDynamicArrays val val2;
 	print "wordarray-->0: "; check_value(wordarray-->0, 10); print "^";
 	print "wordarray-->1: "; check_value(wordarray-->1, testobj); print "^";
 	print "wordarray-->2: "; check_value(wordarray-->2, 'foo'); print "^";
@@ -177,6 +177,23 @@ Object propobj
 	print "stringarray: "; check_address_dynamic(stringarray);
 	print "tablearray: "; check_address_dynamic(tablearray);
 	print "bufferarray: "; check_address_dynamic(bufferarray);
+	print "bigarray: "; check_address_dynamic(bigarray);
+
+	#ifdef STRICT_MODE;
+	
+	print "^The following lines should produce 4 veneer programming errors, as we access outside array bounds. This is expected!^";
+	val = 431;
+	val2 = bigarray->val;
+	bigarray->val = 0;
+	val = 8;
+	val2 = wordarray-->val;
+	wordarray-->val = 0;
+
+	#ifnot; ! STRICT_MODE
+
+	print "^Skipping array-bounds test because we did not compile with strict (-S) mode.^";
+	
+	#Endif; ! STRICT_MODE
 ];
 
 #ifdef TEST_STATIC_ARRAYS;
