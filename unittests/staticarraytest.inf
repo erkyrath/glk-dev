@@ -200,12 +200,23 @@ Object propobj
 
 #ifdef TEST_STATIC_ARRAYS;
 
+Object testobjst
+  with bufferarrayprop bufferarrayst;
+
+Global bytearraystref = bytearrayst;
+
 Array wordarrayst static --> 11 12 13 14 15;
-Array bytearrayst -> 15 16 17 18;
-Array stringarrayst string "plugh";
-Array tablearrayst table 7;
-Array bufferarrayst buffer 13;
-Array bigarrayst -> 531;
+Array bytearrayst static -> 15 16 17 18;
+Array stringarrayst static string "plugh";
+Array tablearrayst static table 7;
+Array bufferarrayst static buffer 13;
+Array bigarrayst static -> 531;
+
+Global stringarraystref = stringarrayst;
+
+Object propobjst
+  with tablearrayprop tablearrayst,
+  with wordarrayprop wordarrayst;
 
 [ TestStaticArrays val;
 	print "^TestStaticArrays:^";
@@ -230,6 +241,12 @@ Array bigarrayst -> 531;
 	print "bufferarrayst-->0: "; check_value(bufferarrayst-->0, 13); print "^";
 	print "bufferarrayst->W+0: "; check_value(bufferarrayst->(WORDSIZE+0), 0); print "^";
 	print "bufferarrayst->W+12: "; check_value(bufferarrayst->(WORDSIZE+12), 0); print "^";
+
+	print "bytearraystref: "; check_value(bytearraystref, bytearrayst); print "^";
+	print "stringarraystref: "; check_value(stringarraystref, stringarrayst); print "^";
+	print "testobjst.bufferarrayprop: "; check_value(testobjst.bufferarrayprop, bufferarrayst); print "^";
+	print "propobjst.tablearrayprop: "; check_value(propobjst.tablearrayprop, tablearrayst); print "^";
+	print "propobjst.wordarrayprop: "; check_value(propobjst.wordarrayprop, wordarrayst); print "^";
 
 	print "wordarrayst: "; check_address_static(wordarrayst);
 	print "bytearrayst: "; check_address_static(bytearrayst);
