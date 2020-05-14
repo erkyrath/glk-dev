@@ -20,7 +20,7 @@ Global failures;
 
 ! Comment this out to test only classical (dynamic) arrays. You can do
 ! this if you're compiling with an older version of Inform.
-!Constant TEST_STATIC_ARRAYS 1;
+Constant TEST_STATIC_ARRAYS 1;
 
 [ Main loc;
     #Ifdef TARGET_GLULX;
@@ -130,6 +130,8 @@ Object propobj
   with wordarrayprop wordarray;
 
 [ TestDynamicArrays val val2;
+	print "^TestDynamicArrays:^";
+	
 	print "wordarray-->0: "; check_value(wordarray-->0, 10); print "^";
 	print "wordarray-->1: "; check_value(wordarray-->1, testobj); print "^";
 	print "wordarray-->2: "; check_value(wordarray-->2, 'foo'); print "^";
@@ -199,9 +201,42 @@ Object propobj
 #ifdef TEST_STATIC_ARRAYS;
 
 Array wordarrayst static --> 11 12 13 14 15;
+Array bytearrayst -> 15 16 17 18;
+Array stringarrayst string "plugh";
+Array tablearrayst table 7;
+Array bufferarrayst buffer 13;
+Array bigarrayst -> 531;
 
 [ TestStaticArrays val;
+	print "^TestStaticArrays:^";
+
 	print "wordarrayst-->0: "; check_value(wordarrayst-->0, 11); print "^";
+	print "wordarrayst-->1: "; check_value(wordarrayst-->1, 12); print "^";
+	print "wordarrayst-->2: "; check_value(wordarrayst-->2, 13); print "^";
+	print "wordarrayst-->3: "; check_value(wordarrayst-->3, 14); print "^";
+	print "wordarrayst-->4: "; check_value(wordarrayst-->4, 15); print "^";
+
+	print "bytearrayst->0: "; check_value(bytearrayst->0, 15); print "^";
+	print "bytearrayst->3: "; check_value(bytearrayst->3, 18); print "^";
+
+	print "stringarrayst->0: "; check_value(stringarrayst->0, 5); print "^";
+	print "stringarrayst->1: "; check_value(stringarrayst->1, 'p'); print "^";
+	print "stringarrayst->5: "; check_value(stringarrayst->5, 'h'); print "^";
+
+	print "tablearrayst-->0: "; check_value(tablearrayst-->0, 7); print "^";
+	print "tablearrayst-->1: "; check_value(tablearrayst-->1, 0); print "^";
+	print "tablearrayst-->6: "; check_value(tablearrayst-->7, 0); print "^";
+
+	print "bufferarrayst-->0: "; check_value(bufferarrayst-->0, 13); print "^";
+	print "bufferarrayst->W+0: "; check_value(bufferarrayst->(WORDSIZE+0), 0); print "^";
+	print "bufferarrayst->W+12: "; check_value(bufferarrayst->(WORDSIZE+12), 0); print "^";
+
+	print "wordarrayst: "; check_address_static(wordarrayst);
+	print "bytearrayst: "; check_address_static(bytearrayst);
+	print "stringarrayst: "; check_address_static(stringarrayst);
+	print "tablearrayst: "; check_address_static(tablearrayst);
+	print "bufferarrayst: "; check_address_static(bufferarrayst);
+	print "bigarrayst: "; check_address_static(bigarrayst);
 ];
 
 #endif; ! TEST_STATIC_ARRAYS
