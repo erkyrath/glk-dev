@@ -188,7 +188,7 @@ Object propobj
 	val = 431;
 	val2 = bigarray->val;
 	bigarray->val = 0;
-	val = 8;
+	val = 9;
 	val2 = wordarray-->val;
 	wordarray-->val = 0;
 
@@ -219,7 +219,7 @@ Object propobjst
   with tablearrayprop tablearrayst,
   with wordarrayprop wordarrayst;
 
-[ TestStaticArrays val;
+[ TestStaticArrays arr val val2;
 	print "^TestStaticArrays:^";
 
 	print "wordarrayst-->0: "; check_value(wordarrayst-->0, 11); print "^";
@@ -259,6 +259,20 @@ Object propobjst
 	print "tablearrayst: "; check_address_static(tablearrayst);
 	print "bufferarrayst: "; check_address_static(bufferarrayst);
 	print "bigarrayst: "; check_address_static(bigarrayst);
+	
+	#ifdef STRICT_MODE;
+	
+	print "^The following lines should produce 2 veneer programming errors, as we access outside array bounds. This is expected!^";
+	val = 531;
+	val2 = bigarrayst->val;
+	val = 9;
+	val2 = wordarrayst-->val;
+
+	#ifnot; ! STRICT_MODE
+
+	print "^Skipping array-bounds test because we did not compile with strict (-S) mode.^";
+	
+	#Endif; ! STRICT_MODE
 ];
 
 #endif; ! TEST_STATIC_ARRAYS
