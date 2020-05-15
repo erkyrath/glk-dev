@@ -116,7 +116,7 @@ Object testobj
 
 Global bytearrayref = bytearray;
 
-Array wordarray --> 10 testobj 'foo' check_value 14 propobj wordarray bytearray;
+Array wordarray --> 10 testobj "foo" 'bar' check_value 14 propobj wordarray bytearray;
 Array bytearray -> 5 6 7 8;
 Array stringarray string "frotz";
 Array tablearray table 6;
@@ -134,12 +134,13 @@ Object propobj
 	
 	print "wordarray-->0: "; check_value(wordarray-->0, 10); print "^";
 	print "wordarray-->1: "; check_value(wordarray-->1, testobj); print "^";
-	print "wordarray-->2: "; check_value(wordarray-->2, 'foo'); print "^";
-	print "wordarray-->3: "; check_value(wordarray-->3, check_value); print "^";
-	print "wordarray-->4: "; check_value(wordarray-->4, 14); print "^";
-	print "wordarray-->5: "; check_value(wordarray-->5, propobj); print "^";
-	print "wordarray-->6: "; check_value(wordarray-->6, wordarray); print "^";
-	print "wordarray-->7: "; check_value(wordarray-->7, bytearray); print "^";
+	print "wordarray-->2: "; check_value(wordarray-->2, "foo"); print "^";
+	print "wordarray-->3: "; check_value(wordarray-->3, 'bar'); print "^";
+	print "wordarray-->4: "; check_value(wordarray-->4, check_value); print "^";
+	print "wordarray-->5: "; check_value(wordarray-->5, 14); print "^";
+	print "wordarray-->6: "; check_value(wordarray-->6, propobj); print "^";
+	print "wordarray-->7: "; check_value(wordarray-->7, wordarray); print "^";
+	print "wordarray-->8: "; check_value(wordarray-->8, bytearray); print "^";
 
 	print "bytearray->0: "; check_value(bytearray->0, 5); print "^";
 	print "bytearray->3: "; check_value(bytearray->3, 8); print "^";
@@ -205,7 +206,7 @@ Object testobjst
 
 Global bytearraystref = bytearrayst;
 
-Array wordarrayst static --> 11 testobjst "foo" check_value propobjst wordarrayst bytearrayst 99;
+Array wordarrayst static --> 11 testobjst 'bar' "foo" check_value propobjst wordarrayst bytearrayst 99;
 Array bytearrayst static -> 15 16 17 18;
 Array stringarrayst static string "plugh";
 Array tablearrayst static table 7;
@@ -223,12 +224,13 @@ Object propobjst
 
 	print "wordarrayst-->0: "; check_value(wordarrayst-->0, 11); print "^";
 	print "wordarrayst-->1: "; check_value(wordarrayst-->1, testobjst); print "^";
-	print "wordarrayst-->2: "; check_value(wordarrayst-->2, "foo"); print "^";
-	print "wordarrayst-->3: "; check_value(wordarrayst-->3, check_value); print "^";
-	print "wordarrayst-->4: "; check_value(wordarrayst-->4, propobjst); print "^";
-	print "wordarrayst-->5: "; check_value(wordarrayst-->5, wordarrayst); print "^";
-	print "wordarrayst-->6: "; check_value(wordarrayst-->6, bytearrayst); print "^";
-	print "wordarrayst-->7: "; check_value(wordarrayst-->7, 99); print "^";
+	print "wordarrayst-->2: "; check_value(wordarrayst-->2, 'bar'); print "^";
+	print "wordarrayst-->3: "; check_value(wordarrayst-->3, "foo"); print "^";
+	print "wordarrayst-->4: "; check_value(wordarrayst-->4, check_value); print "^";
+	print "wordarrayst-->5: "; check_value(wordarrayst-->5, propobjst); print "^";
+	print "wordarrayst-->6: "; check_value(wordarrayst-->6, wordarrayst); print "^";
+	print "wordarrayst-->7: "; check_value(wordarrayst-->7, bytearrayst); print "^";
+	print "wordarrayst-->8: "; check_value(wordarrayst-->8, 99); print "^";
 
 	print "bytearrayst->0: "; check_value(bytearrayst->0, 15); print "^";
 	print "bytearrayst->3: "; check_value(bytearrayst->3, 18); print "^";
