@@ -262,11 +262,15 @@ Object propobjst
 	
 	#ifdef STRICT_MODE;
 	
-	print "^The following lines should produce 2 veneer programming errors, as we access outside array bounds. This is expected!^";
+	print "^The following lines should produce 4 veneer programming errors, as we access outside array bounds. This is expected!^";
 	val = 531;
 	val2 = bigarrayst->val;
 	val = 9;
 	val2 = wordarrayst-->val;
+	arr = bigarrayst;
+	arr->0 = 0;
+	arr = wordarrayst;
+	arr-->0 = 0;
 
 	#ifnot; ! STRICT_MODE
 
