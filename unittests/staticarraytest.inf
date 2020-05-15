@@ -134,7 +134,7 @@ Object propobj
 	
 	print "wordarray-->0: "; check_value(wordarray-->0, 10); print "^";
 	print "wordarray-->1: "; check_value(wordarray-->1, testobj); print "^";
-	print "wordarray-->2: "; check_value(wordarray-->2, "foo"); print "^";
+	print "wordarray-->2: ", (string) wordarray-->2, "; is string:"; check_value(wordarray-->2 ofclass String, 1); print "^";
 	print "wordarray-->3: "; check_value(wordarray-->3, 'bar'); print "^";
 	print "wordarray-->4: "; check_value(wordarray-->4, check_value); print "^";
 	print "wordarray-->5: "; check_value(wordarray-->5, 14); print "^";
@@ -225,7 +225,7 @@ Object propobjst
 	print "wordarrayst-->0: "; check_value(wordarrayst-->0, 11); print "^";
 	print "wordarrayst-->1: "; check_value(wordarrayst-->1, testobjst); print "^";
 	print "wordarrayst-->2: "; check_value(wordarrayst-->2, 'bar'); print "^";
-	print "wordarrayst-->3: "; check_value(wordarrayst-->3, "foo"); print "^";
+	print "wordarrayst-->3: ", (string) wordarrayst-->3, "; is string:"; check_value(wordarrayst-->3 ofclass String, 1); print "^";
 	print "wordarrayst-->4: "; check_value(wordarrayst-->4, check_value); print "^";
 	print "wordarrayst-->5: "; check_value(wordarrayst-->5, propobjst); print "^";
 	print "wordarrayst-->6: "; check_value(wordarrayst-->6, wordarrayst); print "^";
