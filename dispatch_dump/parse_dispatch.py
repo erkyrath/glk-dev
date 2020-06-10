@@ -733,14 +733,14 @@ def make_infglk():
 
     print '! Declare as a system header unless we are in the I7 environment.'
     print '! (I7 does not use the System_file directive.)'
-    print '#ifndef NI_BUILD_COUNT;'
+    print '#Ifndef NI_BUILD_COUNT;'
     print 'System_file;'
-    print '#endif;  ! NI_BUILD_COUNT'
+    print '#Endif;  ! NI_BUILD_COUNT'
     print
     
-    print '#ifndef INFGLK_H;'
+    print '#Ifndef INFGLK_H;'
     print 'Constant INFGLK_H = 1;'
-    print '#ifdef TARGET_GLULX;'
+    print '#Ifdef TARGET_GLULX;'
     print
 
     for key in constantlist:
@@ -765,8 +765,8 @@ def make_infglk():
                 print '];'
             print
             
-    print '#endif;  ! TARGET_GLULX'
-    print '#endif;  ! INFGLK_H'
+    print '#Endif;  ! TARGET_GLULX'
+    print '#Endif;  ! INFGLK_H'
 
 def make_human():
     for id in idarray:
