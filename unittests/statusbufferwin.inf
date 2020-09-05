@@ -1,0 +1,77 @@
+Constant Story "StatusBufferWinTest";
+Constant Headline "^Not a game.^";
+
+Release 1;
+
+Include "Parser";
+Include "VerbLib";
+
+Global gg_invwin = 0;
+Constant INVWIN_ROCK 199;
+
+[ Initialise;
+  location = Kitchen;
+];
+
+[ InitGlkWindow phase;
+	if (phase == 1) {
+		if (gg_invwin == 0) {
+			gg_invwin = glk($0023, gg_mainwin, 2+$10, 1, 3, INVWIN_ROCK); ! glk_window_open(mainwin, Above+Fixed, 1, TextBuffer, INVWIN_ROCK);
+		}
+	}
+
+	return 0;
+];
+
+[ IdentifyGlkObject phase type ref rock;
+	if (phase == 0) {
+		gg_invwin = 0;
+	}
+	else if (phase == 1) {
+		if (rock == INVWIN_ROCK)
+			gg_invwin = ref;
+	}
+	else {
+		type = 0; ! silence warning
+	}
+];
+
+[ AfterPrompt   val obj pairwin;
+	val = children(player);
+	
+	pairwin = glk($0029, gg_invwin); ! window_get_parent;
+	glk($0026, pairwin, 2+$10, val+1, gg_invwin); ! glk_window_set_arrangement
+
+	glk($002F, gg_invwin); ! glk_set_window
+	glk($002A, gg_invwin); ! glk_clear_window
+
+	if (val == 0) {
+		print "You are empty-handed.";
+	}
+	else if (val == 1) {
+		print "You are carrying one item:";
+	}
+	else {
+		print "You are carrying ", val, " items:";
+	}
+	objectloop (obj in player) {
+		new_line;
+		print "- ", (the) obj;
+	}
+
+	glk($002F, gg_mainwin); ! glk_set_window
+];
+
+Object Kitchen "Kitchen"
+  with description "This game has a textbuffer window which lists your inventory.",
+  has light;
+
+Object -> apple "apple"
+  with name 'apple';
+Object -> pear "pear"
+  with name 'pear';
+Object -> grape "grape"
+  with name 'grape';
+
+Include "Grammar";
+
