@@ -9,6 +9,8 @@ Include "VerbLib";
 Global gg_invwin = 0;
 Constant INVWIN_ROCK 199;
 
+Global newlines_at_end = false;
+
 [ Initialise;
   location = Kitchen;
 ];
@@ -45,27 +47,65 @@ Constant INVWIN_ROCK 199;
 	glk($002F, gg_invwin); ! glk_set_window
 	glk($002A, gg_invwin); ! glk_clear_window
 
-	if (val == 0) {
-		print "You are empty-handed.";
-	}
-	else if (val == 1) {
-		print "You are carrying one item:";
+	if (newlines_at_end) {
+		if (val == 0) {
+			print "You are empty-handed.^";
+		}
+		else if (val == 1) {
+			print "You are carrying one item:^";
+		}
+		else {
+			print "You are carrying ", val, " items:^";
+		}
+		objectloop (obj in player) {
+			print "- ", (the) obj;
+			new_line;
+		}
 	}
 	else {
-		print "You are carrying ", val, " items:";
-	}
-	objectloop (obj in player) {
-		new_line;
-		print "- ", (the) obj;
+		if (val == 0) {
+			print "You are empty-handed.";
+		}
+		else if (val == 1) {
+			print "You are carrying one item:";
+		}
+		else {
+			print "You are carrying ", val, " items:";
+		}
+		objectloop (obj in player) {
+			new_line;
+			print "- ", (the) obj;
+		}
 	}
 
 	glk($002F, gg_mainwin); ! glk_set_window
 ];
 
 Object Kitchen "Kitchen"
-  with description "This game has a textbuffer window which lists your inventory.",
+  with description [;
+	print "This game has a textbuffer window which lists your inventory. Type TURN SWITCH to flip from newlines-at-the-end mode to newlines-at-the-start mode. (Currently ";
+	if (newlines_at_end)
+		print "~end~";
+	else
+		print "~start~";
+	".)";
+	],
   has light;
 
+Object -> switch "switch"
+  with name 'switch',
+  before [;
+	Turn, SwitchOn, SwitchOff, Push:
+		newlines_at_end = ~~newlines_at_end;
+		print "You flip the switch. Newline mode is now ";
+		if (newlines_at_end)
+			print "~end~";
+		else
+			print "~start~";
+		".";
+  ],
+  has scenery;
+  
 Object -> apple "apple"
   with name 'apple';
 Object -> pear "pear"
