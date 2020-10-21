@@ -1,7 +1,7 @@
 Constant Story "StatusBufferWinTest";
 Constant Headline "^Not a game.^";
 
-Release 1;
+Release 2;
 
 Include "Parser";
 Include "VerbLib";
@@ -12,7 +12,10 @@ Constant INVWIN_ROCK 199;
 Global newlines_at_end = false;
 
 [ Initialise;
-  location = Kitchen;
+	location = Kitchen;
+	if (gg_invwin == 0) {
+		print "WARNING: This interpreter does not support multiple windows!^^";
+	}
 ];
 
 [ InitGlkWindow phase;
@@ -39,6 +42,8 @@ Global newlines_at_end = false;
 ];
 
 [ AfterPrompt   val obj pairwin;
+	if (gg_invwin == 0) return;
+	
 	val = children(player);
 	
 	pairwin = glk($0029, gg_invwin); ! window_get_parent;
@@ -88,7 +93,8 @@ Object Kitchen "Kitchen"
 		print "~end~";
 	else
 		print "~start~";
-	".)";
+	print ".)^^";
+	print "You can also type QUERY to test line input with no prompt.^";
 	],
   has light;
 
@@ -112,6 +118,17 @@ Object -> pear "pear"
   with name 'pear';
 Object -> grape "grape"
   with name 'grape';
+
+Verb 'query' * -> QueryTest;
+
+[ QueryTestSub val;
+	print "Type ~yes~ or ~no~...^";
+	val = YesOrNo("");
+	if (val)
+		print "You said yes.^";
+	else
+		print "You said no.^";
+];
 
 Include "Grammar";
 
