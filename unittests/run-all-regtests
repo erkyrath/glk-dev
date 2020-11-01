@@ -466,8 +466,8 @@ You can see a table (on which is an apple) here.
 
 
 * inputeventtext
-** game: inputeventtext.ulx
-UnicodeTest
+** game: inputeventtest.ulx
+InputEventTest
 
 > get line input
 > hello
