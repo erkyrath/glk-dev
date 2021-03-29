@@ -1,3 +1,5 @@
+!% $MAX_ABBREVS=96
+
 Constant Story "AbbrevTest96";
 Constant Headline "Not a game.^";
 
