@@ -324,9 +324,9 @@ def identify_gamefile(filename):
     fl.seek(0)
     
     if dat == b'Glul':
-        return (fl, GLULX)
+        return Game(fl, GLULX)
     if dat[0] in (3, 4, 5, 6, 7, 8):
-        return (fl, ZCODE)
+        return Game(fl, ZCODE)
 
     if dat == b'FORM':
         fl.close()
@@ -335,15 +335,23 @@ def identify_gamefile(filename):
         if not chunk:
             raise Exception('No executable chunk: %s' % (filename,))
         if chunk.type == b'GLUL':
-            return (fl, GLULX)
+            return Game(fl, GLULX, isblorb=True)
         if chunk.type == b'ZCOD':
-            return (fl, ZCODE)
+            return Game(fl, ZCODE, isblorb=True)
         raise Exception('Unrecognized executable chunk (%s): %s' % (typestring(chunk.type), filename,))
 
     raise Exception('File not recognized: %s' % (filename,))
 
-def do_release(filename, gamefile, gametype, terp_template, web_template, release):
-    print('###', filename, gametype, release)
+class Game:
+    def __init__(self, file, type, isblorb=False):
+        self.file = file
+        self.type = type
+        self.isblorb = isblorb
+        self.release = 1
+        self.serial = ''
+
+def do_release(filename, game, terp_template, web_template, release):
+    print('###', filename, game.type, release)
     print('###', terp_template, web_template)
     manifest = terp_template.manifest
     basefilename = os.path.split(filename)[1]
@@ -391,7 +399,7 @@ def do_release(filename, gamefile, gametype, terp_template, web_template, releas
         fl.write(dat)
         fl.close()
 
-    dat = gamefile.read()
+    dat = game.file.read()
     fl = open(os.path.join(release, basefilename), 'wb')
     fl.write(dat)
     fl.close()
@@ -543,18 +551,17 @@ if len(args) != 1:
 
 filename = args[0]
 try:
-    (gamefile, gametype) = identify_gamefile(filename)
+    game = identify_gamefile(filename)
 except Exception as ex:
     print(ex)
     sys.exit(1)
 
-isblorb = isinstance(gamefile, BlorbFile)
-print('%s file (%s): %s' % (gametype, ('Blorb' if isblorb else 'plain'), filename,))
+print('%s file (%s): %s' % (game.type, ('Blorb' if game.isblorb else 'plain'), filename,))
 
 (appdir, libdir) = locate_dirs()
 
 try:
-    terp_template = find_terp_template(opts.terp, appdir=appdir, libdir=libdir, gametype=gametype)
+    terp_template = find_terp_template(opts.terp, appdir=appdir, libdir=libdir, gametype=game.type)
 except Exception as ex:
     print(ex)
     sys.exit(-1)
@@ -570,9 +577,9 @@ print('Interpreter: %s' % (val,))
 print('Website: %s' % (web_template.shortname(),))
 
 val = terp_template.manifest.get_meta_line('INTERPRETERVM', '')
-if gametype == GLULX and 'g' not in val:
+if game.type == GLULX and 'g' not in val:
     print('Warning: Template does not appear to support Glulx')
-if gametype == ZCODE and 'z' not in val:
+if game.type == ZCODE and 'z' not in val:
     print('Warning: Template does not appear to support Z-code')
 
-do_release(filename, gamefile, gametype, terp_template, web_template, release=opts.release)
+do_release(filename, game, terp_template, web_template, release=opts.release)
