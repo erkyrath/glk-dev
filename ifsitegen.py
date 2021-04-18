@@ -27,23 +27,25 @@ popt = optparse.OptionParser(usage='ifsitegen.py [ options ] GAME')
 popt.add_option('-a', '--app', '--application',
                 action='store', dest='app', metavar='DIR',
                 help='Inform application')
-
 popt.add_option('-l', '--lib', '--library',
                 action='store', dest='lib', metavar='DIR',
                 help='Inform document library')
-
 popt.add_option('-w', '--website',
                 action='store', dest='website', metavar='TEMPLATE',
                 help='website template package or directory')
-
 popt.add_option('-i', '--terp', '--interpreter',
                 action='store', dest='terp', metavar='TEMPLATE',
                 help='interpreter template package or directory')
-
 popt.add_option('-r', '--release',
                 action='store', dest='release', metavar='DIR',
                 default='Release',
                 help='destination directory')
+popt.add_option('--title',
+                action='store', dest='title',
+                help='game title')
+popt.add_option('--author',
+                action='store', dest='author',
+                help='game author')
 
 (opts, args) = popt.parse_args()
 
@@ -360,7 +362,9 @@ def do_release(filename, game, terp_template, web_template, release):
     for key, ls in manifest.metadata.items():
         map[key] = '\n'.join(ls)
     map['ENCODEDSTORYFILE'] = htmlencode(basefilename+'.js')
-    
+
+    map['TITLE'] = htmlencode(opts.title or '?')
+    map['AUTHOR'] = htmlencode(opts.author or '?')
     map['OTHERCREDITS'] = ''
     
     if not os.path.exists(release):
@@ -407,13 +411,14 @@ def do_release(filename, game, terp_template, web_template, release):
     fl.write(dat)
     fl.close()
 
-    dat = base64.encodebytes(dat)
+    dat = base64.b64encode(dat)
     fl = open(os.path.join(tpath, basefilename+'.js'), 'w')
     lines = manifest.get_meta('BASESIXTYFOURTOP')
-    fl.write('\n'.join(lines)+'\n')
+    fl.write('\n'.join(lines))
     fl.write(dat.decode())
     lines = manifest.get_meta('BASESIXTYFOURTAIL')
-    fl.write('\n'.join(lines)+'\n')
+    fl.write('\n'.join(lines))
+    fl.write('\n')
     fl.close()
 
 class BlorbChunk:
