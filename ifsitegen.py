@@ -81,9 +81,9 @@ def locate_dirs():
             if os.path.isdir(path):
                 appdir = path
         elif sys.platform == 'win32':
-            pass ###?
+            path = 'C:\\Program Files\\Inform 7'
         else:
-            path = '/usr/local/share/inform7/Internal'
+            path = '/usr/local/share/inform7'
             if os.path.isdir(path):
                 appdir = path
             
@@ -92,13 +92,26 @@ def locate_dirs():
             path = os.path.join(appdir, 'Inform.app')
             if os.path.isdir(path):
                 appdir = path
-            path = os.path.join(appdir, 'Contents/Resources/Internal')
+            path = os.path.join(appdir, 'Contents/Resources')
+            if os.path.isdir(path):
+                appdir = path
+            path = os.path.join(appdir, 'Internal')
             if os.path.isdir(path):
                 appdir = path
         elif sys.platform == 'win32':
-            pass ###?
+            path = os.path.join(appdir, 'Inform 7')
+            if os.path.isdir(path):
+                appdir = path
+            path = os.path.join(appdir, 'Internal')
+            if os.path.isdir(path):
+                appdir = path
         else:
-            pass ###?
+            path = os.path.join(appdir, 'inform7')
+            if os.path.isdir(path):
+                appdir = path
+            path = os.path.join(appdir, 'Internal')
+            if os.path.isdir(path):
+                appdir = path
     
     if appdir:
         path = os.path.join(appdir, 'Templates')
