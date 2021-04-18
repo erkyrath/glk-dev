@@ -366,8 +366,6 @@ class Game:
         self.serial = ''
 
 def do_release(filename, game, terp_template, web_template, release):
-    print('###', filename, game.type, release)
-    print('###', terp_template, web_template)
     manifest = terp_template.manifest
     basefilename = os.path.split(filename)[1]
 
@@ -445,6 +443,8 @@ def do_release(filename, game, terp_template, web_template, release):
     fl.write('\n'.join(lines))
     fl.write('\n')
     fl.close()
+
+    print('Wrote playable game to:', release)
 
 class BlorbChunk:
     def __init__(self, blorbfile, typ, start, len, formtype=None):
