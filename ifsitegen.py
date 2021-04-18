@@ -278,7 +278,7 @@ class Template:
             dat = fl.read()
             fl.close()
             if text:
-                dat = dat.encode()
+                dat = dat.decode()
             return dat
 
 class Manifest:
@@ -358,14 +358,24 @@ def do_release(filename, game, terp_template, web_template, release):
     manifest = terp_template.manifest
     basefilename = os.path.split(filename)[1]
 
+    playpath = None
+    for (path, name) in web_template.files:
+        if name == 'play.html':
+            playpath = path
+            break
+    if playpath is None:
+        print('No play.html in web template')
+        return
+    
     map = {}
     for key, ls in manifest.metadata.items():
         map[key] = '\n'.join(ls)
+        
     map['ENCODEDSTORYFILE'] = htmlencode(basefilename+'.js')
-
-    map['TITLE'] = htmlencode(opts.title or '?')
-    map['AUTHOR'] = htmlencode(opts.author or '?')
-    map['OTHERCREDITS'] = ''
+    map['TITLE'] = htmlencode(opts.title or '???')
+    map['AUTHOR'] = htmlencode(opts.author or '???')
+    map['COVER'] = '' ### cover option?
+    ### DOWNLOAD?
     
     if not os.path.exists(release):
         os.mkdir(release)
@@ -377,20 +387,22 @@ def do_release(filename, game, terp_template, web_template, release):
         if val is not None:
             return val
         return '[?'+key+'?]'
-        
+
+    dat = web_template.getfile(playpath, text=True)
+    while pat_tag.search(dat):
+        dat = pat_tag.sub(subst, dat)
+    ### replace "home page" link with game file?
+    fl = open(os.path.join(release, 'index.html'), 'w')
+    fl.write(dat)
+    fl.close()
+
     for (path, name) in web_template.files:
         if name.endswith('.html'):
-            dat = web_template.getfile(path, text=True)
-            while pat_tag.search(dat):
-                dat = pat_tag.sub(subst, dat)
-            fl = open(os.path.join(release, name), 'w')
-            fl.write(dat)
-            fl.close()
-        else:
-            dat = web_template.getfile(path)
-            fl = open(os.path.join(release, name), 'wb')
-            fl.write(dat)
-            fl.close()
+            continue
+        dat = web_template.getfile(path)
+        fl = open(os.path.join(release, name), 'wb')
+        fl.write(dat)
+        fl.close()
 
     tpath = os.path.join(release, 'interpreter')
     if not os.path.exists(tpath):
