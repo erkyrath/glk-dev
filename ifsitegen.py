@@ -399,7 +399,10 @@ def do_release(filename, game, terp_template, web_template, release):
         fl.write(dat)
         fl.close()
 
-    dat = game.file.read()
+    fl = open(filename, 'rb')
+    dat = fl.read()
+    fl.close()
+
     fl = open(os.path.join(release, basefilename), 'wb')
     fl.write(dat)
     fl.close()
