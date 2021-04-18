@@ -6,6 +6,72 @@
 ### -w ~/lib/OneCol.zip -i ~/lib/Quixe.zip game.ulx
 ### -a Inform.app -i ~/lib/Quixe game.ulx
 
+"""
+ifsitegen.py: Generate a playable IF web site for a Z-code/Glulx game
+Created by Andrew Plotkin (erkyrath@eblong.com)
+Last updated: April 18, 2021
+This script is in the public domain.
+
+This script does essentially the same job as the "Release along
+with an interpreter" option of Inform 7. The differences are:
+
+- You can run this on *any* Z-code or Glulx game file.
+- It generates the playable game page as the primary page, rather
+  than starting with a game information page. (The playable game is
+  at index.html, not play.html.)
+
+This is useful for making Inform 6 games and older games available on
+a web site.
+
+File types supported: .z3 through .z8, .ulx, .zblorb, .gblorb
+
+You must install Inform 7 to use this script. (It relies on template
+files that are distributed as part of Inform 7.) However, you don't
+need to *run* Inform 7.
+
+The simplest way to use this:
+
+    python3 ifsitegen.py Game.ulx
+
+This will look for Inform 7 in its default installation location (on
+your OS). It will use the "Standard" web site template and the "Quixe"
+or "Parchment" interpreter, depending on the game file type. If you
+have installed updated templates in your Inform document library,
+those will be used instead.
+
+The "Standard" template includes the game title and author on the page.
+You should supply these:
+
+    python3 ifsitegen.py --author 'Bob Zod' --title 'Pow!' Game.ulx
+
+If you have installed Inform 7 in a non-standard place, or given it
+a non-standard name, you must pass this with the -a argument:
+
+    python3 ifsitegen.py -a /Applications/Local/I7.app Game.ulx
+
+Similarly, you can use the -l argument to refer to your document library
+directory.
+
+Default locations:
+- MacOS:   /Applications/Inform.app,  ~/Library/Inform
+- Windows: C:\Program Files\Inform 7, ~\My Documents\Inform
+- Linux:   /usr/local/share/inform7,  ~/Inform
+
+You can select a different web site template with the -w option, or a
+different interpreter template with the -i option:
+
+    python3 ifsitegen.py -i Vorple -w Classic Game.ulx
+
+(For more information about Inform's templates, see chapters 25.10-25.14
+of the Inform manual.)
+
+The -i and -w options can also refer to a directory or a zip file containing
+a template:
+
+    python3 ifsitegen.py -i ~/Downloads/Quixe-220.zip Game.ulx
+
+"""
+
 import sys
 import os
 import os.path
@@ -39,13 +105,14 @@ popt.add_option('-i', '--terp', '--interpreter',
 popt.add_option('-r', '--release',
                 action='store', dest='release', metavar='DIR',
                 default='Release',
-                help='destination directory')
+                help='destination directory (default: Release)')
 popt.add_option('--title',
                 action='store', dest='title',
                 help='game title')
 popt.add_option('--author',
                 action='store', dest='author',
                 help='game author')
+### giblorb option
 
 (opts, args) = popt.parse_args()
 
@@ -70,7 +137,6 @@ def locate_dirs():
                 libdir = path
 
     if libdir:
-        # Can specify "~/Library/Inform" or "~/Library/Inform/Templates"
         path = os.path.join(libdir, 'Templates')
         if os.path.isdir(path):
             libdir = path
