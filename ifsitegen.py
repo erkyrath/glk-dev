@@ -499,10 +499,15 @@ def do_release(filename, game, terp_template, web_template, release):
             return val
         return '[?'+key+'?]'
 
+    # Transform the web template's play.html file.
     dat = web_template.getfile(playpath, text=True)
+    # Replace the "Home page" link with a "Game file" link.
+    pat_indexhtml = re.compile('<a href="index.html">[^<>]*</a>')
+    dat = pat_indexhtml.sub('[DOWNLOAD]', dat)
+    # Perform tag substitutions until there are no more.
     while pat_tag.search(dat):
         dat = pat_tag.sub(subst, dat)
-    ### replace "home page" link with game file?
+    # Write out as index.html.
     fl = open(os.path.join(release, 'index.html'), 'w')
     fl.write(dat)
     fl.close()
