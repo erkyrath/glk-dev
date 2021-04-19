@@ -70,6 +70,11 @@ a template:
 
     python3 ifsitegen.py -i ~/Downloads/Quixe-220.zip Game.ulx
 
+Finally, if you have a Glulx game with images, pass the --unpack option
+to unpack the .gblorb file into separate image files. This is not required!
+The game will play fine either way. However, --unpack reduces the processing
+and memory load on the client browser.
+
 """
 
 import sys
