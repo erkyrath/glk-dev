@@ -112,6 +112,9 @@ popt.add_option('--title',
 popt.add_option('--author',
                 action='store', dest='author',
                 help='game author')
+popt.add_option('--cover',
+                action='store', dest='cover',
+                help='cover image (should be square)')
 ### giblorb option
 
 (opts, args) = popt.parse_args()
@@ -451,8 +454,17 @@ def do_release(filename, game, terp_template, web_template, release):
     map['ENCODEDSTORYFILE'] = htmlencode(basefilename+'.js')
     map['TITLE'] = htmlencode(opts.title or '???')
     map['AUTHOR'] = htmlencode(opts.author or '???')
-    map['COVER'] = '' ### cover option?
     map['DOWNLOAD'] = '<a href="%s">Game file</a>' % (htmlencode(basefilename),)
+
+    map['COVER'] = ''
+    coverdat = None
+    if opts.cover:
+        covername = os.path.split(opts.cover)[1]
+        fl = open(opts.cover, 'rb')
+        coverdat = fl.read()
+        fl.close()
+        val = htmlencode(covername)
+        map['COVER'] = '<a href="%s"><img src="%s" width="120" height="120" border="1"></a>' % (val, val, )
     
     if not os.path.exists(release):
         os.mkdir(release)
@@ -480,6 +492,12 @@ def do_release(filename, game, terp_template, web_template, release):
         fl = open(os.path.join(release, name), 'wb')
         fl.write(dat)
         fl.close()
+
+    if coverdat is not None:
+        fl = open(os.path.join(release, covername), 'wb')
+        fl.write(coverdat)
+        fl.close()
+        coverdat = None
 
     tpath = os.path.join(release, 'interpreter')
     if not os.path.exists(tpath):
