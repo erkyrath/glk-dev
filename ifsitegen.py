@@ -1,11 +1,5 @@
 #!/usr/bin/env python3
 
-### -a Inform.app -w Standard game.ulx
-### -a ~/Library/Inform game.ulx
-### -a Inform.app -w Standard -i Vorple game.ulx
-### -w ~/lib/OneCol.zip -i ~/lib/Quixe.zip game.ulx
-### -a Inform.app -i ~/lib/Quixe game.ulx
-
 """
 ifsitegen.py: Generate a playable IF web site for a Z-code/Glulx game
 Created by Andrew Plotkin (erkyrath@eblong.com)
@@ -21,7 +15,8 @@ with an interpreter" option of Inform 7. The differences are:
   at index.html, not play.html.)
 
 This is useful for making Inform 6 games and older games available on
-a web site.
+a web site. It can also make a playable Glulx file with images, which
+Inform 7 (as of 6M62) cannot.
 
 File types supported: .z3 through .z8, .ulx, .zblorb, .gblorb
 
@@ -43,6 +38,11 @@ The "Standard" template includes the game title and author on the page.
 You should supply these:
 
     python3 ifsitegen.py --author 'Bob Zod' --title 'Pow!' Game.ulx
+
+If you provide a Blorb file which contains cover art, that will be
+used on the web page. Otherwise, you can use the --cover argument:
+
+    python3 ifsitegen.py --cover my-cover-art.jpeg Game.ulx
 
 If you have installed Inform 7 in a non-standard place, or given it
 a non-standard name, you must pass this with the -a argument:
@@ -120,7 +120,18 @@ popt.add_option('--cover',
 (opts, args) = popt.parse_args()
 
 def locate_dirs():
-    # Identify the Templates directories
+    """Identify the application and library directories for this OS.
+    What we actually want are the Templates directory within Inform 7
+    and the Templates directory in the Inform library folder.
+
+    This relies on the --app and --lib arguments, if provided. We
+    try to interpret them liberally. For example, --app could be either
+    the pathname of the Inform 7 application or the directory that
+    contains it. Either argument may include or exclude the Templates
+    component.
+
+    Returns (appdir, libdir).
+    """
     
     appdir = opts.app
     libdir = opts.lib
@@ -190,6 +201,18 @@ def locate_dirs():
     return appdir, libdir
 
 def find_terp_template(path, appdir=None, libdir=None, gametype=None):
+    """Attempt to find the right interpreter template. The path argument
+    (poorly named) may be:
+    
+    - None: Use the default Quixe or Parchment interpreter, based on
+      gametype.
+    - A name like "Quixe", "Parchment", or "Vorple": Find this in the
+      library or application path.
+    - A directory name containing a template.
+    - A zip file containing a template.
+
+    Returns a Template object containing a Manifest.
+    """
     defaultterp = None
     if gametype == ZCODE:
         defaultterp = 'Parchment'
@@ -249,6 +272,17 @@ def find_terp_template(path, appdir=None, libdir=None, gametype=None):
     raise Exception('Unable to read template: %s' % (path,))
 
 def find_web_template(path, appdir=None, libdir=None):
+    """Attempt to find the right web site template. The path argument
+    (poorly named) may be:
+    
+    - None: Use the default Standard template.
+    - A name like "Standard" or "Classic": Find this in the library or
+      application path.
+    - A directory name containing a template.
+    - A zip file containing a template.
+
+    Returns a Template object.
+    """
     if path and not os.path.split(path)[0]:
         # The path has no slashes; try reading it as a dir in appdir/libdir
         if libdir:
@@ -290,6 +324,16 @@ def find_web_template(path, appdir=None, libdir=None):
 
 
 class Template:
+    """Information about a template (interpreter or web site).
+    Really this is just a bunch of files, but they might be packaged
+    in a zip file.
+
+    You must provide either the dir argument (pathname to a directory)
+    or the zip argument (an open ZipFile handle).
+
+    If manpath is provided, this is the "(manifest).txt" file for
+    an interpreter template.
+    """
     def __init__(self, dir=None, zip=None, prefix=None, manpath=None):
         # list of (origpath, destfile)
         self.files = []
@@ -338,6 +382,8 @@ class Template:
             return '<Template (zip): %s>' % (self.zip.filename,)
 
     def shortname(self):
+        """Return the base filename for this package (Quixe or Quixe.zip).
+        """
         if not self.iszip:
             val = self.dir
         else:
@@ -345,6 +391,9 @@ class Template:
         return os.path.split(val)[1]
 
     def getfile(self, path, text=False):
+        """Return the contents of the file with the given pathname.
+        Returns bytes or string, depending on the text argument.
+        """
         if not self.iszip:
             if not text:
                 fl = open(path, 'rb')
@@ -364,6 +413,9 @@ class Template:
             return dat
 
 class Manifest:
+    """The contents of the (manifest).txt file from an interpreter template
+    This consists of a bunch of metadata entries plus a list of filenames.
+    """
     def __init__(self, file=None):
         self.body = []
         self.metadata = {}
@@ -372,15 +424,22 @@ class Manifest:
             self.load(file)
 
     def get_meta(self, key):
+        """Get a metadata entry as a list of lines.
+        """
         return self.metadata.get(key, [])
 
     def get_meta_line(self, key, defval=None):
+        """Get a one-line metadata entry, as a string.
+        """
         ls = self.metadata.get(key)
         if not ls:
             return defval
         return ls[0]
 
     def load(self, file):
+        """Parse a (manifest).txt file. The argument is an open file
+        stream.
+        """
         section = None
         
         for ln in file.readlines():
@@ -403,6 +462,10 @@ class Manifest:
                 section.append(ln)
 
 def identify_gamefile(filename):
+    """Figure out whether the file is Z-code or Glulx, or a Blorb file
+    containing one of those.
+    Return a Game object.
+    """
     fl = open(filename, 'rb')
     dat = fl.read(4)
     fl.seek(0)
@@ -427,17 +490,20 @@ def identify_gamefile(filename):
     raise Exception('File not recognized: %s' % (filename,))
 
 class Game:
+    """Information about a game file.
+    """
     def __init__(self, file, type, isblorb=False):
         self.file = file
         self.type = type
         self.isblorb = isblorb
-        self.release = 1
-        self.serial = ''
 
 def do_release(filename, game, terp_template, web_template, release):
+    """Generate the Release directory.
+    """
     manifest = terp_template.manifest
     basefilename = os.path.split(filename)[1]
 
+    # Locate the play.html file, which we will use as index.html.
     playpath = None
     for (path, name) in web_template.files:
         if name == 'play.html':
@@ -446,29 +512,31 @@ def do_release(filename, game, terp_template, web_template, release):
     if playpath is None:
         print('No play.html in web template')
         return
-    
+
+    # Prepare the tag substitution map.
     map = {}
+    
+    # Copy all the fields out of the interpreter manifest.
     for key, ls in manifest.metadata.items():
         map[key] = '\n'.join(ls)
-        
-    map['ENCODEDSTORYFILE'] = htmlencode(basefilename+'.js')
-    map['TITLE'] = htmlencode(opts.title or '???')
-    map['AUTHOR'] = htmlencode(opts.author or '???')
-    map['DOWNLOAD'] = '<a href="%s">Game file</a>' % (htmlencode(basefilename),)
 
+    # Add a few more fields.
+    map['ENCODEDSTORYFILE'] = htmlencode(basefilename+'.js')
+    map['TITLE'] = htmlencode(opts.title or 'TITLE?')
+    map['AUTHOR'] = htmlencode(opts.author or 'AUTHOR?')
+    map['DOWNLOAD'] = '<a href="%s">Game file</a>' % (htmlencode(basefilename),)
     map['COVER'] = ''
     coverdat = None
     covername = None
 
+    # Try to extract a cover image from the blorb file.
     if game.isblorb and not opts.cover:
         ls = game.file.chunkmap.get(b'Fspc')
         if ls:
             chunk = ls[0]
-            print('###', chunk)
             dat = chunk.data()
             index = struct.unpack('>I', dat[0:4])[0]
             chunk = game.file.usagemap.get( (b'Pict', index) )
-            print('###', chunk)
             coverdat = chunk.data()
             if chunk.type == b'JPEG':
                 covername = 'Cover.jpeg'
@@ -477,7 +545,8 @@ def do_release(filename, game, terp_template, web_template, release):
             else:
                 coverdat = None
                 print('Unrecognized cover chunk type: %s' % (chunk.type,))
-                
+
+    # Use the --cover argument.
     if opts.cover:
         covername = os.path.split(opts.cover)[1]
         fl = open(opts.cover, 'rb')
@@ -512,6 +581,7 @@ def do_release(filename, game, terp_template, web_template, release):
     fl.write(dat)
     fl.close()
 
+    # Copy over all the non-HTML web template files. (The CSS, basically.)
     for (path, name) in web_template.files:
         if name.endswith('.html'):
             continue
@@ -520,6 +590,7 @@ def do_release(filename, game, terp_template, web_template, release):
         fl.write(dat)
         fl.close()
 
+    # Copy over the cover image, if supplied.
     if covername and coverdat:
         fl = open(os.path.join(release, covername), 'wb')
         fl.write(coverdat)
@@ -530,6 +601,7 @@ def do_release(filename, game, terp_template, web_template, release):
     if not os.path.exists(tpath):
         os.mkdir(tpath)
 
+    # Copy over all the interpreter template files.
     for (path, name) in terp_template.files:
         # We're ignoring the list in the manifest, but it should be the same.
         dat = terp_template.getfile(path)
@@ -537,6 +609,7 @@ def do_release(filename, game, terp_template, web_template, release):
         fl.write(dat)
         fl.close()
 
+    # Copy over the game file.
     fl = open(filename, 'rb')
     dat = fl.read()
     fl.close()
@@ -545,6 +618,7 @@ def do_release(filename, game, terp_template, web_template, release):
     fl.write(dat)
     fl.close()
 
+    # And its base64 (.js) clone.
     dat = base64.b64encode(dat)
     fl = open(os.path.join(tpath, basefilename+'.js'), 'w')
     lines = manifest.get_meta('BASESIXTYFOURTOP')
@@ -557,6 +631,9 @@ def do_release(filename, game, terp_template, web_template, release):
 
     print('Wrote playable game to:', release)
 
+# The BlorbChunk and BlorbFile classes are copied from blorbtool.py.
+# See: https://eblong.com/zarf/blorb/blorbtool.py
+    
 class BlorbChunk:
     def __init__(self, blorbfile, typ, start, len, formtype=None):
         self.blorbfile = blorbfile
@@ -670,6 +747,8 @@ class BlorbFile:
         except:
             return None
 
+# A few miscellaneous utilities
+
 def dict_append(map, key, val):
     ls = map.get(key)
     if (not ls):
@@ -687,7 +766,8 @@ def htmlencode(val):
     val = val.replace('"', '&quot;')
     return val
 
-# Do the work
+
+# Do the work!
 
 if len(args) != 1:
     popt.print_help()
