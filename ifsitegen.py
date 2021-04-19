@@ -506,6 +506,13 @@ def do_release(filename, game, terp_template, web_template, release):
     manifest = terp_template.manifest
     basefilename = os.path.split(filename)[1]
     jsfilename = basefilename+'.js'
+    unpacking = False
+
+    if game.isblorb and opts.unpack:
+        unpacking = True
+        val = basefilename.rpartition('.')[0]
+        typ = '.zcode' if game.type == ZCODE else '.ulx'
+        jsfilename = val+typ+'.js'
 
     # Locate the play.html file, which we will use as index.html.
     playpath = None
@@ -613,7 +620,7 @@ def do_release(filename, game, terp_template, web_template, release):
         fl.write(dat)
         fl.close()
 
-    if game.isblorb and opts.unpack:
+    if unpacking:
         alttexts = {}
         ls = game.file.chunkmap.get(b'RDes')
         if (ls):
@@ -636,7 +643,7 @@ def do_release(filename, game, terp_template, web_template, release):
             picfilename = 'pict-%d.%s' % (num, suffix)
             map = OrderedDict()
             map['image'] = num
-            map['url'] = picfilename
+            map['url'] = 'interpreter/'+picfilename
             if (b'Pict', num) in alttexts:
                 map['alttext'] = alttexts.get( (b'Pict',num) ).decode('utf-8')
             map['width'] = size[0]
@@ -667,6 +674,11 @@ def do_release(filename, game, terp_template, web_template, release):
     fl.close()
 
     # And its base64 (.js) clone.
+    if unpacking:
+        # Unpack the game file from the blorb.
+        chunk = game.file.usagemap.get( (b'Exec', 0) )
+        dat = chunk.data()
+        
     dat = base64.b64encode(dat)
     fl = open(os.path.join(tpath, jsfilename), 'w')
     lines = manifest.get_meta('BASESIXTYFOURTOP')
