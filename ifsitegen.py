@@ -452,7 +452,7 @@ def do_release(filename, game, terp_template, web_template, release):
     map['TITLE'] = htmlencode(opts.title or '???')
     map['AUTHOR'] = htmlencode(opts.author or '???')
     map['COVER'] = '' ### cover option?
-    ### DOWNLOAD?
+    map['DOWNLOAD'] = '<a href="%s">Game file</a>' % (htmlencode(basefilename),)
     
     if not os.path.exists(release):
         os.mkdir(release)
