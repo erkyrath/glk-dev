@@ -458,11 +458,33 @@ def do_release(filename, game, terp_template, web_template, release):
 
     map['COVER'] = ''
     coverdat = None
+    covername = None
+
+    if game.isblorb and not opts.cover:
+        ls = game.file.chunkmap.get(b'Fspc')
+        if ls:
+            chunk = ls[0]
+            print('###', chunk)
+            dat = chunk.data()
+            index = struct.unpack('>I', dat[0:4])[0]
+            chunk = game.file.usagemap.get( (b'Pict', index) )
+            print('###', chunk)
+            coverdat = chunk.data()
+            if chunk.type == b'JPEG':
+                covername = 'Cover.jpeg'
+            elif chunk.type == b'PNG ':
+                covername = 'Cover.png'
+            else:
+                coverdat = None
+                print('Unrecognized cover chunk type: %s' % (chunk.type,))
+                
     if opts.cover:
         covername = os.path.split(opts.cover)[1]
         fl = open(opts.cover, 'rb')
         coverdat = fl.read()
         fl.close()
+
+    if covername and coverdat:
         val = htmlencode(covername)
         map['COVER'] = '<a href="%s"><img src="%s" width="120" height="120" border="1"></a>' % (val, val, )
     
@@ -493,7 +515,7 @@ def do_release(filename, game, terp_template, web_template, release):
         fl.write(dat)
         fl.close()
 
-    if coverdat is not None:
+    if covername and coverdat:
         fl = open(os.path.join(release, covername), 'wb')
         fl.write(coverdat)
         fl.close()
