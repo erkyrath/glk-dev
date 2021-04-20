@@ -24,7 +24,15 @@ You must install Inform 7 to use this script. (It relies on template
 files that are distributed as part of Inform 7.) However, you don't
 need to *run* Inform 7.
 
-The simplest way to use this:
+The Parchment and Quixe interpreters included in Inform are somewhat
+old (as of I7 6M62). You may want to download the latest versions:
+
+    https://github.com/curiousdannii/parchment/raw/ifcomp/dist/inform7/parchment-for-inform7.zip
+    https://eblong.com/zarf/glulx/quixe/Quixe.zip
+
+---
+
+The simplest way to use this tool:
 
     python3 ifsitegen.py Game.ulx
 
