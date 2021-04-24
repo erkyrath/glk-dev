@@ -63,7 +63,7 @@ directory.
 Default locations:
 - MacOS:   /Applications/Inform.app,  ~/Library/Inform
 - Windows: C:\Program Files\Inform 7, ~\My Documents\Inform
-- Linux:   /usr/local/share/inform7,  ~/Inform
+- Linux:   /usr/local/share/inform7 or /usr/share/gnome-inform7, ~/Inform
 
 You can select a different web site template with the -w option, or a
 different interpreter template with the -i option:
@@ -178,10 +178,16 @@ def locate_dirs():
                 appdir = path
         elif sys.platform == 'win32':
             path = 'C:\\Program Files\\Inform 7'
+            if os.path.isdir(path):
+                appdir = path
         else:
             path = '/usr/local/share/inform7'
             if os.path.isdir(path):
                 appdir = path
+            else:
+                path = '/usr/share/gnome-inform7'
+                if os.path.isdir(path):
+                    appdir = path
             
     if appdir:
         if sys.platform == 'darwin':
