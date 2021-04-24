@@ -3,7 +3,7 @@
 """
 ifsitegen.py: Generate a playable IF web site for a Z-code/Glulx game
 Created by Andrew Plotkin (erkyrath@eblong.com)
-Last updated: April 19, 2021
+Last updated: April 24, 2021
 This script is in the public domain.
 
 This script does essentially the same job as the "Release along
