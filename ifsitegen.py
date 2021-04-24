@@ -281,11 +281,11 @@ def find_terp_template(path, appdir=None, libdir=None, gametype=None):
             manpath = os.path.join(tpath, MANIFEST_FILE)
             if os.path.isfile(manpath):
                 return Template(dir=tpath, manpath=manpath)
-        raise Exception('Unable to locate template: %s' % (path,))
+        raise Exception('Unable to locate interpreter template: %s' % (path,))
 
     if path is None:
-        raise Exception('Unable to locate template')
-    raise Exception('Unable to read template: %s' % (path,))
+        raise Exception('Unable to locate interpreter template')
+    raise Exception('Unable to read interpreter template: %s' % (path,))
 
 def find_web_template(path, appdir=None, libdir=None):
     """Attempt to find the right web site template. The path argument
@@ -332,11 +332,10 @@ def find_web_template(path, appdir=None, libdir=None):
         return Template(zip=zip, prefix=prefix)
     elif path and os.path.isdir(path):
         return Template(dir=path)
-        raise Exception('Unable to locate template: %s' % (path,))
 
     if path is None:
-        raise Exception('Unable to locate template')
-    raise Exception('Unable to read template: %s' % (path,))
+        raise Exception('Unable to locate web template')
+    raise Exception('Unable to read web template: %s' % (path,))
 
 
 class Template:
