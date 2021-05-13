@@ -177,7 +177,7 @@ Global failures;
 	! These differ in the high five bits of the last character, which is *not* truncated.
 	test_different('abcdef%', 'abcdef@:o');
 
-	! A four-byte character in the seventh place leaves zchar 6 followed by no bits
+	! A four-byte character in the eighth place leaves zchar 6 followed by no bits
 	test_same('abcdefg%', 'abcdefg@:o');
 	test_different('abcdefg', 'abcdefg@:o');
 	test_different('abcdefg_', 'abcdefg@:o');
