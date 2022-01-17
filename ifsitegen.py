@@ -27,7 +27,7 @@ need to *run* Inform 7.
 The Parchment and Quixe interpreters included in Inform are somewhat
 old (as of I7 6M62). You may want to download the latest versions:
 
-    https://github.com/curiousdannii/parchment/raw/ifcomp/dist/inform7/parchment-for-inform7.zip
+    https://github.com/curiousdannii/parchment/raw/gh-pages/dist/inform7/parchment-for-inform7.zip
     https://eblong.com/zarf/glulx/quixe/Quixe.zip
 
 ---
