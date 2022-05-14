@@ -1,0 +1,175 @@
+Constant Story "DoubleConstTest";
+Constant Headline "Not a game.^";
+
+Release 1;
+
+Global gg_mainwin;
+
+Constant HDR_GLULXVERSION  $04;     ! long word
+Constant ROM_GAMERELEASE   $34;     ! short word
+Constant ROM_GAMESERIAL    $36;     ! six ASCII characters
+
+Global failures;
+
+[ Main loc;
+	@setiosys 2 0;
+	@push 201; @push 3; @push 0; @push 0; @push 0;
+	@glk $0023 5 gg_mainwin;
+
+	@push gg_mainwin;
+	@glk $002F 1 loc;
+
+	Banner();
+	new_line;
+	RunTest();
+];
+
+[ Banner  i ix;
+    if (Story ~= 0) {
+        glk($0086, 3); ! set header style
+        print (string) Story;
+        glk($0086, 0); ! set normal style
+    }
+    if (Headline ~= 0) print ": ", (string) Headline;
+    print "Release ";
+    @aloads ROM_GAMERELEASE 0 i;
+    print i;
+    print " / Serial number ";
+    for (i=0 : i<6 : i++) print (char) ROM_GAMESERIAL->i;
+    print " / Inform v"; inversion;
+    print ", compiler options ";
+    i = false;
+    #Ifdef STRICT_MODE;
+    print "S"; i++;
+    #Endif; ! STRICT_MODE
+    #Ifdef INFIX;
+    print "X"; i++;
+    #Ifnot;
+    #Ifdef DEBUG;
+    print "D"; i++;
+    #Endif; ! DEBUG
+    #Endif; ! INFIX
+    if (~~i) print "(none)";
+    new_line;
+
+    @gestalt 1 0 ix;
+    print "Interpreter version ", ix / $10000, ".", (ix & $FF00) / $100,
+    ".", ix & $FF, " / ";
+    @gestalt 0 0 ix;
+    print "VM ", ix / $10000, ".", (ix & $FF00) / $100, ".", ix & $FF, " / ";
+    ix = HDR_GLULXVERSION-->0;
+    print "game file format ", ix / $10000, ".", (ix & $FF00) / $100, ".", ix & $FF, "^";
+];
+
+[ Hex val   byte initial ix;
+	print "$";
+	initial = true;
+	for (ix=0 : ix<8 : ix++) {
+		@ushiftr val 28 byte;
+		@shiftl val 4 val;
+		byte = byte & $0F;
+		if (byte == 0 && initial && ix < 7)
+			continue;
+		initial = false;
+		if (byte <= 9)
+			print (char) (byte+'0');
+		else
+			print (char) (byte-10+'A');
+	}
+];
+
+[ Hex8 val   byte ix;
+	print "$";
+	for (ix=0 : ix<8 : ix++) {
+		@ushiftr val 28 byte;
+		@shiftl val 4 val;
+		byte = byte & $0F;
+		if (byte <= 9)
+			print (char) (byte+'0');
+		else
+			print (char) (byte-10+'A');
+	}
+];
+
+[ check2 label valhi vallo targethi targetlo;
+	if (valhi == targethi && vallo == targetlo) {
+		print (string) label, ": ", (Hex) valhi, " ", (Hex8) vallo, "^";
+		rtrue;
+	}
+	
+	failures++;
+	print (string) label, ": ", (Hex) valhi, " ", (Hex8) vallo;
+	print " FAIL -- should be ", (Hex) targethi, " ", (Hex8) targetlo, "^";
+];
+
+! Allow a margin of one unit-in-the-last-place
+[ check2ulp label valhi vallo targethi targetlo   tmphi tmplo;
+	if (valhi == targethi && vallo == targetlo) {
+		print (string) label, ": ", (Hex) valhi, " ", (Hex8) vallo, "^";
+		rtrue;
+	}
+
+	tmphi = targethi;
+	tmplo = targetlo;
+	tmplo++;
+	if (tmplo == 0) tmphi++;
+	if (valhi == tmphi && vallo == tmplo) {
+		print (string) label, ": ", (Hex) valhi, " ", (Hex8) vallo, " (minus epsilon)^";
+		rtrue;
+	}
+	
+	tmphi = targethi;
+	tmplo = targetlo;
+	tmplo--;
+	if (tmplo == $FFFFFFFF) tmphi--;
+	if (valhi == tmphi && vallo == tmplo) {
+		print (string) label, ": ", (Hex) valhi, " ", (Hex8) vallo, " (plus epsilon)^";
+		rtrue;
+	}
+	
+	failures++;
+	print (string) label, ": ", (Hex) valhi, " ", (Hex8) vallo;
+	print " FAIL -- should be ", (Hex) targethi, " ", (Hex8) targetlo, "^";
+];
+
+[ RunTest;
+	failures = 0;
+	
+	check2("+Inf", DOUBLE_HI_INFINITY, DOUBLE_LO_INFINITY, $7FF00000, $00000000);
+	check2("-Inf", DOUBLE_HI_NINFINITY, DOUBLE_LO_NINFINITY, $FFF00000, $00000000);
+	check2("NaN", DOUBLE_HI_NAN, DOUBLE_LO_NAN, $7FF80000, $00000001);
+
+	check2("$+0", $>+0, $<+0, $00000000, $00000000);
+	check2("$+0.", $>+0., $<+0., $00000000, $00000000);
+	check2("$+.0", $>+.0, $<+.0, $00000000, $00000000);
+	check2("$+0.0", $>+0.0, $<+0.0, $00000000, $00000000);
+	check2("$+0000000000000000000.000000000000000000e000000000000000000", $>+0000000000000000000.000000000000000000e000000000000000000, $<+0000000000000000000.000000000000000000e000000000000000000, $00000000, $00000000);
+
+	check2("$+1", $>+1, $<+1, $3FF00000, $00000000);
+	check2("$+1.", $>+1., $<+1., $3FF00000, $00000000);
+	check2("$+1.0", $>+1.0, $<+1.0, $3FF00000, $00000000);
+	check2("$+1e0", $>+1e0, $<+1e0, $3FF00000, $00000000);
+	check2("$+1E0", $>+1E0, $<+1E0, $3FF00000, $00000000);
+	check2("$+1.0e0", $>+1.0e0, $<+1.0e0, $3FF00000, $00000000);
+	check2("$+1e+0", $>+1e+0, $<+1e+0, $3FF00000, $00000000);
+	check2("$+1.0e+0", $>+1.0e+0, $<+1.0e+0, $3FF00000, $00000000);
+	check2("$+1e-0", $>+1e-0, $<+1e-0, $3FF00000, $00000000);
+	check2("$+1.0e-0", $>+1.0e-0, $<+1.0e-0, $3FF00000, $00000000);
+
+	check2("$+10e-1", $>+10e-1, $<+10e-1, $3FF00000, $00000000);
+	check2("$+10.e-01", $>+10.e-01, $<+10.e-01, $3FF00000, $00000000);
+	check2("$+.1e1", $>+.1e1, $<+.1e1, $3FF00000, $00000000);
+	check2("$+0.1e1", $>+0.1e1, $<+0.1e1, $3FF00000, $00000000);
+	check2ulp("$+.01e+2", $>+0.01e+2, $<+0.01e+2, $3FF00000, $00000000);
+
+
+	check2("$+2", $>+2, $<+2, $40000000, $00000000);
+	
+	new_line;
+	if (failures == 0) {
+		print "All tests passed.^";
+	}
+	else {
+		print failures, " tests failed!^";
+	}
+];
