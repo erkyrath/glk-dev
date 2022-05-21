@@ -1,6 +1,11 @@
 Constant Story "DoubleConstTest";
 Constant Headline "Not a game.^";
 
+! This is a compiler unit test for double-precision float literals.
+!     $>1.0, $<1.0
+! We also test the @dload, @dstore macros, which are meant to be used
+! with doubles.
+
 Release 1;
 
 Global gg_mainwin;
@@ -136,6 +141,7 @@ Global failures;
 	failures = 0;
 
 	RunLiteralTest();
+	RunMacroTest();
 	
 	new_line;
 	if (failures == 0) {
@@ -250,4 +256,83 @@ Global failures;
 	check2ulp("$+2e-315", $>+2e-315, $<+2e-315, $00000000, $1820D39B);
 	check2ulp("$+2e-320", $>+2e-320, $<+2e-320, $00000000, $00000FD0);
 
+];
+
+Array arr-->4;
+Global globhi;
+Global globlo;
+
+[ RunMacroTest addr xhi xlo;
+	arr-->0 = 111;
+	arr-->1 = -222;
+	arr-->2 = -333;
+	arr-->3 = 444;
+
+	@dload arr xlo xhi;
+	check2("dload arr xlo xhi", xhi, xlo, 111, -222);
+
+	@dload arr globlo globhi;
+	check2("dload arr globlo globhi", globhi, globlo, 111, -222);
+
+	addr = arr+(2*WORDSIZE);
+	@dload addr xlo xhi;
+	check2("dload addr xlo xhi", xhi, xlo, -333, 444);
+
+	@dload arr sp sp;
+	@pull xhi;
+	@pull xlo;
+	check2("dload arr sp sp", xhi, xlo, 111, -222);
+
+	addr = arr+(2*WORDSIZE);
+	@dload addr sp sp;
+	@pull xhi;
+	@pull xlo;
+	check2("dload addr sp sp", xhi, xlo, -333, 444);
+
+	@push arr;
+	@dload sp xlo xhi;
+	check2("dload sp xlo xhi", xhi, xlo, 111, -222);
+
+	addr = arr+(1*WORDSIZE);
+	@push addr;
+	@dload sp sp sp;
+	@pull xhi;
+	@pull xlo;
+	check2("dload sp sp sp", xhi, xlo, -222, -333);
+
+	xhi = 555;
+	xlo = -666;
+	@dstore arr xhi xlo;
+	check2("dstore arr xhi xlo", arr-->0, arr-->1, 555, -666);
+
+	globhi = 777;
+	globlo = -888;
+	@dstore arr globhi globlo;
+	check2("dstore arr globhi globlo", arr-->0, arr-->1, 777, -888);
+
+	addr = arr+(2*WORDSIZE);
+	xhi = 555;
+	xlo = -666;
+	@dstore addr xhi xlo;
+	check2("dstore addr xhi xlo", arr-->2, arr-->3, 555, -666);
+
+	xhi = 888;
+	xlo = -999;
+	@push xlo;
+	@push xhi;
+	@dstore arr sp sp;
+	check2("dstore arr sp sp", arr-->0, arr-->1, 888, -999);
+
+	@push arr;
+	@dstore sp 123 456;
+	check2("dstore sp 123 456", arr-->0, arr-->1, 123, 456);
+
+	xhi = 555;
+	xlo = -666;
+	addr = arr+(1*WORDSIZE);
+	@push xlo;
+	@push xhi;
+	@push addr;
+	@dstore sp sp sp;
+	check2("dstore sp sp sp", arr-->1, arr-->2, 555, -666);
 ];
