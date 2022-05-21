@@ -134,7 +134,19 @@ Global failures;
 
 [ RunTest;
 	failures = 0;
+
+	RunLiteralTest();
 	
+	new_line;
+	if (failures == 0) {
+		print "All tests passed.^";
+	}
+	else {
+		print failures, " tests failed!^";
+	}
+];
+
+[ RunLiteralTest;
 	check2("+Inf", DOUBLE_HI_INFINITY, DOUBLE_LO_INFINITY, $7FF00000, $00000000);
 	check2("-Inf", DOUBLE_HI_NINFINITY, DOUBLE_LO_NINFINITY, $FFF00000, $00000000);
 	check2("NaN", DOUBLE_HI_NAN, DOUBLE_LO_NAN, $7FF80000, $00000001);
@@ -237,12 +249,5 @@ Global failures;
 	check2ulp("$+2e-310", $>+2e-310, $<+2e-310, $000024D1, $16E1CC56);
 	check2ulp("$+2e-315", $>+2e-315, $<+2e-315, $00000000, $1820D39B);
 	check2ulp("$+2e-320", $>+2e-320, $<+2e-320, $00000000, $00000FD0);
-	
-	new_line;
-	if (failures == 0) {
-		print "All tests passed.^";
-	}
-	else {
-		print failures, " tests failed!^";
-	}
+
 ];
