@@ -10537,14 +10537,20 @@ TestFloatClass FloatprintTest
 ! doubles without floats.
 #ifdef DOUBLE_OPCODES_AVAILABLE;
 
-Constant D_0_hi    = $0;
-Constant D_0_lo    = $0;
-Constant D_N0_hi   = $80000000; ! -0
-Constant D_N0_lo   = $0;
-Constant D_1_hi    = $3FF00000; ! 1
-Constant D_1_lo    = $0;
-Constant D_N1_hi   = $BFF00000; ! -1
-Constant D_N1_lo   = $0;
+Constant M_0_hi    = $0;
+Constant M_0_lo    = $0;
+Constant M_N0_hi   = $80000000; ! -0
+Constant M_N0_lo   = $0;
+Constant M_1_hi    = $3FF00000; ! 1
+Constant M_1_lo    = $0;
+Constant M_N1_hi   = $BFF00000; ! -1
+Constant M_N1_lo   = $0;
+Constant M_INF_hi     = $7FF00000;
+Constant M_INF_lo     = $0;
+Constant M_NINF_hi    = $FFF00000;
+Constant M_NINF_lo    = $0;
+Constant M_NAN_hi     = $7FF80000;
+Constant M_NAN_lo     = $00000001;
 
 ! Print a double, given as two values (valhi, vallo). This uses exponential
 ! notation ("[-]N.NNNe[+-]NN") if the exponent is not between 6 and -5.
@@ -10774,13 +10780,13 @@ TestDoubleClass DoublePrintTest
 			return;
 		}
 
-		val = func_to_array(bigbuffer, BIGBUFSIZE, DoubleExp, D_0_hi, D_0_lo);
+		val = func_to_array(bigbuffer, BIGBUFSIZE, DoubleExp, M_0_hi, M_0_lo);
 		check_str("0.000000e+00", val); print ", ";
-		val = func_to_array(bigbuffer, BIGBUFSIZE, DoubleExp, D_N0_hi, D_N0_lo);
+		val = func_to_array(bigbuffer, BIGBUFSIZE, DoubleExp, M_N0_hi, M_N0_lo);
 		check_str("-0.000000e+00", val); print ", ";
-		val = func_to_array(bigbuffer, BIGBUFSIZE, DoubleExp, D_1_hi, D_1_lo);
+		val = func_to_array(bigbuffer, BIGBUFSIZE, DoubleExp, M_1_hi, M_1_lo);
 		check_str("1.000000e+00", val); print ", ";
-		val = func_to_array(bigbuffer, BIGBUFSIZE, DoubleExp, D_N1_hi, D_N1_lo);
+		val = func_to_array(bigbuffer, BIGBUFSIZE, DoubleExp, M_N1_hi, M_N1_lo);
 		check_str("-1.000000e+00", val); print "^";
 		
 		val = func_to_array(bigbuffer, BIGBUFSIZE, DoubleExp, $3FB99999, $99999999);
@@ -10799,6 +10805,39 @@ TestDoubleClass DoublePrintTest
 		check_str("9.999999e+01", val); print ", ";
 		val = func_to_array(bigbuffer, BIGBUFSIZE, DoubleExp, $405F4000, $00000000);
 		check_str("1.250000e+02", val); print "^";
+		
+		val = func_to_array(bigbuffer, BIGBUFSIZE, DoubleExp, $7A2A717A, $99D002A8);
+		check_str("3.000000e+280", val); print ", ";
+		val = func_to_array(bigbuffer, BIGBUFSIZE, DoubleExp, $01C01297, $D23AB683);
+		check_str("3.000000e-300", val); print ", ";
+		val = func_to_array(bigbuffer, BIGBUFSIZE, DoubleExp, $7E51EB2D, $66005835);
+		check_str("3.000000e+300", val); print ", ";
+		val = func_to_array(bigbuffer, BIGBUFSIZE, DoubleExp, $00000000, $000017B8);
+		check_str("2.999967e-320", val); print "^";
+
+		val = func_to_array(bigbuffer, BIGBUFSIZE, DoubleExp, M_1_hi, M_1_lo, 1);
+		check_str("1.0e+00", val); print ", ";
+		val = func_to_array(bigbuffer, BIGBUFSIZE, DoubleExp, M_1_hi, M_1_lo, 4);
+		check_str("1.0000e+00", val); print ", ";
+		val = func_to_array(bigbuffer, BIGBUFSIZE, DoubleExp, M_1_hi, M_1_lo, 8);
+		check_str("1.00000000e+00", val); print ", ";
+		val = func_to_array(bigbuffer, BIGBUFSIZE, DoubleExp, $401B28BE, $A7976F13, 1);
+		check_str("6.8e+00", val); print ", ";
+		val = func_to_array(bigbuffer, BIGBUFSIZE, DoubleExp, $401B28BE, $A7976F13, 4);
+		check_str("6.7898e+00", val); print ", ";
+		val = func_to_array(bigbuffer, BIGBUFSIZE, DoubleExp, $401B28BE, $A7976F13, 8);
+		check_str("6.78978979e+00", val); print "^";
+		
+		val = func_to_array(bigbuffer, BIGBUFSIZE, DoubleExp, M_INF_hi, M_INF_lo);
+		check_str("Inf", val); print ", ";
+		val = func_to_array(bigbuffer, BIGBUFSIZE, DoubleExp, M_NINF_hi, M_NINF_lo);
+		check_str("-Inf", val); print ", ";
+		val = func_to_array(bigbuffer, BIGBUFSIZE, DoubleExp, M_NAN_hi, M_NAN_lo);
+		check_str("NaN", val); print ", ";
+		val = func_to_array(bigbuffer, BIGBUFSIZE, DoubleExp, $FFFFFFFF, $FFFFFFFF);
+		check_str("-NaN", val); print "^";
+
+		new_line;
 		
 
 		count_failures();
