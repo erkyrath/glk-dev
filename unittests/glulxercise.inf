@@ -2,8 +2,8 @@
 
 Constant Story "Glulxercise";
 Constant Headline "A Glulx interpreter unit test^";
-Release 9;
-Serial "161114";
+Release 10;
+Serial "220522";
 ! Written by Andrew Plotkin (erkyrath@eblong.com).
 ! This unit test suite, and its functions, are in the public domain.
 
@@ -11,8 +11,12 @@ Serial "161114";
 ! options.
 
 ! Comment out the following line if you are using an Inform 6 compiler
-! that lacks the new floating-point opcodes.
+! that lacks the floating-point opcodes.
 Constant FLOAT_OPCODES_AVAILABLE;
+
+! Comment out the following line if you are using an Inform 6 compiler
+! that lacks the new double-precision floating-point opcodes.
+Constant DOUBLE_OPCODES_AVAILABLE;
 
 Constant GG_MAINWIN_ROCK     201;
 Constant GG_SAVESTR_ROCK     301;
@@ -10518,7 +10522,116 @@ TestFloatClass FloatprintTest
 		count_failures();
 	];
 
+! The DOUBLE tests are inside the FLOAT test #ifdef. You can't have
+! doubles without floats.
+#ifdef DOUBLE_OPCODES_AVAILABLE;
+
+! Print a double in decimal notation: "[-]NNN.NNNNN".
+! The precision is the number of digits after the decimal point
+! (at least one, no more than eight). The default is six.
+! The integer part itself only has about 9 digits of precision; if it's
+! more than 2^32, it will be rounded.
+[ DoubleDec valhi vallo prec   log10valhi log10vallo int finthi fintlo extra0 frachi fraclo idig ix pow10;
+	if (prec == 0)
+		prec = 6;
+	if (prec > 8)
+		prec = 8;
+	pow10 = PowersOfTen --> prec;
+	
+	! Knock off the sign bit first.
+	if (valhi & $80000000) {
+		@streamchar '-';
+		valhi = valhi & $7FFFFFFF;
+	}
+	
+	@jdisnan valhi vallo ?IsNan;
+	@jdisinf valhi vallo ?IsInf;
+
+	! Take as an example val=123.5, with precision=6. The desired result
+	! is "123.50000".
+	
+	extra0 = 0;
+	! $3FF00000:00000000 is 1.0.
+	@dmodr valhi vallo $3FF00000 $00000000 fraclo frachi;
+	@dmodq valhi vallo $3FF00000 $00000000 fintlo finthi;
+	@dtonumz finthi fintlo int;
+	! This converts the integer part of the value to an integer value;
+	! in our example, 123.
+	
+	if (int == $7FFFFFFF) {
+		! Looks like the integer part of the value is bigger than
+		! we can store in an int variable. We're going to have to use
+		! a log function to reduce it by some number of factors of 10,
+		! and then pad with zeroes.
+		@dlog finthi fintlo sp sp;
+		! $40026BB1:BBB55516 is log(10)
+		@ddiv sp sp $40026BB1 $BBB55516 log10vallo log10valhi;
+		@dtonumz log10valhi log10vallo extra0;
+		@sub extra0 8 extra0;
+		! extra0 is the number of zeroes we'll be padding with.
+		@numtod extra0 sp sp;
+		@dsub log10valhi log10vallo sp sp sp sp;
+		@dmul sp sp $40026BB1 $BBB55516 sp sp;
+		@dexp sp sp sp sp;
+		! The stack value is now exp((log10val - extra0) * log(10)).
+		! We've shifted the decimal point far enough left to leave
+		! about eight digits, which is all we can print as an integer.
+		@dtonumz sp sp int;
+	}
+
+	! Print the integer part.
+	@streamnum int;
+	for (ix=0 : ix<extra0 : ix++)
+		@streamchar '0';
+
+	@streamchar '.';
+
+	! Now we need to print the frac part, which is .5.
+	
+	@dlog frachi fraclo sp sp;
+	@ddiv sp sp $40026BB1 $BBB55516 log10vallo log10valhi;
+	@numtod prec sp sp;
+	@dadd log10valhi log10vallo sp sp sp sp;
+	@dmul sp sp $40026BB1 $BBB55516 sp sp;
+	@dexp sp sp sp sp;
+	! The stack value is now exp((frac + prec) * log(10)).
+	! We've shifted the decimal point right by prec
+	! digits. In our example, that would be 50000.0.
+	@dtonumn sp sp idig;
+	! Round to an integer, and we have 50000. Notice that this is
+	! exactly the (post-decimal-point) digits we want to print.
+
+	.DoPrint;
+	
+	if (idig >= pow10) {
+		! Rounding errors have left us outside the decimal range of
+		! [0.0, 1.0) where we should be. I'm not sure this is possible,
+		! actually, but we'll just adjust downward.
+		idig = pow10 - 1;
+	}
+	
+	@div pow10 10 pow10;
+	for (ix=0 : ix<prec : ix++) {
+		@div idig pow10 sp;
+		@mod sp 10 sp;
+		@streamnum sp;
+		@div pow10 10 pow10;
+	}
+	rtrue;
+
+	.IsNan;
+	@streamstr "NaN";
+	rtrue;
+
+	.IsInf;
+	@streamstr "Inf";
+	rtrue;
+];
+
+#endif; ! DOUBLE_OPCODES_AVAILABLE
+
 #endif; ! FLOAT_OPCODES_AVAILABLE
+
 
 TestClass Safari5Test
 	with name 'safari5',
