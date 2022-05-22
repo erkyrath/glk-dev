@@ -10898,6 +10898,27 @@ TestDoubleClass DoublePrintTest
 
 		new_line;
 
+		val = func_to_array(bigbuffer, BIGBUFSIZE, Double, M_1_hi, M_1_lo, 2);
+		check_str("1.00", val); print ", ";
+		val = func_to_array(bigbuffer, BIGBUFSIZE, Double, M_1_hi, M_1_lo);
+		check_str("1.000000", val); print ", ";
+		val = func_to_array(bigbuffer, BIGBUFSIZE, Double, $412E847E, $00000000);
+		check_str("999999.000000", val); print ", ";
+		val = func_to_array(bigbuffer, BIGBUFSIZE, Double, $C12E847E, $00000000);
+		check_str("-999999.000000", val); print ", ";
+		val = func_to_array(bigbuffer, BIGBUFSIZE, Double, $412E8482, $00000000);
+		check_str("1.000001e+06", val); print ", ";
+		val = func_to_array(bigbuffer, BIGBUFSIZE, Double, $C12E8482, $00000000);
+		check_str("-1.000001e+06", val); print ", ";
+		val = func_to_array(bigbuffer, BIGBUFSIZE, Double, $3EE4F8B5, $88E368F1);
+		check_str("0.000010", val); print ", ";
+		val = func_to_array(bigbuffer, BIGBUFSIZE, Double, $BEE4F8B5, $88E368F1);
+		check_str("-0.000010", val); print ", ";
+		val = func_to_array(bigbuffer, BIGBUFSIZE, Double, $3EE2DFD6, $94CCAB3F);
+		check_str("9.000000e-06", val); print ", ";
+		val = func_to_array(bigbuffer, BIGBUFSIZE, Double, $BEE2DFD6, $94CCAB3F);
+		check_str("-9.000000e-06", val); print "^";
+
 
 		count_failures();
 	];
