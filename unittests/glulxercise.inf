@@ -10380,7 +10380,7 @@ TestFloatClass FloatprintTest
 	testfunc [ val;
 		print "Print floating-point numbers:^";
 		print "Note: this does not test an opcode. It tests the
-			FloatExp function, which is included in this test suite.
+			Float function, which is included in this test suite.
 			You are welcome to use that function in your Glulx program
 			or library.^^";
 
@@ -10782,6 +10782,23 @@ TestDoubleClass DoublePrintTest
 		check_str("1.000000e+00", val); print ", ";
 		val = func_to_array(bigbuffer, BIGBUFSIZE, DoubleExp, D_N1_hi, D_N1_lo);
 		check_str("-1.000000e+00", val); print "^";
+		
+		val = func_to_array(bigbuffer, BIGBUFSIZE, DoubleExp, $3FB99999, $99999999);
+		check_str("1.000000e-01", val); print ", ";
+		val = func_to_array(bigbuffer, BIGBUFSIZE, DoubleExp, $3FA11111, $11111111);
+		check_str("3.333333e-02", val); print ", ";
+		val = func_to_array(bigbuffer, BIGBUFSIZE, DoubleExp, $40000000, $00000000);
+		check_str("2.000000e+00", val); print ", ";
+		val = func_to_array(bigbuffer, BIGBUFSIZE, DoubleExp, $40590000, $00000000);
+		check_str("1.000000e+02", val); print ", ";
+		val = func_to_array(bigbuffer, BIGBUFSIZE, DoubleExp, $4058FFFF, $FFFFFFFF);
+		check_str("1.000000e+02", val); print ", ";
+		val = func_to_array(bigbuffer, BIGBUFSIZE, DoubleExp, $4058FFFF, $FFFFFFFD);
+		check_str("1.000000e+02", val); print ", ";
+		val = func_to_array(bigbuffer, BIGBUFSIZE, DoubleExp, $4058FFFF, $E0000000);
+		check_str("9.999999e+01", val); print ", ";
+		val = func_to_array(bigbuffer, BIGBUFSIZE, DoubleExp, $405F4000, $00000000);
+		check_str("1.250000e+02", val); print "^";
 		
 
 		count_failures();
