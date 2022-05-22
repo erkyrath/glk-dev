@@ -10526,9 +10526,10 @@ TestFloatClass FloatprintTest
 ! doubles without floats.
 #ifdef DOUBLE_OPCODES_AVAILABLE;
 
-! Print a double. This uses exponential notation ("[-]N.NNNe[+-]NN") if
-! the exponent is not between 6 and -5. If it is (that is, if the
-! absolute value is near 1.0) then it uses decimal notation ("[-]NNN.NNNNN").
+! Print a double, given as two values (valhi, vallo). This uses exponential
+! notation ("[-]N.NNNe[+-]NN") if the exponent is not between 6 and -5.
+! If it is (that is, if the absolute value is near 1.0) then it uses decimal
+! notation ("[-]NNN.NNNNN").
 ! The precision is the number of digits after the decimal point
 ! (at least one, no more than eight). The default is six.
 [ Double valhi vallo prec   pvalhi;
