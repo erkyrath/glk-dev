@@ -10526,6 +10526,24 @@ TestFloatClass FloatprintTest
 ! doubles without floats.
 #ifdef DOUBLE_OPCODES_AVAILABLE;
 
+! Print a double. This uses exponential notation ("[-]N.NNNe[+-]NN") if
+! the exponent is not between 6 and -5. If it is (that is, if the
+! absolute value is near 1.0) then it uses decimal notation ("[-]NNN.NNNNN").
+! The precision is the number of digits after the decimal point
+! (at least one, no more than eight). The default is six.
+[ Double valhi vallo prec   pvalhi;
+	pvalhi = valhi & $7FFFFFFF;
+
+	if (pvalhi == 0 && vallo == 0) jump UseDoubleDec;
+	@jdge pvalhi vallo $412E8480 $00000000 ?UseDoubleExp; ! 1000000.0
+	@jdlt pvalhi vallo $3EE4F8B5 $88E368F1 ?UseDoubleExp; ! 0.00001
+
+	.UseDoubleDec;
+	return DoubleDec(valhi, vallo, prec);
+	.UseDoubleExp;
+	return DoubleExp(valhi, vallo, prec);
+];
+
 ! Print a double in exponential notation: "[-]N.NNNe[+-]NN".
 ! The precision is the number of digits after the decimal point
 ! (at least one, no more than eight). The default is six.
