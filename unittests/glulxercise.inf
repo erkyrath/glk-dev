@@ -7203,6 +7203,8 @@ Array PowersOfTen --> 1 10 100 1000 10000 100000 1000000 10000000 100000000 1000
 ! (at least one, no more than eight). The default is five, because
 ! beyond that rounding errors creep in, and even exactly-represented
 ! float values are printed with trailing fudgy digits.
+! The integer part itself only has about 9 digits of precision; if it's
+! more than 2^32, it will be rounded.
 [ FloatDec val prec   log10val int fint extra0 frac idig ix pow10;
 	if (prec == 0)
 		prec = 5;
