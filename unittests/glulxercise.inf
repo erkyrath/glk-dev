@@ -322,6 +322,9 @@ Class TestClass
 Class TestFloatClass
   class TestClass;
 
+Class TestDoubleClass
+  class TestClass;
+
 [ PrintShortName obj;
 	if (obj provides short_name && obj.short_name) {
 		print (string) obj.short_name;
@@ -639,6 +642,14 @@ TestClass AllFloatAction
 	testfunc [;
 		print "All floating-point tests:^";
 		run_all_tests(TestFloatClass);
+	],
+	has meta;
+	
+TestClass AllDoubleAction
+	with name 'alldouble' 'doubleall',
+	testfunc [;
+		print "All double-precision tests:^";
+		run_all_tests(TestDoubleClass);
 	],
 	has meta;
 	
@@ -10526,6 +10537,15 @@ TestFloatClass FloatprintTest
 ! doubles without floats.
 #ifdef DOUBLE_OPCODES_AVAILABLE;
 
+Constant D_0_hi    = $0;
+Constant D_0_lo    = $0;
+Constant D_N0_hi   = $80000000; ! -0
+Constant D_N0_lo   = $0;
+Constant D_1_hi    = $3FF00000; ! 1
+Constant D_1_lo    = $0;
+Constant D_N1_hi   = $BFF00000; ! -1
+Constant D_N1_lo   = $0;
+
 ! Print a double, given as two values (valhi, vallo). This uses exponential
 ! notation ("[-]N.NNNe[+-]NN") if the exponent is not between 6 and -5.
 ! If it is (that is, if the absolute value is near 1.0) then it uses decimal
@@ -10737,6 +10757,35 @@ TestFloatClass FloatprintTest
 	@streamstr "Inf";
 	rtrue;
 ];
+
+TestDoubleClass DoublePrintTest
+	with name 'dprint' 'doubleprint',
+	testfunc [ val;
+		print "Print double-precision numbers:^";
+		print "Note: this does not test an opcode. It tests the
+			Double function, which is included in this test suite.
+			You are welcome to use that function in your Glulx program
+			or library.^^";
+
+		@gestalt 13 0 val; ! Double
+		if (~~val) {
+			print "Interpreter claims to not support double-precision. Skipping test.^^";
+			count_failures();
+			return;
+		}
+
+		val = func_to_array(bigbuffer, BIGBUFSIZE, DoubleExp, D_0_hi, D_0_lo);
+		check_str("0.000000e+00", val); print ", ";
+		val = func_to_array(bigbuffer, BIGBUFSIZE, DoubleExp, D_N0_hi, D_N0_lo);
+		check_str("-0.000000e+00", val); print ", ";
+		val = func_to_array(bigbuffer, BIGBUFSIZE, DoubleExp, D_1_hi, D_1_lo);
+		check_str("1.000000e+00", val); print ", ";
+		val = func_to_array(bigbuffer, BIGBUFSIZE, DoubleExp, D_N1_hi, D_N1_lo);
+		check_str("-1.000000e+00", val); print "^";
+		
+
+		count_failures();
+	];
 
 #endif; ! DOUBLE_OPCODES_AVAILABLE
 
