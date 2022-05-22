@@ -10526,6 +10526,97 @@ TestFloatClass FloatprintTest
 ! doubles without floats.
 #ifdef DOUBLE_OPCODES_AVAILABLE;
 
+! Print a double in exponential notation: "[-]N.NNNe[+-]NN".
+! The precision is the number of digits after the decimal point
+! (at least one, no more than eight). The default is six.
+[ DoubleExp valhi vallo prec   log10valhi log10vallo expo dexpohi dexpolo idig ix pow10;
+	if (prec == 0)
+		prec = 6;
+	if (prec > 8)
+		prec = 8;
+	pow10 = PowersOfTen --> prec;
+
+	! Knock off the sign bit first.
+	if (valhi & $80000000) {
+		@streamchar '-';
+		valhi = valhi & $7FFFFFFF;
+	}
+	
+	@jdisnan valhi vallo ?IsNan;
+	@jdisinf valhi vallo ?IsInf;
+
+	if (valhi == $0 && vallo == $0) {
+		expo = 0;
+		idig = 0;
+		jump DoPrint;
+	}
+
+	! Take as an example val=123.5, with precision=6. The desired
+	! result is "1.23000e+02".
+	
+	@dlog valhi vallo sp sp;
+	! $40026BB1:BBB55516 is log(10)
+	@ddiv sp sp $40026BB1 $BBB55516 log10vallo log10valhi;
+	@dfloor log10valhi log10vallo dexpolo dexpohi;
+	@dtonumn dexpohi dexpolo expo;
+	! expo is now the exponent (as an integer). For our example, expo=2.
+
+	@dsub log10valhi log10vallo dexpohi dexpolo sp sp;
+	@numtod prec sp sp;
+	@dadd sp sp sp sp sp sp;
+	@dmul sp sp $40026BB1 $BBB55516 sp sp;
+	@dexp sp sp sp sp;
+	! The stack value is now exp((log10val - dexpo + prec) * log(10)).
+	! We've shifted the decimal point left by expo digits (so that
+	! it's after the first nonzero digit), and then right by prec
+	! digits. In our example, that would be 1235000.0.
+	@dtonumn sp sp idig;
+	! Round to an integer, and we have 1235000. Notice that this is
+	! exactly the digits we want to print (if we stick a decimal point
+	! after the first).
+
+	.DoPrint;
+	
+	if (idig >= 10*pow10) {
+		! Rounding errors have left us outside the decimal range of
+		! [1.0, 10.0) where we should be. Adjust to the next higher
+		! exponent.
+		expo++;
+		@div idig 10 idig;
+	}
+	
+	for (ix=0 : ix<=prec : ix++) {
+		@div idig pow10 sp;
+		@mod sp 10 sp;
+		@streamnum sp;
+		if (ix == 0)
+			@streamchar '.';
+		@div pow10 10 pow10;
+	}
+
+	! Print the exponent. Convention is to use at least two digits.
+	@streamchar 'e';
+	if (expo < 0) {
+		@streamchar '-';
+		@neg expo expo;
+	}
+	else {
+		@streamchar '+';
+	}
+	if (expo < 10)
+		@streamchar '0';
+	@streamnum expo;
+	rtrue;
+
+	.IsNan;
+	@streamstr "NaN";
+	rtrue;
+
+	.IsInf;
+	@streamstr "Inf";
+	rtrue;
+];
+
 ! Print a double in decimal notation: "[-]NNN.NNNNN".
 ! The precision is the number of digits after the decimal point
 ! (at least one, no more than eight). The default is six.
