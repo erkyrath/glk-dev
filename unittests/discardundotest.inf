@@ -76,7 +76,13 @@ Array protected --> 4;
 
 Global glob;
 
-[ RunTest;
+[ RunTest val;
+	@gestalt 12 0 val; ! ExtUndo
+	if (~~val) {
+		print "Interpreter claims to not support extended undo. Skipping test.^^";
+		return;
+	}
+		
 	@protect protected 4*WORDSIZE;
 	protected-->0 = 0;
 
