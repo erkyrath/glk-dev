@@ -5954,8 +5954,6 @@ TestClass MultiUndoTest
 		count_failures();
 	];
 
-! @hasundo/@discardundo are not yet supported by either Inform or interpreters. So this test is commented out for now.
-#iftrue 0;
 
 TestClass ExtUndoTest
 	with name 'extundo',
@@ -6122,7 +6120,6 @@ TestClass ExtUndoTest
 		count_failures();
 	];
 
-#endif;  ! @hasundo/@discardundo
 
 TestClass RestoreTest
 	with name 'restore',
