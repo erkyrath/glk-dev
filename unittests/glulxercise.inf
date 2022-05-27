@@ -10944,6 +10944,57 @@ TestDoubleClass DoubleConvTest
 		@numtod testglobal vallo valhi;
 		print "numtod $80000000="; check_double_hex(valhi, vallo, $C1E00000, $00000000); print "^";
 		
+		new_line;
+
+		@push 0;
+		noop();
+		@numtod sp vallo valhi;
+		print "numtod 0="; check_double_hex(valhi, vallo, 0, 0); print ", ";
+		@push 1;
+		noop();
+		@numtod sp vallo valhi;
+		print "numtod 1="; check_double_hex(valhi, vallo, $3FF00000, 0); print ", ";
+		@push -1;
+		noop();
+		@numtod sp vallo valhi;
+		print "numtod -1="; check_double_hex(valhi, vallo, $BFF00000, 0); print ", ";
+		@push 2;
+		noop();
+		@numtod sp vallo valhi;
+		print "numtod 2="; check_double_hex(valhi, vallo, $40000000, 0); print ", ";
+		@push -2;
+		noop();
+		@numtod sp vallo valhi;
+		print "numtod -2="; check_double_hex(valhi, vallo, $C0000000, 0); print ", ";
+		@push 73;
+		noop();
+		@numtod sp vallo valhi;
+		print "numtod 73="; check_double_hex(valhi, vallo, $40524000, 0); print ", ";
+		@push -73;
+		noop();
+		@numtod sp vallo valhi;
+		print "numtod -73="; check_double_hex(valhi, vallo, $C0524000, 0); print ", ";
+		@push 98765432;
+		noop();
+		@numtod sp vallo valhi;
+		print "numtod 98765432="; check_double_hex(valhi, vallo, $41978C29, $E0000000); print ", ";
+		@push -987654321;
+		noop();
+		@numtod sp vallo valhi;
+		print "numtod -987654321="; check_double_hex(valhi, vallo, $C1CD6F34, $58800000); print ", ";
+		@push $7FFFFFFF;
+		noop();
+		@numtod sp vallo valhi;
+		print "numtod $7FFFFFFF="; check_double_hex(valhi, vallo, $41DFFFFF, $FFC00000); print ", ";
+		@push -$7FFFFFFF;
+		noop();
+		@numtod sp vallo valhi;
+		print "numtod -$7FFFFFFF="; check_double_hex(valhi, vallo, $C1DFFFFF, $FFC00000); print ", ";
+		@push $80000000;
+		noop();
+		@numtod sp vallo valhi;
+		print "numtod $80000000="; check_double_hex(valhi, vallo, $C1E00000, $00000000); print "^";
+		
 		count_failures();
 	];
 	
