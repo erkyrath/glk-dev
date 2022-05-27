@@ -10797,6 +10797,50 @@ TestDoubleClass DoubleConvTest
 			return;
 		}
 
+		! These test the interpreter's conversation of 32-bit value-pairs to doubles and back.
+		testglobal = M_0_hi;
+		testglobal2 = M_0_lo;
+		@dadd testglobal testglobal2 M_0_hi M_0_lo vallo valhi;
+		print "0="; check_double_hex(valhi, vallo, M_0, M_0_hi, M_0_lo); print ", ";
+		testglobal = M_N0_hi;
+		testglobal2 = M_N0_lo;
+		@dadd testglobal testglobal2 M_N0_hi M_N0_lo vallo valhi;
+		print "-0="; check_double_hex(valhi, vallo, M_N0_hi, M_N0_lo); print ", ";
+		testglobal = M_1_hi;
+		testglobal2 = M_1_lo;
+		@dadd testglobal testglobal2 M_0_hi M_0_lo vallo valhi;
+		print "1="; check_double_hex(valhi, vallo, M_1_hi, M_1_lo); print ", ";
+		testglobal = $00000000;
+		testglobal2 = $00010000;
+		@dadd testglobal testglobal2 M_0_hi M_0_lo vallo valhi;
+		print "3.23e-319="; check_double_hex(valhi, vallo, $00000000, $00010000); print ", ";
+		testglobal = $000FFFFF;
+		testglobal2 = $FFFFFFFE;
+		@dadd testglobal testglobal2 M_0_hi M_0_lo vallo valhi;
+		print "2.22e-308="; check_double_hex(valhi, vallo, $000FFFFF, $FFFFFFFE); print ", ";
+		testglobal = $00200001;
+		testglobal2 = $00300004;
+		@dadd testglobal testglobal2 M_0_hi M_0_lo vallo valhi;
+		print "4.45e-308="; check_double_hex(valhi, vallo, $00200001, $00300004); print ", ";
+		testglobal = $08000000;
+		testglobal2 = $00000000;
+		@dadd testglobal testglobal2 M_0_hi M_0_lo vallo valhi;
+		print "3.78e-270="; check_double_hex(valhi, vallo, $08000000, $00000000); print ", ";
+		testglobal = $7FEFFFFF;
+		testglobal2 = $FFFFFFFF;
+		@dadd testglobal testglobal2 M_0_hi M_0_lo vallo valhi;
+		print "1.79e+308="; check_double_hex(valhi, vallo, $7FEFFFFF, $FFFFFFFF); print ", ";
+		testglobal = M_INF_hi;
+		testglobal2 = M_INF_lo;
+		@dadd testglobal testglobal2 M_0_hi M_0_lo vallo valhi;
+		print "Inf="; check_double_hex(valhi, vallo, M_INF_hi, M_INF_lo); print ", ";
+		testglobal = M_NINF_hi;
+		testglobal2 = M_NINF_lo;
+		@dadd testglobal testglobal2 M_0_hi M_0_lo vallo valhi;
+		print "-Inf="; check_double_hex(valhi, vallo, M_NINF_hi, M_NINF_lo); print "^";
+
+		new_line;
+
 		@numtod 0 vallo valhi;
 		print "numtod 0="; check_double_hex(valhi, vallo, 0, 0); print ", ";
 		@numtod 1 vallo valhi;
