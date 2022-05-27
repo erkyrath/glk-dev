@@ -7361,7 +7361,7 @@ TestFloatClass FloatConvTest
 			return;
 		}
 
-		!### move these fadd tests?
+		! These test the interpreter's conversation of 32-bit values to floats and back.
 		testglobal = M_0;
 		@fadd testglobal M_0 val;
 		print "0="; check_hex(val, M_0); print ", ";
