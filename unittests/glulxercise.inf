@@ -10787,6 +10787,21 @@ Constant M_NNAN_lo    = $00000001;
 	rfalse;
 ];
 
+[ check_disnan valhi vallo   expo mhi;
+	expo = (valhi & $7FF00000);
+	mhi = (valhi & $000FFFFF);
+	if (expo == $7FF00000 && (mhi || vallo)) {
+		if (valhi & $80000000)
+			print "-";
+		print "NaN";
+		rtrue;
+	}
+	failures++;
+	Double(valhi, vallo);
+	print " or ", (Hex) valhi, ":", (Hex8) vallo;
+	print " (should be a NaN, FAIL)";
+	rfalse;
+];
 TestDoubleClass DoubleConvTest
 	with name 'doubleconv',
 	testfunc [ val valhi vallo;
@@ -11181,7 +11196,38 @@ TestDoubleClass DoubleConvTest
 		@dtonumn sp sp val; ! -10.1
 		print "dtonumn -10.1="; check_hex(val, -10); print "^";
 
-		!### ftod, dtof
+		new_line;
+		
+		@ftod M_0 vallo valhi;
+		print "ftod 0="; check_double_hex(valhi, vallo, M_0_hi, M_0_lo); print ", ";
+		@ftod M_N0 vallo valhi;
+		print "ftod -0="; check_double_hex(valhi, vallo, M_N0_hi, M_N0_lo); print ", ";
+		@ftod M_1 vallo valhi;
+		print "ftod 1="; check_double_hex(valhi, vallo, M_1_hi, M_1_lo); print ", ";
+		@ftod M_N1 vallo valhi;
+		print "ftod -1="; check_double_hex(valhi, vallo, M_N1_hi, M_N1_lo); print ", ";
+		@ftod $+2.75 vallo valhi;
+		print "ftod 2.75="; check_double_hex(valhi, vallo, $>+2.75, $<+2.75); print ", ";
+		@ftod $-12.75 vallo valhi;
+		print "ftod -12.75="; check_double_hex(valhi, vallo, $>-12.75, $<+2.75); print ", ";
+		@ftod $+2e-30 vallo valhi;
+		print "ftod 2e-30="; check_double_hex(valhi, vallo, $39C4484C, $0); print ", ";
+		@ftod $-123456789 vallo valhi;
+		print "ftod -123456789="; check_double_hex(valhi, vallo, $C19D6F34, $60000000); print ", ";
+		@ftod $+1e+37 vallo valhi;
+		print "ftod 1e+37="; check_double_hex(valhi, vallo, $479E17B8, $40000000); print ", ";
+		@ftod M_INF vallo valhi;
+		print "ftod Inf="; check_double_hex(valhi, vallo, M_INF_hi, M_INF_lo); print ", ";
+		@ftod M_NINF vallo valhi;
+		print "ftod -Inf="; check_double_hex(valhi, vallo, M_NINF_hi, M_NINF_lo); print ", ";
+		@ftod M_NAN vallo valhi;
+		print "ftod NaN="; check_disnan(valhi, vallo); print ", ";
+		@ftod M_NNAN vallo valhi;
+		print "ftod -NaN="; check_disnan(valhi, vallo); print "^";
+
+		new_line;
+		
+		!### dtof
 		
 		count_failures();
 	];
