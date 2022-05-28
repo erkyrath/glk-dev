@@ -10549,6 +10549,8 @@ Constant M_NINF_hi    = $FFF00000;
 Constant M_NINF_lo    = $0;
 Constant M_NAN_hi     = $7FF80000;
 Constant M_NAN_lo     = $00000001;
+Constant M_NNAN_hi    = $FFF80000;
+Constant M_NNAN_lo    = $00000001;
 
 ! Print a double, given as two values (valhi, vallo). This uses exponential
 ! notation ("[-]N.NNNe[+-]NN") if the exponent is not between 6 and -5.
@@ -10994,6 +10996,74 @@ TestDoubleClass DoubleConvTest
 		noop();
 		@numtod sp vallo valhi;
 		print "numtod $80000000="; check_double_hex(valhi, vallo, $C1E00000, $00000000); print "^";
+
+		new_line;
+
+		@dtonumz M_0_hi M_0_lo val; ! 0.0
+		print "dtonumz 0.0="; check_hex(val, 0); print ", ";
+		@dtonumz M_N0_hi M_N0_lo val; ! -0.0
+		print "dtonumz -0.0="; check_hex(val, 0); print ", ";
+		@dtonumz $3FECCCCC $CCCCCCCC val; ! 0.9
+		print "dtonumz 0.9="; check_hex(val, 0); print ", ";
+		@dtonumz $BFECCCCC $CCCCCCCD val; ! -0.9
+		print "dtonumz -0.9="; check_hex(val, 0); print ", ";
+		@dtonumz $3FF00000 $00000000 val; ! 1.0
+		print "dtonumz 1.0="; check_hex(val, 1); print ", ";
+		@dtonumz $BFF00000 $00000000 val; ! -1.0
+		print "dtonumz -1.0="; check_hex(val, -1); print ", ";
+		@dtonumz $3FFC0000 $00000000 val; ! 1.75
+		print "dtonumz 1.75="; check_hex(val, 1); print ", ";
+		@dtonumz $BFFC0000 $00000000 val; ! -1.75
+		print "dtonumz -1.75="; check_hex(val, -1); print ", ";
+		@dtonumz $40000000 $00000000 val; ! 2.0
+		print "dtonumz 2.0="; check_hex(val, 2); print ", ";
+		@dtonumz $C0000000 $00000000 val; ! -2.0
+		print "dtonumz -2.0="; check_hex(val, -2); print ", ";
+		@dtonumz $40243333 $33333333 val; ! 10.1
+		print "dtonumz 10.1="; check_hex(val, 10); print ", ";
+		@dtonumz $C0243333 $33333333 val; ! -10.1
+		print "dtonumz -10.1="; check_hex(val, -10); print ", ";
+		@dtonumz $408F3FFF $FFBCE421 val; ! 999.9999995
+		print "dtonumz 999.9999995="; check_hex(val, 999); print ", ";
+		@dtonumz $C08F3FFF $FFBCE421 val; ! -999.9999995
+		print "dtonumz -999.9999995="; check_hex(val, -999); print ", ";
+		@dtonumz $41700000 $00000000 val; ! $1000000
+		print "dtonumz $1000000="; check_hex(val, $1000000); print ", ";
+		@dtonumz $C1700000 $00000000 val; ! -$1000000
+		print "dtonumz -$1000000="; check_hex(val, -$1000000); print ", ";
+		@dtonumz $41DFFFFF $FFC00000 val; ! $7FFFFFFF
+		print "dtonumz $7FFFFFFF="; check_hex(val, $7FFFFFFF); print ", ";
+		@dtonumz $C1DFFFFF $FFC00000 val; ! -$7FFFFFFF
+		print "dtonumz -$7FFFFFFF="; check_hex(val, -$7FFFFFFF); print ", ";
+		@dtonumz $41E00000 $00000000 val; ! $80000000
+		print "dtonumz $80000000="; check_hex(val, $7FFFFFFF); print ", ";
+		@dtonumz $C1E00000 $00000000 val; ! -$80000000
+		print "dtonumz -$80000000="; check_hex(val, $80000000); print ", ";
+		@dtonumz $41E20000 $00000000 val; ! $90000000
+		print "dtonumz $90000000="; check_hex(val, $7FFFFFFF); print ", ";
+		@dtonumz $C1E20000 $00000000 val; ! -$90000000
+		print "dtonumz -$90000000="; check_hex(val, $80000000); print ", ";
+		@dtonumz $41F00000 $00000000 val; ! $100000000
+		print "dtonumz $100000000="; check_hex(val, $7FFFFFFF); print ", ";
+		@dtonumz $C1F00000 $00000000 val; ! -$100000000
+		print "dtonumz -$100000000="; check_hex(val, $80000000); print ", ";
+		@dtonumz $7FEFFFFF $FFFFFFFF val; ! 1.79e+308
+		print "dtonumz 1.79e+308="; check_hex(val, $7FFFFFFF); print ", ";
+		@dtonumz $FFEFFFFF $FFFFFFFF val; ! -1.79e+308
+		print "dtonumz -1.79e+308="; check_hex(val, $80000000); print ", ";
+		@dtonumz M_INF_hi M_INF_lo val;
+		print "dtonumz +Inf="; check_hex(val, $7FFFFFFF); print ", ";
+		@dtonumz M_NINF_hi M_NINF_lo val;
+		print "dtonumz -Inf="; check_hex(val, $80000000); print ", ";
+		@dtonumz M_NAN_hi M_NAN_lo val;
+		print "dtonumz +NaN="; check_hex(val, $7FFFFFFF); print ", ";
+		@dtonumz M_NNAN_hi M_NNAN_lo val;
+		print "dtonumz -NaN="; check_hex(val, $80000000); print "^";
+		
+		new_line;
+
+		!### dtonumn (ditto)
+		!### ftod, dtof
 		
 		count_failures();
 	];
