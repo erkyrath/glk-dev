@@ -11240,8 +11240,56 @@ TestDoubleClass DoubleConvTest
 
 		new_line;
 
-		!### dtof
-		
+		@dtof M_0_hi M_0_lo val;
+		print "dtof 0="; check_hex(val, M_0); print ", ";
+		@dtof M_N0_hi M_N0_lo val;
+		print "dtof -0="; check_hex(val, M_N0); print ", ";
+		@dtof M_1_hi M_1_lo val;
+		print "dtof 1="; check_hex(val, M_1); print ", ";
+		@dtof M_N1_hi M_N1_lo val;
+		print "dtof -1="; check_hex(val, M_N1); print ", ";
+		@dtof $>+8.75 $<+8.75 val;
+		print "dtof 8.75="; check_hex(val, $+8.75); print ", ";
+		@dtof $>-18.75 $<-18.75 val;
+		print "dtof -18.75="; check_hex(val, $-18.75); print ", ";
+		@dtof $>+123456789 $<+123456789 val;
+		print "dtof 123456789="; check_hex(val, $+123456789); print ", ";
+		@dtof $>+2e-35 $<+2e-35 val;
+		print "dtof 2e-35="; check_hex(val, $+2e-35); print ", ";
+		@dtof $>+2e+35 $<+2e+35 val;
+		print "dtof 2e+35="; check_hex(val, $+2e+35); print ", ";
+		@dtof $>+2e-50 $<+2e-50 val;
+		print "dtof 2e-50="; check_hex(val, M_0); print ", ";
+		@dtof $>-2e-50 $<-2e-50 val;
+		print "dtof -2e-50="; check_hex(val, M_N0); print ", ";
+		@dtof $>+2e+50 $<+2e+50 val;
+		print "dtof 2e+50="; check_hex(val, M_INF); print ", ";
+		@dtof $>-2e+50 $<-2e+50 val;
+		print "dtof -2e+50="; check_hex(val, M_NINF); print ", ";
+		@dtof M_INF_hi M_INF_lo val;
+		print "dtof Inf="; check_hex(val, M_INF); print ", ";
+		@dtof M_NINF_hi M_NINF_lo val;
+		print "dtof -Inf="; check_hex(val, M_NINF); print ", ";
+		@dtof M_NAN_hi M_NAN_lo val;
+		print "dtof NaN="; check_isnan(val); print ", ";
+		@dtof M_NNAN_hi M_NNAN_lo val;
+		print "dtof NaN="; check_isnan(val); print "^";
+
+		new_line;
+
+		testglobal = $>-18.75;
+		testglobal2 = $<-18.75;
+		@dtof testglobal testglobal2 testglobal;
+		print "dtof -18.75="; check_hex(testglobal, $-18.75); print ", ";
+
+		@push $<+18.75e-3;
+		@push $>+18.75e-3;
+		noop();
+		@dtof sp sp sp;
+		noop();
+		@pull val;
+		print "dtof 18.75e-3="; check_hex(val, $+18.75e-3); print "^";
+
 		count_failures();
 	];
 	
