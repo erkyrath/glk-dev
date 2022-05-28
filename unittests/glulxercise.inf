@@ -11062,7 +11062,125 @@ TestDoubleClass DoubleConvTest
 		
 		new_line;
 
-		!### dtonumn (ditto)
+		testglobal = $40243333;
+		testglobal2 = $33333333;
+		@dtonumz testglobal testglobal2 val; ! 10.1
+		print "dtonumz 10.1="; check_hex(val, 10); print ", ";
+		testglobal = $C0243333;
+		testglobal2 = $33333333;
+		@dtonumz testglobal testglobal2 val; ! -10.1
+		print "dtonumz -10.1="; check_hex(val, -10); print ", ";
+		
+		valhi = $4027CCCC;
+		vallo = $CCCCCCCC;
+		@dtonumz valhi vallo val; ! 11.9
+		print "dtonumz 11.9="; check_hex(val, 11); print ", ";
+		valhi = $C027CCCC;
+		vallo = $CCCCCCCC;
+		@dtonumz valhi vallo val; ! -11.9
+		print "dtonumz -11.9="; check_hex(val, -11); print ", ";
+		
+		@push $33333333;
+		@push $40243333;
+		@dtonumz sp sp val; ! 10.1
+		print "dtonumz 10.1="; check_hex(val, 10); print ", ";
+		@push $33333333;
+		@push $C0243333;
+		@dtonumz sp sp val; ! -10.1
+		print "dtonumz -10.1="; check_hex(val, -10); print "^";
+
+		new_line;
+		
+		@dtonumn M_0_hi M_0_lo val; ! 0.0
+		print "dtonumn 0.0="; check_hex(val, 0); print ", ";
+		@dtonumn M_N0_hi M_N0_lo val; ! -0.0
+		print "dtonumn -0.0="; check_hex(val, 0); print ", ";
+		@dtonumn $3FECCCCC $CCCCCCCC val; ! 0.9
+		print "dtonumn 0.9="; check_hex(val, 1); print ", ";
+		@dtonumn $BFECCCCC $CCCCCCCD val; ! -0.9
+		print "dtonumn -0.9="; check_hex(val, -1); print ", ";
+		@dtonumn $3FF00000 $00000000 val; ! 1.0
+		print "dtonumn 1.0="; check_hex(val, 1); print ", ";
+		@dtonumn $BFF00000 $00000000 val; ! -1.0
+		print "dtonumn -1.0="; check_hex(val, -1); print ", ";
+		@dtonumn $3FFC0000 $00000000 val; ! 1.75
+		print "dtonumn 1.75="; check_hex(val, 2); print ", ";
+		@dtonumn $BFFC0000 $00000000 val; ! -1.75
+		print "dtonumn -1.75="; check_hex(val, -2); print ", ";
+		@dtonumn $40000000 $00000000 val; ! 2.0
+		print "dtonumn 2.0="; check_hex(val, 2); print ", ";
+		@dtonumn $C0000000 $00000000 val; ! -2.0
+		print "dtonumn -2.0="; check_hex(val, -2); print ", ";
+		@dtonumn $40243333 $33333333 val; ! 10.1
+		print "dtonumn 10.1="; check_hex(val, 10); print ", ";
+		@dtonumn $C0243333 $33333333 val; ! -10.1
+		print "dtonumn -10.1="; check_hex(val, -10); print ", ";
+		@dtonumn $408F3FFF $FFBCE421 val; ! 999.9999995
+		print "dtonumn 999.9999995="; check_hex(val, 1000); print ", ";
+		@dtonumn $C08F3FFF $FFBCE421 val; ! -999.9999995
+		print "dtonumn -999.9999995="; check_hex(val, -1000); print ", ";
+		@dtonumn $41700000 $00000000 val; ! $1000000
+		print "dtonumn $1000000="; check_hex(val, $1000000); print ", ";
+		@dtonumn $C1700000 $00000000 val; ! -$1000000
+		print "dtonumn -$1000000="; check_hex(val, -$1000000); print ", ";
+		@dtonumn $41DFFFFF $FFC00000 val; ! $7FFFFFFF
+		print "dtonumn $7FFFFFFF="; check_hex(val, $7FFFFFFF); print ", ";
+		@dtonumn $C1DFFFFF $FFC00000 val; ! -$7FFFFFFF
+		print "dtonumn -$7FFFFFFF="; check_hex(val, -$7FFFFFFF); print ", ";
+		@dtonumn $41E00000 $00000000 val; ! $80000000
+		print "dtonumn $80000000="; check_hex(val, $7FFFFFFF); print ", ";
+		@dtonumn $C1E00000 $00000000 val; ! -$80000000
+		print "dtonumn -$80000000="; check_hex(val, $80000000); print ", ";
+		@dtonumn $41E20000 $00000000 val; ! $90000000
+		print "dtonumn $90000000="; check_hex(val, $7FFFFFFF); print ", ";
+		@dtonumn $C1E20000 $00000000 val; ! -$90000000
+		print "dtonumn -$90000000="; check_hex(val, $80000000); print ", ";
+		@dtonumn $41F00000 $00000000 val; ! $100000000
+		print "dtonumn $100000000="; check_hex(val, $7FFFFFFF); print ", ";
+		@dtonumn $C1F00000 $00000000 val; ! -$100000000
+		print "dtonumn -$100000000="; check_hex(val, $80000000); print ", ";
+		@dtonumn $7FEFFFFF $FFFFFFFF val; ! 1.79e+308
+		print "dtonumn 1.79e+308="; check_hex(val, $7FFFFFFF); print ", ";
+		@dtonumn $FFEFFFFF $FFFFFFFF val; ! -1.79e+308
+		print "dtonumn -1.79e+308="; check_hex(val, $80000000); print ", ";
+		@dtonumn M_INF_hi M_INF_lo val;
+		print "dtonumn +Inf="; check_hex(val, $7FFFFFFF); print ", ";
+		@dtonumn M_NINF_hi M_NINF_lo val;
+		print "dtonumn -Inf="; check_hex(val, $80000000); print ", ";
+		@dtonumn M_NAN_hi M_NAN_lo val;
+		print "dtonumn +NaN="; check_hex(val, $7FFFFFFF); print ", ";
+		@dtonumn M_NNAN_hi M_NNAN_lo val;
+		print "dtonumn -NaN="; check_hex(val, $80000000); print "^";
+		
+		new_line;
+
+		testglobal = $40243333;
+		testglobal2 = $33333333;
+		@dtonumn testglobal testglobal2 val; ! 10.1
+		print "dtonumn 10.1="; check_hex(val, 10); print ", ";
+		testglobal = $C0243333;
+		testglobal2 = $33333333;
+		@dtonumn testglobal testglobal2 val; ! -10.1
+		print "dtonumn -10.1="; check_hex(val, -10); print ", ";
+		
+		valhi = $4027CCCC;
+		vallo = $CCCCCCCC;
+		@dtonumn valhi vallo val; ! 11.9
+		print "dtonumn 11.9="; check_hex(val, 12); print ", ";
+		valhi = $C027CCCC;
+		vallo = $CCCCCCCC;
+		@dtonumn valhi vallo val; ! -11.9
+		print "dtonumn -11.9="; check_hex(val, -12); print ", ";
+		
+		@push $33333333;
+		@push $40243333;
+		@dtonumn sp sp val; ! 10.1
+		print "dtonumn 10.1="; check_hex(val, 10); print ", ";
+		@push $33333333;
+		@push $C0243333;
+		@dtonumn sp sp val; ! -10.1
+		print "dtonumn -10.1="; check_hex(val, -10); print "^";
+
 		!### ftod, dtof
 		
 		count_failures();
