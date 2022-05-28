@@ -11226,7 +11226,20 @@ TestDoubleClass DoubleConvTest
 		print "ftod -NaN="; check_disnan(valhi, vallo); print "^";
 
 		new_line;
-		
+
+		testglobal = $-2.75;
+		@ftod testglobal testglobal2 testglobal;
+		print "ftod -2.75="; check_double_hex(testglobal, testglobal2, $>-2.75, $<-2.75); print ", ";
+		@push $+12.5;
+		noop();
+		@ftod sp sp sp;
+		noop();
+		@pull valhi;
+		@pull vallo;
+		print "ftod 12.5="; check_double_hex(valhi, vallo, $>+12.5, $<+12.5); print "^";
+
+		new_line;
+
 		!### dtof
 		
 		count_failures();
