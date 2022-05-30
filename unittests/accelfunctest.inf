@@ -1,7 +1,7 @@
 Constant Story "AccelFuncTest";
 Constant Headline "^Not a game.^";
 
-Release 3;
+Release 4;
 
 ! Unit test for the @accelfunc and @accelparam opcodes.
 
@@ -162,6 +162,14 @@ TestObj -> TestOPPr "OPPr (new) test"
 	indexname "OP__Pr (new)",
 	corefunc OP__Pr,
 	testfunc test_oppr;
+
+TestObj -> TestErrMsg "errmsg test"
+  with
+	name 'errmsg',
+	indexnum 8,
+	indexname "errmsg",
+	corefunc CP__Tab,
+	testfunc test_errmsg;
 
 Global test_core_global;
 
@@ -630,6 +638,36 @@ BotClass botspecial
 	print "botspecial provides MidClass::glark: ", (printbool) val;
 	val = OP__Pr(botspecial, TopClass::glark);
 	print "botspecial provides TopClass::glark: ", (printbool) val;
+];
+
+[ surroundbracket ch;
+	glk($0080, '<'); ! put_char
+	glk($0080, ch); ! put_char
+	glk($0080, '>'); ! put_char
+];
+
+[ test_errmsg val zero;
+	print "This tests the error messages in accelerated functions to make sure they go through iosys properly.^^";
+	zero = 0;
+
+	print "Should print an error: 'Tried to find the ~.~ of...'^";
+	val = zero.comprop;
+	new_line;
+
+	print "Should print an error message with <> around each char:^";
+	print "(But in ACCELERATED mode, will probably print nothing):^";
+	@setiosys 1 surroundbracket;
+	val = zero.comprop;
+	@setiosys 2 0;
+	new_line;
+
+	print "Should print nothing (iosys is null):^";
+	@setiosys 0 0;
+	val = zero.comprop;
+	@setiosys 2 0;
+	new_line;
+
+	print "Done.^";
 ];
 
 Include "Grammar";
