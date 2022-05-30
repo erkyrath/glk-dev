@@ -8220,6 +8220,8 @@ TestFloatClass FloatArithTest
 			return;
 		}
 
+		! Various arrangements of operands
+		
 		@fadd M_1 $3FC00000 val;
 		print "add(1,1.5)="; check_float(val, $40200000); print ", ";
 		@fadd $3F000000 $BFC00000 val;
@@ -10811,6 +10813,40 @@ Constant M_NNAN_lo    = $00000001;
 	rfalse;
 ];
 
+! Allow a margin of one unit-in-the-last-place
+[ check_double_hex_ulp valhi vallo wantedhi wantedlo althi altlo;
+	if (valhi == wantedhi && vallo == wantedlo) {
+		print (Hex) valhi, ":", (Hex8) vallo;
+		rtrue;
+	}
+	
+	althi = wantedhi;
+	altlo = wantedlo;
+	altlo++;
+	if (altlo == 0) {
+		althi++;
+	}
+	if (valhi == althi && vallo == altlo) {
+		print (Hex) valhi, ":", (Hex8) vallo, " (minus epsilon)";
+		rtrue;
+	}
+	
+	althi = wantedhi;
+	altlo = wantedlo;
+	altlo--;
+	if (altlo == $FFFFFFFF) {
+		althi--;
+	}
+	if (valhi == althi && vallo == altlo) {
+		print (Hex) valhi, ":", (Hex8) vallo, " (plus epsilon)";
+		rtrue;
+	}
+	
+	failures++;
+	print (Hex) valhi, ":", (Hex8) vallo, " (should be ", (Hex) wantedhi, ":", (Hex8) wantedlo, " FAIL)";
+	rfalse;
+];
+
 [ check_disnan valhi vallo   expo mhi;
 	expo = (valhi & $7FF00000);
 	mhi = (valhi & $000FFFFF);
@@ -11316,7 +11352,70 @@ TestDoubleClass DoubleConvTest
 
 		count_failures();
 	];
-	
+
+TestDoubleClass DoubleArithTest
+	with name 'doublearith',
+	short_name "doublearith",
+	testfunc [ val valhi vallo val2hi val2lo;
+		print "Double-precision arithmetic:^^";
+
+		@gestalt 13 0 val; ! Double
+		if (~~val) {
+			print "Interpreter claims to not support double-precision. Skipping test.^^";
+			count_failures();
+			return;
+		}
+
+		! Various arrangements of operands
+
+		@dadd M_1_hi M_1_lo $>+1.5 $<+1.5 vallo valhi;
+		print "add(1,1.5)="; check_double_hex(valhi, vallo, $>+2.5, $<+2.5); print ", ";
+		valhi = M_1_hi;
+		vallo = M_1_lo;
+		val2hi = $>-1.5;
+		val2lo = $<-1.5;
+		@dadd valhi vallo val2hi val2lo vallo valhi;
+		print "add(1,-1.5)="; check_double_hex(valhi, vallo, $>-0.5, $<-0.5); print ", ";
+		
+		@push $<+2.0;
+		@push $>+2.0;
+		@push $<+1.5;
+		@push $>+1.5;
+		@dadd sp sp sp sp sp sp;
+		@pull valhi;
+		@pull vallo;
+		print "add(2,1.5)="; check_double_hex(valhi, vallo, $>+3.5, $<+3.5); print ", ";
+
+		testglobal = $>+3.3;
+		testglobal2 = $<+3.3;
+		valhi = $>+1.1;
+		vallo = $<+1.1;
+		@dadd testglobal testglobal2 valhi vallo sp sp;
+		@pull valhi;
+		@pull vallo;
+		print "add(3.3,1.1)="; check_double_hex(valhi, vallo, $>+4.4, $<+4.4); print ", ";
+
+		testglobal = $>-4.4;
+		vallo = $<-4.4;
+		valhi = $>-3.3;
+		@push $<-3.3;
+		@dadd testglobal vallo valhi sp sp valhi;
+		@pull vallo;
+		print "add(-4.4,-3.3)="; check_double_hex(valhi, vallo, $>-7.7, $<-7.7); print "^";
+
+		@push $<+1.1;
+		@push $>+1.1;
+		@push $<+4.4;
+		@push $>+4.4;
+		@dsub sp sp sp sp sp sp;
+		@pull valhi;
+		@pull vallo;
+		print "sub(4.4,1.1)="; check_double_hex_ulp(valhi, vallo, $>+3.3, $<+3.3); print "^";
+
+		count_failures();
+	];
+
+
 TestDoubleClass DoublePrintTest
 	with name 'dprint' 'doubleprint',
 	testfunc [ val;
