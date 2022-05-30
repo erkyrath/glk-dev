@@ -10863,7 +10863,7 @@ Constant M_NNAN_lo    = $00000001;
 	rfalse;
 ];
 TestDoubleClass DoubleConvTest
-	with name 'doubleconv',
+	with name 'dconv' 'doubleconv',
 	testfunc [ val valhi vallo;
 		print "Double-precision conversion:^^";
 
@@ -11354,7 +11354,7 @@ TestDoubleClass DoubleConvTest
 	];
 
 TestDoubleClass DoubleArithTest
-	with name 'doublearith',
+	with name 'darith' 'doublearith',
 	short_name "doublearith",
 	testfunc [ val valhi vallo val2hi val2lo;
 		print "Double-precision arithmetic:^^";
@@ -11411,6 +11411,58 @@ TestDoubleClass DoubleArithTest
 		@pull valhi;
 		@pull vallo;
 		print "sub(4.4,1.1)="; check_double_hex_ulp(valhi, vallo, $>+3.3, $<+3.3); print "^";
+
+		new_line;
+
+		@dadd M_1_hi M_1_lo M_1_hi M_1_lo vallo valhi;
+		print "add(1,1)="; check_double_hex(valhi, vallo, $>+2, $<+2); print ", ";
+		@dadd M_N1_hi M_N1_lo M_1_hi M_1_lo vallo valhi;
+		print "add(-1,1)="; check_double_hex(valhi, vallo, $>+0, $<+0); print ", ";
+		@dadd M_1_hi M_1_lo M_N1_hi M_N1_lo vallo valhi;
+		print "add(1,-1)="; check_double_hex(valhi, vallo, $>+0, $<+0); print ", ";
+		@dadd M_1_hi M_1_lo M_0_hi M_0_lo vallo valhi;
+		print "add(1,0)="; check_double_hex(valhi, vallo, $>+1, $<+1); print ", ";
+		@dadd M_1_hi M_1_lo M_N0_hi M_N0_lo vallo valhi;
+		print "add(1,-0)="; check_double_hex(valhi, vallo, $>+1, $<+1); print ", ";
+		@dadd M_0_hi M_0_lo M_N0_hi M_N0_lo vallo valhi;
+		print "add(0,-0)="; check_double_hex(valhi, vallo, $>+0, $<+0); print ", ";
+		@dadd $>+1234567890 $<+1234567890 M_N0_hi M_N0_lo vallo valhi;
+		print "add(1234567890,-0)="; check_double_hex(valhi, vallo, $>+1234567890, $<+1234567890); print ", ";
+		@dadd M_1_hi M_1_lo $>+1234567890 $<+1234567890 vallo valhi;
+		print "add(1,1234567890)="; check_double_hex(valhi, vallo, $>+1234567891, $<+1234567891); print ", ";
+		@dadd $>+1234567890 $<+1234567890 M_N1_hi M_N1_lo vallo valhi;
+		print "add(1234567890,-1)="; check_double_hex(valhi, vallo, $>+1234567891, $<+1234567889); print ", ";
+		@dadd $>+1.0001 $<+1.0001 $>-1.0 $<-1.0 vallo valhi;
+		print "add(1.0001,-1)="; check_double_hex(valhi, vallo, $3F1A36E2, $EB1C4000); print ", ";  ! 0.0001
+		@dadd $>-1.0 $<-1.0 $3FF00000 $00280000 vallo valhi;
+		print "add(-1,1+(5e-10))="; check_double_hex(valhi, vallo, $3E040000, $0); print ", ";  ! +5e-10
+		@dadd $>+1e+308 $<+1e+308 $>+1e+308 $<+1e+308 vallo valhi;
+		print "add(1e+308,1e+308)="; check_double_hex(valhi, vallo, M_INF_hi, M_INF_lo); print ", ";
+		@dadd $>-1e+308 $<-1e+308 $>-1e+308 $<-1e+308 vallo valhi;
+		print "add(-1e+308,-1e+308)="; check_double_hex(valhi, vallo, M_NINF_hi, M_NINF_lo); print ", ";
+		@dadd $>+1e+308 $<+1e+308 $>-1e+308 $<-1e+308 vallo valhi;
+		print "add(1e+308,-1e+308)="; check_double_hex(valhi, vallo, M_0_hi, M_0_lo); print ", ";
+		@dadd $>+12345 $<+12345 M_INF_hi M_INF_lo vallo valhi;
+		print "add(12345,Inf)="; check_double_hex(valhi, vallo, M_INF_hi, M_INF_lo); print ", ";
+		@dadd $>-1234567 $<-1234567 M_INF_hi M_INF_lo vallo valhi;
+		print "add(-1234567,Inf)="; check_double_hex(valhi, vallo, M_INF_hi, M_INF_lo); print ", ";
+		@dadd $>+12345 $<+12345 M_NINF_hi M_NINF_lo vallo valhi;
+		print "add(12345,-Inf)="; check_double_hex(valhi, vallo, M_NINF_hi, M_NINF_lo); print ", ";
+		@dadd M_INF_hi M_INF_lo M_NINF_hi M_NINF_lo vallo valhi;
+		print "add(Inf,-Inf)="; check_disnan(valhi, vallo); print "^";
+
+		@dadd M_0_hi M_0_lo M_NAN_hi M_NAN_lo vallo valhi;
+		print "add(0,NaN)="; check_disnan(valhi, vallo); print ", ";
+		@dadd M_NAN_hi M_NAN_lo M_1_hi M_1_lo vallo valhi;
+		print "add(NaN,1)="; check_disnan(valhi, vallo); print ", ";
+		@dadd M_NAN_hi M_NAN_lo M_INF_hi M_INF_lo vallo valhi;
+		print "add(NaN,Inf)="; check_disnan(valhi, vallo); print ", ";
+		@dadd M_NINF_hi M_NINF_lo M_NAN_hi M_NAN_lo vallo valhi;
+		print "add(-Inf,NaN)="; check_disnan(valhi, vallo); print ", ";
+		@dadd M_NAN_hi M_NAN_lo M_NAN_hi M_NAN_lo vallo valhi;
+		print "add(NaN,NaN)="; check_disnan(valhi, vallo); print "^";
+
+		new_line;
 
 		count_failures();
 	];
