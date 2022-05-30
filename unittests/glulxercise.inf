@@ -4358,6 +4358,30 @@ TestClass IOSys2Test
 		count_failures();
 	];
 
+TestClass IOSys3Test
+	with name 'iosys3',
+	testfunc [ oldstr;
+		print "Printing with no I/O mode and no Glk stream:^";
+		print "This should print nothing, but should not crash.^^";
+
+		@setiosys 0 0;
+		print "This line should not appear!^";
+		@setiosys 2 0;
+
+		print "Again, printing nothing:^^";
+		
+		oldstr = glk($0048); ! stream_get_current
+		glk($0047, 0); ! stream_set_current
+		@setiosys 0 0;
+		print "This line should not appear!^";
+		@setiosys 2 0;
+		glk($0047, oldstr); ! stream_set_current
+
+		print "Done.^";
+
+		count_failures();
+	];
+
 Array ccomma_str -> $E0 ',' ' ' 0;
 	
 [ iosys_tester   loc;
