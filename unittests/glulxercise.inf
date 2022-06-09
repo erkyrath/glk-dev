@@ -11572,7 +11572,46 @@ TestDoubleClass DoubleArithTest
 
 		new_line;
 
-		!### ddiv
+		@ddiv M_1_hi M_1_lo M_1_hi M_1_lo vallo valhi;
+		print "div(1,1)="; check_double_hex(valhi, vallo, $>+1, $<+1); print ", ";
+		@ddiv M_1_hi M_1_lo M_N1_hi M_N1_lo vallo valhi;
+		print "div(1,-1)="; check_double_hex(valhi, vallo, $>-1, $<-1); print ", ";
+		@ddiv M_N1_hi M_N1_lo M_N1_hi M_N1_lo vallo valhi;
+		print "div(-1,-1)="; check_double_hex(valhi, vallo, $>+1, $<+1); print ", ";
+		@ddiv M_1_hi M_1_lo M_0_hi M_0_lo vallo valhi;
+		print "div(1,0)="; check_double_hex(valhi, vallo, M_INF_HI, M_INF_LO); print ", ";
+		@ddiv M_1_hi M_1_lo M_N0_hi M_N0_lo vallo valhi;
+		print "div(1,-0)="; check_double_hex(valhi, vallo, M_NINF_HI, M_NINF_LO); print ", ";
+		@ddiv M_N0_hi M_N0_lo M_1_hi M_1_lo vallo valhi;
+		print "div(-0,1)="; check_double_hex(valhi, vallo, M_N0_HI, M_N0_LO); print ", ";
+		@ddiv M_N0_hi M_N0_lo M_N1_hi M_N1_lo vallo valhi;
+		print "div(-0,-1)="; check_double_hex(valhi, vallo, M_0_HI, M_0_LO); print ", ";
+		@ddiv $>+123 $<+123 $>+2 $<+2 vallo valhi;
+		print "div(123,2)="; check_double_hex(valhi, vallo, $>+61.5, $<+61.5); print ", ";
+		@ddiv $>-2 $<-2 $>+3 $<+3 vallo valhi;
+		print "div(-2,3)="; check_double_hex(valhi, vallo, $>-0.6666666666666666, $<-0.6666666666666666); print ", ";
+		@ddiv $>+5e50 $<+5e50 $>+5e50 $<+5e50 vallo valhi;
+		print "div(5e50,5e50)="; check_double_hex(valhi, vallo, $>+1, $<+1); print ", ";
+		@ddiv $>-5e50 $<-5e50 $>+5e49 $<+5e49 vallo valhi;
+		print "div(-5e50,5e49)="; check_double_hex(valhi, vallo, $>-10, $<-10); print ", ";
+		@ddiv $>+1e200 $<+1e200 $>+1e-200 $<+1e-200 vallo valhi;
+		print "div(1e200,1e-200)="; check_double_hex(valhi, vallo, M_INF_HI, M_INF_LO); print ", ";
+		@ddiv $>+1e-200 $<+1e-200 $>+1e200 $<+1e200 vallo valhi;
+		print "div(1e-200,1e200)="; check_double_hex(valhi, vallo, M_0_HI, M_0_LO); print ", ";
+		@ddiv $>-1e-200 $<-1e-200 $>+1e200 $<+1e200 vallo valhi;
+		print "div(-1e-200,1e200)="; check_double_hex(valhi, vallo, M_N0_HI, M_N0_LO); print ", ";
+		@ddiv M_INF_HI M_INF_LO $>+1e200 $<+1e200 vallo valhi;
+		print "div(Inf,1e200)="; check_double_hex(valhi, vallo, M_INF_HI, M_INF_LO); print ", ";
+		@ddiv M_INF_HI M_INF_LO M_N0_HI M_N0_LO vallo valhi;
+		print "div(Inf,-0)="; check_double_hex(valhi, vallo, M_NINF_HI, M_NINF_LO); print ", ";
+		@ddiv $>+1e200 $<+1e200 M_NINF_HI M_NINF_LO vallo valhi;
+		print "div(1e200,-Inf)="; check_double_hex(valhi, vallo, M_N0_HI, M_N0_LO); print ", ";
+		@ddiv M_0_hi M_0_lo M_0_hi M_0_lo vallo valhi;
+		print "div(0,0)="; check_disnan(valhi, vallo); print ", ";
+		@ddiv M_0_hi M_0_lo M_N0_hi M_N0_lo vallo valhi;
+		print "div(0,-0)="; check_disnan(valhi, vallo); print ", ";
+		@ddiv M_INF_hi M_INF_lo M_INF_hi M_INF_lo vallo valhi;
+		print "div(Inf,Inf)="; check_disnan(valhi, vallo); print "^";
 		
 		count_failures();
 	];
