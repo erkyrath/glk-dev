@@ -11612,6 +11612,17 @@ TestDoubleClass DoubleArithTest
 		print "div(0,-0)="; check_disnan(valhi, vallo); print ", ";
 		@ddiv M_INF_hi M_INF_lo M_INF_hi M_INF_lo vallo valhi;
 		print "div(Inf,Inf)="; check_disnan(valhi, vallo); print "^";
+
+		@ddiv M_NAN_hi M_NAN_lo M_0_hi M_0_lo vallo valhi;
+		print "div(NaN,0)="; check_disnan(valhi, vallo); print ", ";
+		@ddiv M_N1_hi M_N1_lo M_NAN_hi M_NAN_lo vallo valhi;
+		print "div(-1,NaN)="; check_disnan(valhi, vallo); print ", ";
+		@ddiv M_NAN_hi M_NAN_lo M_INF_hi M_INF_lo vallo valhi;
+		print "div(NaN,Inf)="; check_disnan(valhi, vallo); print ", ";
+		@ddiv M_NINF_hi M_NINF_lo M_NAN_hi M_NAN_lo vallo valhi;
+		print "div(-Inf,NaN)="; check_disnan(valhi, vallo); print ", ";
+		@ddiv M_NAN_hi M_NAN_lo M_NAN_hi M_NAN_lo vallo valhi;
+		print "div(NaN,NaN)="; check_disnan(valhi, vallo); print "^";
 		
 		count_failures();
 	];
