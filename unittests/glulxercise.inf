@@ -11716,6 +11716,38 @@ TestDoubleClass DoubleRoundTest
 
 		new_line;
 		
+		@dceil M_0_HI M_0_LO vallo valhi;
+		print "ceil(0)="; check_double_hex(valhi, vallo, $>+0, $<+0); print ", ";
+		@dceil M_N0_HI M_N0_LO vallo valhi;
+		print "ceil(-0)="; check_double_hex(valhi, vallo, $>-0, $<-0); print ", ";
+		@dceil $>+0.9 $<+0.9 vallo valhi;
+		print "ceil(0.9)="; check_double_hex(valhi, vallo, $>+1, $<+1); print ", ";
+		@dceil $>-0.9 $<-0.9 vallo valhi;
+		print "ceil(-0.9)="; check_double_hex(valhi, vallo, $>-0, $<-0); print ", ";
+		@dceil $>+1.0 $<+1.0 vallo valhi;
+		print "ceil(1.0)="; check_double_hex(valhi, vallo, $>+1, $<+1); print ", ";
+		@dceil $>-1.0 $<-1.0 vallo valhi;
+		print "ceil(-1.0)="; check_double_hex(valhi, vallo, $>-1, $<-1); print ", ";
+		@dceil $>+10.1 $<+10.1 vallo valhi;
+		print "ceil(10.1)="; check_double_hex(valhi, vallo, $>+11, $<+11); print ", ";
+		@dceil $>-10.1 $<-10.1 vallo valhi;
+		print "ceil(-10.1)="; check_double_hex(valhi, vallo, $>-10, $<-10); print ", ";
+		@dceil $>+9999.9999995 $<+9999.9999995 vallo valhi;
+		print "ceil(9999.9999995)="; check_double_hex(valhi, vallo, $>+10000, $<+10000); print ", ";
+		@dceil $>-9999.9999995 $<-9999.9999995 vallo valhi;
+		print "ceil(-9999.9999995)="; check_double_hex(valhi, vallo, $>-9999, $<-9999); print ", ";
+		@dceil $>+1.123e100 $<+1.123e100 vallo valhi;
+		print "ceil(1.123e100)="; check_double_hex(valhi, vallo, $>+1.123e100, $<+1.123e100); print ", ";
+		!### MAXFLOAT, MINFLOAT?
+		@dceil M_INF_HI M_INF_LO vallo valhi;
+		print "ceil(Inf)="; check_double_hex(valhi, vallo, M_INF_HI, M_INF_LO); print ", ";
+		@dceil M_NINF_HI M_NINF_LO vallo valhi;
+		print "ceil(-Inf)="; check_double_hex(valhi, vallo, M_NINF_HI, M_NINF_LO); print ", ";
+		@dceil M_NAN_HI M_NAN_LO vallo valhi;
+		print "ceil(NaN)="; check_disnan(valhi, vallo); print "^";
+
+		new_line;
+		
 		count_failures();
 	];
 
