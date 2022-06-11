@@ -11627,6 +11627,65 @@ TestDoubleClass DoubleArithTest
 		count_failures();
 	];
 
+TestDoubleClass DoubleRoundTest
+	with name 'dround' 'doubleround',
+	short_name "doubleround",
+	testfunc [ val valhi vallo;
+		print "Double-precision rounding:^^";
+
+		@gestalt 13 0 val; ! Double
+		if (~~val) {
+			print "Interpreter claims to not support double-precision. Skipping test.^^";
+			count_failures();
+			return;
+		}
+
+		! Various arrangements of operands
+
+		@dfloor $>+3.5 $<+3.5 vallo valhi;
+		print "floor(3.5)="; check_double_hex(valhi, vallo, $>+3, $<+3); print ", ";
+		@dfloor $>-3.5 $<-3.5 vallo valhi;
+		print "floor(-3.5)="; check_double_hex(valhi, vallo, $>-4, $<-4); print ", ";
+		testglobal = $>+3.5;
+		testglobal2 = $<+3.5;
+		@dfloor testglobal testglobal2 vallo valhi;
+		print "floor(3.5)="; check_double_hex(valhi, vallo, $>+3, $<+3); print ", ";
+		valhi = $>+1.1;
+		vallo = $<+1.1;
+		@dfloor valhi vallo vallo valhi;
+		print "floor(1.1)="; check_double_hex(valhi, vallo, $>+1, $<+1); print ", ";
+		@push $<-3.5;
+		@push $>-3.5;
+		@dfloor sp sp sp sp;
+		@pull valhi;
+		@pull vallo;
+		print "floor(-3.5)="; check_double_hex(valhi, vallo, $>-4, $<-4); print "^";
+
+		new_line;
+		
+		@dceil $>+3.5 $<+3.5 vallo valhi;
+		print "ceil(3.5)="; check_double_hex(valhi, vallo, $>+4, $<+4); print ", ";
+		@dceil $>-3.5 $<-3.5 vallo valhi;
+		print "ceil(-3.5)="; check_double_hex(valhi, vallo, $>-3, $<-3); print ", ";
+		testglobal = $>+3.5;
+		testglobal2 = $<+3.5;
+		@dceil testglobal testglobal2 vallo valhi;
+		print "ceil(3.5)="; check_double_hex(valhi, vallo, $>+4, $<+4); print ", ";
+		valhi = $>+1.1;
+		vallo = $<+1.1;
+		@dceil valhi vallo vallo valhi;
+		print "ceil(1.1)="; check_double_hex(valhi, vallo, $>+2, $<+2); print ", ";
+		@push $<-3.5;
+		@push $>-3.5;
+		@dceil sp sp sp sp;
+		@pull valhi;
+		@pull vallo;
+		print "ceil(-3.5)="; check_double_hex(valhi, vallo, $>-3, $<-3); print "^";
+
+		new_line;
+		
+		count_failures();
+	];
 
 TestDoubleClass DoublePrintTest
 	with name 'dprint' 'doubleprint',
