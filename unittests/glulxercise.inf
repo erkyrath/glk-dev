@@ -11751,6 +11751,69 @@ TestDoubleClass DoubleRoundTest
 		count_failures();
 	];
 
+TestDoubleClass DoubleModTest
+	with name 'dmod' 'doublemod',
+	short_name "doublemod",
+	testfunc [ val valhi vallo val2hi val2lo;
+		print "Double-precision modulo:^^";
+
+		@gestalt 13 0 val; ! Double
+		if (~~val) {
+			print "Interpreter claims to not support double-precision. Skipping test.^^";
+			count_failures();
+			return;
+		}
+
+		! Various arrangements of operands
+		@dmodr $>+2.5 $<+2.5 $>+1.0 $<+1.0 vallo valhi;
+		print "modr(2.5,1.0)="; check_double_hex(valhi, vallo, $>+0.5, $<+0.5); print ", ";
+		valhi = $>-3.5;
+		vallo = $<-3.5;
+		val2hi = $>+1.5;
+		val2lo = $<+1.5;
+		@dmodr valhi vallo val2hi val2lo vallo valhi;
+		print "modr(-3.5,1.0)="; check_double_hex(valhi, vallo, $>-0.5, $<-0.5); print ", ";
+		
+		@push $<+1.0;
+		@push $>+1.0;
+		@push $<+2.5;
+		@push $>+2.5;
+		@dmodr sp sp sp sp sp sp;
+		@pull valhi;
+		@pull vallo;
+		print "modr(2.5,1.0)="; check_double_hex(valhi, vallo, $>+0.5, $<+0.5); print ", ";
+
+		testglobal = $>+3.5;
+		testglobal2 = $<+3.5;
+		valhi = $>+1.0;
+		vallo = $<+1.0;
+		@dmodr testglobal testglobal2 valhi vallo sp sp;
+		@pull valhi;
+		@pull vallo;
+		print "modr(3.5,1.0)="; check_double_hex(valhi, vallo, $>+0.5, $<+0.5); print ", ";
+
+		testglobal = $>-4.5;
+		vallo = $<-4.5;
+		valhi = $>-1.0;
+		@push $<-1.0;
+		@dmodr testglobal vallo valhi sp sp valhi;
+		@pull vallo;
+		print "modr(-4.5,-1.0)="; check_double_hex(valhi, vallo, $>-0.5, $<-0.5); print "^";
+
+		@push $<+1.0;
+		@push $>+1.0;
+		@push $<+4.5;
+		@push $>+4.5;
+		@dmodq sp sp sp sp sp sp;
+		@pull valhi;
+		@pull vallo;
+		print "modq(4.5,1.0)="; check_double_hex_ulp(valhi, vallo, $>+4.0, $<+4.0); print "^";
+
+		new_line;
+		
+		count_failures();
+	];
+
 TestDoubleClass DoublePrintTest
 	with name 'dprint' 'doubleprint',
 	short_name "doubleprint",
