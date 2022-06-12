@@ -11873,6 +11873,42 @@ TestDoubleClass DoubleModTest
 		@dmodq valhi vallo val2hi val2lo quolo quohi;
 		print "mod(5.125,0.5): rem="; check_double_hex(remhi, remlo, $>+0.125, $<+0.125); 
 		print " quo="; check_double_hex(quohi, quolo, $>+10.0, $<+10.0); print ", ";
+		
+		valhi = M_0_HI;
+		vallo = M_0_LO;
+		val2hi = M_1_HI;
+		val2lo = M_1_LO;
+		@dmodr valhi vallo val2hi val2lo remlo remhi;
+		@dmodq valhi vallo val2hi val2lo quolo quohi;
+		print "mod(0,1): rem="; check_double_hex(remhi, remlo, $>+0, $<+0); 
+		print " quo="; check_double_hex(quohi, quolo, $>+0, $<+0); print ", ";
+		
+		valhi = M_0_HI;
+		vallo = M_0_LO;
+		val2hi = M_N1_HI;
+		val2lo = M_N1_LO;
+		@dmodr valhi vallo val2hi val2lo remlo remhi;
+		@dmodq valhi vallo val2hi val2lo quolo quohi;
+		print "mod(0,-1): rem="; check_double_hex(remhi, remlo, $>+0, $<+0); 
+		print " quo="; check_double_hex(quohi, quolo, $>-0, $<-0); print ", ";
+		
+		valhi = M_N0_HI;
+		vallo = M_N0_LO;
+		val2hi = M_1_HI;
+		val2lo = M_1_LO;
+		@dmodr valhi vallo val2hi val2lo remlo remhi;
+		@dmodq valhi vallo val2hi val2lo quolo quohi;
+		print "mod(-0,1): rem="; check_double_hex(remhi, remlo, $>-0, $<-0); 
+		print " quo="; check_double_hex(quohi, quolo, $>-0, $<-0); print ", ";
+		
+		valhi = M_N0_HI;
+		vallo = M_N0_LO;
+		val2hi = M_N1_HI;
+		val2lo = M_N1_LO;
+		@dmodr valhi vallo val2hi val2lo remlo remhi;
+		@dmodq valhi vallo val2hi val2lo quolo quohi;
+		print "mod(-0,-1): rem="; check_double_hex(remhi, remlo, $>-0, $<-0); 
+		print " quo="; check_double_hex(quohi, quolo, $>+0, $<+0); print ", ";
 
 		count_failures();
 	];
