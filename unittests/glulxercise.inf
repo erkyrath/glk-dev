@@ -12031,6 +12031,90 @@ TestDoubleClass DoubleModTest
 		print "mod(Inf,-Inf): rem="; check_disnan(remhi, remlo); 
 		print " quo="; check_disnan(quohi, quolo); print "^";
 
+		new_line;
+
+		valhi = $>+2;
+		vallo = $<+2;
+		val2hi = M_INF_HI;
+		val2lo = M_INF_LO;
+		@dmodr valhi vallo val2hi val2lo remlo remhi;
+		@dmodq valhi vallo val2hi val2lo quolo quohi;
+		print "mod(2,Inf): rem="; check_double_hex(remhi, remlo, $>+2, $<+2); 
+		print " quo="; check_double_hex(quohi, quolo, M_0_HI, M_0_LO); print ", ";
+
+		valhi = $>-12345678.1234567;
+		vallo = $<-12345678.1234567;
+		val2hi = M_INF_HI;
+		val2lo = M_INF_LO;
+		@dmodr valhi vallo val2hi val2lo remlo remhi;
+		@dmodq valhi vallo val2hi val2lo quolo quohi;
+		print "mod(-12345678.1234567,Inf): rem="; check_double_hex(remhi, remlo, $>-12345678.1234567, $<-12345678.1234567); 
+		print " quo="; check_double_hex(quohi, quolo, M_N0_HI, M_N0_LO); print ", ";
+
+		valhi = $>+1.234e-20;
+		vallo = $<+1.234e-20;
+		val2hi = M_INF_HI;
+		val2lo = M_INF_LO;
+		@dmodr valhi vallo val2hi val2lo remlo remhi;
+		@dmodq valhi vallo val2hi val2lo quolo quohi;
+		print "mod(1.234e-20,Inf): rem="; check_double_hex(remhi, remlo, $>+1.234e-20, $<+1.234e-20); 
+		print " quo="; check_double_hex(quohi, quolo, M_0_HI, M_0_LO); print ", ";
+
+		valhi = $>-0;
+		vallo = $<-0;
+		val2hi = M_INF_HI;
+		val2lo = M_INF_LO;
+		@dmodr valhi vallo val2hi val2lo remlo remhi;
+		@dmodq valhi vallo val2hi val2lo quolo quohi;
+		print "mod(-0,Inf): rem="; check_double_hex(remhi, remlo, $>-0, $<-0); 
+		print " quo="; check_double_hex(quohi, quolo, M_N0_HI, M_N0_LO); print ", ";
+		valhi = $>+2;
+		vallo = $<+2;
+		val2hi = M_NINF_HI;
+		val2lo = M_NINF_LO;
+		@dmodr valhi vallo val2hi val2lo remlo remhi;
+		@dmodq valhi vallo val2hi val2lo quolo quohi;
+		print "mod(2,-Inf): rem="; check_double_hex(remhi, remlo, $>+2, $<+2); 
+		print " quo="; check_double_hex(quohi, quolo, M_N0_HI, M_N0_LO); print "^";
+
+		new_line;
+
+		valhi = M_1_HI;
+		vallo = M_1_LO;
+		val2hi = M_NAN_HI;
+		val2lo = M_NAN_LO;
+		@dmodr valhi vallo val2hi val2lo remlo remhi;
+		@dmodq valhi vallo val2hi val2lo quolo quohi;
+		print "mod(1,NaN): rem="; check_disnan(remhi, remlo); 
+		print " quo="; check_disnan(quohi, quolo); print ", ";
+
+		valhi = M_NAN_HI;
+		vallo = M_NAN_LO;
+		val2hi = M_1_HI;
+		val2lo = M_1_LO;
+		@dmodr valhi vallo val2hi val2lo remlo remhi;
+		@dmodq valhi vallo val2hi val2lo quolo quohi;
+		print "mod(NaN,1): rem="; check_disnan(remhi, remlo); 
+		print " quo="; check_disnan(quohi, quolo); print ", ";
+
+		valhi = M_NAN_HI;
+		vallo = M_NAN_LO;
+		val2hi = M_NAN_HI;
+		val2lo = M_NAN_LO;
+		@dmodr valhi vallo val2hi val2lo remlo remhi;
+		@dmodq valhi vallo val2hi val2lo quolo quohi;
+		print "mod(NaN,NaN): rem="; check_disnan(remhi, remlo); 
+		print " quo="; check_disnan(quohi, quolo); print ", ";
+
+		valhi = M_INF_HI;
+		vallo = M_INF_LO;
+		val2hi = M_NAN_HI;
+		val2lo = M_NAN_LO;
+		@dmodr valhi vallo val2hi val2lo remlo remhi;
+		@dmodq valhi vallo val2hi val2lo quolo quohi;
+		print "mod(Inf,NaN): rem="; check_disnan(remhi, remlo); 
+		print " quo="; check_disnan(quohi, quolo); print "^";
+
 		count_failures();
 	];
 
