@@ -11754,7 +11754,7 @@ TestDoubleClass DoubleRoundTest
 TestDoubleClass DoubleExpTest
 	with name 'dexp' 'doubleexp' 'doublesqrt' 'doublepow' 'doublelog',
 	short_name "doubleexp",
-	testfunc [ val valhi vallo;
+	testfunc [ val valhi vallo val2hi val2lo;
 		print "Double-precision exponent functions:^^";
 
 		@gestalt 13 0 val; ! Double
@@ -11848,6 +11848,46 @@ TestDoubleClass DoubleExpTest
 		@dlog M_NAN_HI M_NAN_LO vallo valhi;
 		print "log(-NaN)="; check_disnan(valhi, vallo); print "^";
 
+		new_line;
+		
+		! Various arrangements of operands
+
+		@dpow $>+1.5 $<+1.5 $>+2 $<+2 vallo valhi;
+		print "pow(1.5,2.0)="; check_double_hex(valhi, vallo, $>+2.25, $<+2.25); print ", ";
+		valhi = $>+2.5;
+		vallo = $<+2.5;
+		val2hi = $>+2;
+		val2lo = $<+2;
+		@dpow valhi vallo val2hi val2lo vallo valhi;
+		print "pow(2.5,2)="; check_double_hex(valhi, vallo, $>+6.25, $<+6.25); print ", ";
+		
+		@push $<+2;
+		@push $>+2;
+		@push $<+1.5;
+		@push $>+1.5;
+		@dpow sp sp sp sp sp sp;
+		@pull valhi;
+		@pull vallo;
+		print "pow(1.5,2)="; check_double_hex(valhi, vallo, $>+2.25, $<+2.25); print ", ";
+
+		testglobal = $>-1.5;
+		testglobal2 = $<-1.5;
+		valhi = $>+3;
+		vallo = $<+3;
+		@dpow testglobal testglobal2 valhi vallo sp sp;
+		@pull valhi;
+		@pull vallo;
+		print "pow(-1.5,3)="; check_double_hex(valhi, vallo, $>-3.375, $<-3.375); print ", ";
+
+		testglobal = $>+2.5;
+		vallo = $<+2.5;
+		valhi = $>+2;
+		@push $<+2;
+		@dpow testglobal vallo valhi sp sp valhi;
+		@pull vallo;
+		print "pow(2.5,2)="; check_double_hex(valhi, vallo, $>+6.25, $<+6.25); print "^";
+
+		new_line;
 		!### dpow
 		
 		count_failures();
