@@ -11888,7 +11888,31 @@ TestDoubleClass DoubleExpTest
 		print "pow(2.5,2)="; check_double_hex(valhi, vallo, $>+6.25, $<+6.25); print "^";
 
 		new_line;
-		!### dpow
+
+		@dpow M_N1_HI M_N1_LO M_1_HI M_1_LO vallo valhi;
+		print "pow(-1,1)="; check_double_hex(valhi, vallo, $>-1, $<-1); print ", ";
+		@dpow M_N1_HI M_N1_LO M_N1_HI M_N1_LO vallo valhi;
+		print "pow(-1,-1)="; check_double_hex(valhi, vallo, $>-1, $<-1); print ", ";
+		@dpow $>-1 $<-1 $>+1.5 $<+1.5 vallo valhi;
+		print "pow(-1,1.5)="; check_disnan(valhi, vallo); print ", ";
+		@dpow $>+0 $<+0 $>+1 $<+1 vallo valhi;
+		print "pow(0,1)="; check_double_hex(valhi, vallo, $>+0, $<+0); print ", ";
+		@dpow $>-0 $<-0 $>+1 $<+1 vallo valhi;
+		print "pow(-0,1)="; check_double_hex(valhi, vallo, $>-0, $<-0); print ", ";
+		@dpow $>+2 $<+2 $>+127 $<+127 vallo valhi;
+		print "pow(2,127)="; check_double_hex(valhi, vallo, $>+1.7014118346046923e+38, $<+1.7014118346046923e+38); print ", ";
+		@dpow $>+2 $<+2 $>-127 $<-127 vallo valhi;
+		print "pow(2,-127)="; check_double_hex_ulp(valhi, vallo, $>+5.877471754111438e-39, $<+5.877471754111438e-39); print ", ";
+		@dpow $>+2 $<+2 $>+1023 $<+1023 vallo valhi;
+		print "pow(2,1023)="; check_double_hex(valhi, vallo, $>+8.98846567431158e+307, $<+8.98846567431158e+307); print ", ";
+		@dpow $>+2 $<+2 $>-1023 $<-1023 vallo valhi;
+		print "pow(2,-1023)="; check_double_hex_ulp(valhi, vallo, $>+1.1125369292535990e-308, $<+1.1125369292535990e-308); print ", ";
+		@dpow $>+2 $<+2 $>+1024 $<+1024 vallo valhi;
+		print "pow(2,1024)="; check_double_hex(valhi, vallo, M_INF_HI, M_INF_LO); print ", ";
+		@dpow $>+2 $<+2 $>-1075 $<-1075 vallo valhi;
+		print "pow(2,-1075)="; check_double_hex(valhi, vallo, $>+0, $<+0); print ", ";
+		@dpow $>+2 $<+2 $>-1074 $<-1074 vallo valhi;
+		print "pow(2,-1074)="; check_double_hex(valhi, vallo, $00000000, $00000001); print ", ";
 		
 		count_failures();
 	];
