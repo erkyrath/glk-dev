@@ -11823,8 +11823,32 @@ TestDoubleClass DoubleExpTest
 		@dexp M_NAN_HI M_NAN_LO vallo valhi;
 		print "exp(-NaN)="; check_disnan(valhi, vallo); print "^";
 
-		
-		!### dexp, dlog, dpow
+		new_line;
+
+		@dlog $>+0 $<+0 vallo valhi;
+		print "log(0)="; check_double_hex(valhi, vallo, M_NINF_HI, M_NINF_LO); print ", ";
+		@dlog $>-0 $<-0 vallo valhi;
+		print "log(-0)="; check_double_hex(valhi, vallo, M_NINF_HI, M_NINF_LO); print ", ";
+		@dlog $>+1 $<+1 vallo valhi;
+		print "log(1)="; check_double_hex(valhi, vallo, $>+0, $<+0); print ", ";
+		@dlog $>-1 $<-1 vallo valhi;
+		print "log(-1)="; check_disnan(valhi, vallo); print ", ";
+		@dlog $>+2.718281828459045 $<+2.718281828459045 vallo valhi;
+		print "log(e)="; check_double_hex(valhi, vallo, $>+1, $<+1); print ", ";
+		@dlog $>+0.36787944117144215 $<+0.36787944117144215 vallo valhi;
+		print "log(1/e)="; check_double_hex_ulp(valhi, vallo, $>-1, $<-1); print ", ";
+		@dlog $>+1e+200 $<+1e+200 vallo valhi;
+		print "log(1e200)="; check_double_hex_ulp(valhi, vallo, $>+460.51701859880916, $<+460.51701859880916); print ", ";
+		@dlog $>+1e-200 $<+1e-200 vallo valhi;
+		print "log(1e-200)="; check_double_hex_ulp(valhi, vallo, $>-460.51701859880916, $<-460.51701859880916); print ", ";
+		@dlog M_INF_HI M_INF_LO vallo valhi;
+		print "log(Inf)="; check_double_hex(valhi, vallo, M_INF_HI, M_INF_LO); print ", ";
+		@dlog M_NINF_HI M_NINF_LO vallo valhi;
+		print "log(-Inf)="; check_disnan(valhi, vallo); print ", ";
+		@dlog M_NAN_HI M_NAN_LO vallo valhi;
+		print "log(-NaN)="; check_disnan(valhi, vallo); print "^";
+
+		!### dpow
 		
 		count_failures();
 	];
