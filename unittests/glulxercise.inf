@@ -11814,6 +11814,8 @@ TestDoubleClass DoubleExpTest
 		print "exp(-200)="; check_double_hex_ulp(valhi, vallo, $>+1.3838965267367376e-87, $<+1.3838965267367376e-87); print ", ";
 		@dexp $>-750 $<-750 vallo valhi;
 		print "exp(-750)="; check_double_hex_ulp(valhi, vallo, $>+0, $<+0); print ", ";
+		@dexp $>+750 $<+750 vallo valhi;
+		print "exp(750)="; check_double_hex_ulp(valhi, vallo, M_INF_HI, M_INF_LO); print ", ";
 		@dexp M_INF_HI M_INF_LO vallo valhi;
 		print "exp(Inf)="; check_double_hex(valhi, vallo, M_INF_HI, M_INF_LO); print ", ";
 		@dexp M_NINF_HI M_NINF_LO vallo valhi;
