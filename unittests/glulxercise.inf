@@ -11899,6 +11899,8 @@ TestDoubleClass DoubleExpTest
 		print "pow(0,1)="; check_double_hex(valhi, vallo, $>+0, $<+0); print ", ";
 		@dpow $>-0 $<-0 $>+1 $<+1 vallo valhi;
 		print "pow(-0,1)="; check_double_hex(valhi, vallo, $>-0, $<-0); print ", ";
+		@dpow $>+13 $<+13 $>+0.6 $<+0.6 vallo valhi;
+		print "pow(13,0.6)="; check_double_hex_ulp(valhi, vallo, $>+4.659786420036066, $<+4.659786420036066); print ", ";
 		@dpow $>+2 $<+2 $>+127 $<+127 vallo valhi;
 		print "pow(2,127)="; check_double_hex(valhi, vallo, $>+1.7014118346046923e+38, $<+1.7014118346046923e+38); print ", ";
 		@dpow $>+2 $<+2 $>-127 $<-127 vallo valhi;
@@ -11913,6 +11915,16 @@ TestDoubleClass DoubleExpTest
 		print "pow(2,-1075)="; check_double_hex(valhi, vallo, $>+0, $<+0); print ", ";
 		@dpow $>+2 $<+2 $>-1074 $<-1074 vallo valhi;
 		print "pow(2,-1074)="; check_double_hex(valhi, vallo, $00000000, $00000001); print ", ";
+		@dpow $>+2 $<+2 M_INF_HI M_INF_LO vallo valhi;
+		print "pow(2,Inf)="; check_double_hex(valhi, vallo, M_INF_HI, M_INF_LO); print ", ";
+		@dpow $>+2 $<+2 M_NINF_HI M_NINF_LO vallo valhi;
+		print "pow(2,-Inf)="; check_double_hex(valhi, vallo, M_0_HI, M_0_LO); print ", ";
+		@dpow $>+2 $<+2 M_NAN_HI M_NAN_LO vallo valhi;
+		print "pow(2,NaN)="; check_disnan(valhi, vallo); print ", ";
+		@dpow M_NAN_HI M_NAN_LO $>+2 $<+2 vallo valhi;
+		print "pow(NaN,2)="; check_disnan(valhi, vallo); print ", ";
+		@dpow M_NAN_HI M_NAN_LO M_NAN_HI M_NAN_LO vallo valhi;
+		print "pow(NaN,NaN)="; check_disnan(valhi, vallo); print "^";
 		
 		count_failures();
 	];
