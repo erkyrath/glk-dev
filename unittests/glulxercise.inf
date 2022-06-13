@@ -11751,6 +11751,57 @@ TestDoubleClass DoubleRoundTest
 		count_failures();
 	];
 
+TestDoubleClass DoubleExpTest
+	with name 'dexp' 'doubleexp' 'doublesqrt' 'doublepow' 'doublelog',
+	short_name "doubleexp",
+	testfunc [ val valhi vallo;
+		print "Double-precision exponent functions:^^";
+
+		@gestalt 13 0 val; ! Double
+		if (~~val) {
+			print "Interpreter claims to not support double-precision. Skipping test.^^";
+			count_failures();
+			return;
+		}
+		
+		@dsqrt $>+2.25 $<+2.25 vallo valhi;
+		print "sqrt(2.25)="; check_double_hex(valhi, vallo, $>+1.5, $<+1.5); print ", ";
+		@dsqrt $>-2.25 $<-2.25 vallo valhi;
+		print "sqrt(-2.25)="; check_disnan(valhi, vallo); print ", ";
+		@push $<+9.0;
+		@push $>+9.0;
+		noop();
+		@dsqrt sp sp sp sp;
+		noop();
+		@pull valhi;
+		@pull vallo;
+		print "sqrt(9.0)="; check_double_hex(valhi, vallo, $>+3.0, $<+3.0); print ", ";
+		testglobal = $>+10;
+		testglobal2 = $<+10;
+		@dsqrt testglobal testglobal2 vallo valhi;
+		print "sqrt(10.0)="; check_double_hex(valhi, vallo, $>+3.1622776601683795, $<+3.1622776601683795); print ", ";
+		@dsqrt $>+9e50 $<+9e50 vallo valhi;
+		print "sqrt(9e50)="; check_double_hex_ulp(valhi, vallo, $>+3e+25, $<+3e+25); print ", ";
+		@dsqrt $>+9e-50 $<+9e-50 vallo valhi;
+		print "sqrt(9e-50)="; check_double_hex_ulp(valhi, vallo, $>+3e-25, $<+3e-25); print ", ";
+		@dsqrt $>-9e-50 $<-9e-50 vallo valhi;
+		print "sqrt(-9e-50)="; check_disnan(valhi, vallo); print "^";
+
+		@dsqrt M_0_HI M_0_LO vallo valhi;
+		print "sqrt(0)="; check_double_hex(valhi, vallo, $>+0, $<+0); print ", ";
+		@dsqrt M_N0_HI M_N0_LO vallo valhi;
+		print "sqrt(-0)="; check_double_hex(valhi, vallo, $>-0, $<-0); print ", ";
+		@dsqrt M_INF_HI M_INF_LO vallo valhi;
+		print "sqrt(Inf)="; check_double_hex(valhi, vallo, M_INF_HI, M_INF_LO); print ", ";
+		@dsqrt M_NINF_HI M_NINF_LO vallo valhi;
+		print "sqrt(-Inf)="; check_disnan(valhi, vallo); print ", ";
+		@dsqrt M_NAN_HI M_NAN_LO vallo valhi;
+		print "sqrt(NaN)="; check_disnan(valhi, vallo); print "^";
+
+		
+		count_failures();
+	];
+
 TestDoubleClass DoubleModTest
 	with name 'dmod' 'doublemod',
 	short_name "doublemod",
