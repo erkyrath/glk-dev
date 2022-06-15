@@ -11579,13 +11579,13 @@ TestDoubleClass DoubleArithTest
 		@ddiv M_N1_hi M_N1_lo M_N1_hi M_N1_lo vallo valhi;
 		print "div(-1,-1)="; check_double_hex(valhi, vallo, $>+1, $<+1); print ", ";
 		@ddiv M_1_hi M_1_lo M_0_hi M_0_lo vallo valhi;
-		print "div(1,0)="; check_double_hex(valhi, vallo, M_INF_HI, M_INF_LO); print ", ";
+		print "div(1,0)="; check_double_hex(valhi, vallo, M_INF_hi, M_INF_lo); print ", ";
 		@ddiv M_1_hi M_1_lo M_N0_hi M_N0_lo vallo valhi;
-		print "div(1,-0)="; check_double_hex(valhi, vallo, M_NINF_HI, M_NINF_LO); print ", ";
+		print "div(1,-0)="; check_double_hex(valhi, vallo, M_NINF_hi, M_NINF_lo); print ", ";
 		@ddiv M_N0_hi M_N0_lo M_1_hi M_1_lo vallo valhi;
-		print "div(-0,1)="; check_double_hex(valhi, vallo, M_N0_HI, M_N0_LO); print ", ";
+		print "div(-0,1)="; check_double_hex(valhi, vallo, M_N0_hi, M_N0_lo); print ", ";
 		@ddiv M_N0_hi M_N0_lo M_N1_hi M_N1_lo vallo valhi;
-		print "div(-0,-1)="; check_double_hex(valhi, vallo, M_0_HI, M_0_LO); print ", ";
+		print "div(-0,-1)="; check_double_hex(valhi, vallo, M_0_hi, M_0_lo); print ", ";
 		@ddiv $>+123 $<+123 $>+2 $<+2 vallo valhi;
 		print "div(123,2)="; check_double_hex(valhi, vallo, $>+61.5, $<+61.5); print ", ";
 		@ddiv $>-2 $<-2 $>+3 $<+3 vallo valhi;
@@ -11595,17 +11595,17 @@ TestDoubleClass DoubleArithTest
 		@ddiv $>-5e50 $<-5e50 $>+5e49 $<+5e49 vallo valhi;
 		print "div(-5e50,5e49)="; check_double_hex(valhi, vallo, $>-10, $<-10); print ", ";
 		@ddiv $>+1e200 $<+1e200 $>+1e-200 $<+1e-200 vallo valhi;
-		print "div(1e200,1e-200)="; check_double_hex(valhi, vallo, M_INF_HI, M_INF_LO); print ", ";
+		print "div(1e200,1e-200)="; check_double_hex(valhi, vallo, M_INF_hi, M_INF_lo); print ", ";
 		@ddiv $>+1e-200 $<+1e-200 $>+1e200 $<+1e200 vallo valhi;
-		print "div(1e-200,1e200)="; check_double_hex(valhi, vallo, M_0_HI, M_0_LO); print ", ";
+		print "div(1e-200,1e200)="; check_double_hex(valhi, vallo, M_0_hi, M_0_lo); print ", ";
 		@ddiv $>-1e-200 $<-1e-200 $>+1e200 $<+1e200 vallo valhi;
-		print "div(-1e-200,1e200)="; check_double_hex(valhi, vallo, M_N0_HI, M_N0_LO); print ", ";
-		@ddiv M_INF_HI M_INF_LO $>+1e200 $<+1e200 vallo valhi;
-		print "div(Inf,1e200)="; check_double_hex(valhi, vallo, M_INF_HI, M_INF_LO); print ", ";
-		@ddiv M_INF_HI M_INF_LO M_N0_HI M_N0_LO vallo valhi;
-		print "div(Inf,-0)="; check_double_hex(valhi, vallo, M_NINF_HI, M_NINF_LO); print ", ";
-		@ddiv $>+1e200 $<+1e200 M_NINF_HI M_NINF_LO vallo valhi;
-		print "div(1e200,-Inf)="; check_double_hex(valhi, vallo, M_N0_HI, M_N0_LO); print ", ";
+		print "div(-1e-200,1e200)="; check_double_hex(valhi, vallo, M_N0_hi, M_N0_lo); print ", ";
+		@ddiv M_INF_hi M_INF_lo $>+1e200 $<+1e200 vallo valhi;
+		print "div(Inf,1e200)="; check_double_hex(valhi, vallo, M_INF_hi, M_INF_lo); print ", ";
+		@ddiv M_INF_hi M_INF_lo M_N0_hi M_N0_lo vallo valhi;
+		print "div(Inf,-0)="; check_double_hex(valhi, vallo, M_NINF_hi, M_NINF_lo); print ", ";
+		@ddiv $>+1e200 $<+1e200 M_NINF_hi M_NINF_lo vallo valhi;
+		print "div(1e200,-Inf)="; check_double_hex(valhi, vallo, M_N0_hi, M_N0_lo); print ", ";
 		@ddiv M_0_hi M_0_lo M_0_hi M_0_lo vallo valhi;
 		print "div(0,0)="; check_disnan(valhi, vallo); print ", ";
 		@ddiv M_0_hi M_0_lo M_N0_hi M_N0_lo vallo valhi;
@@ -11684,9 +11684,9 @@ TestDoubleClass DoubleRoundTest
 
 		new_line;
 		
-		@dfloor M_0_HI M_0_LO vallo valhi;
+		@dfloor M_0_hi M_0_lo vallo valhi;
 		print "floor(0)="; check_double_hex(valhi, vallo, $>+0, $<+0); print ", ";
-		@dfloor M_N0_HI M_N0_LO vallo valhi;
+		@dfloor M_N0_hi M_N0_lo vallo valhi;
 		print "floor(-0)="; check_double_hex(valhi, vallo, $>-0, $<-0); print ", ";
 		@dfloor $>+0.9 $<+0.9 vallo valhi;
 		print "floor(0.9)="; check_double_hex(valhi, vallo, $>+0, $<+0); print ", ";
@@ -11707,18 +11707,18 @@ TestDoubleClass DoubleRoundTest
 		@dfloor $>+1.123e100 $<+1.123e100 vallo valhi;
 		print "floor(1.123e100)="; check_double_hex(valhi, vallo, $>+1.123e100, $<+1.123e100); print ", ";
 		!### MAXFLOAT, MINFLOAT?
-		@dfloor M_INF_HI M_INF_LO vallo valhi;
-		print "floor(Inf)="; check_double_hex(valhi, vallo, M_INF_HI, M_INF_LO); print ", ";
-		@dfloor M_NINF_HI M_NINF_LO vallo valhi;
-		print "floor(-Inf)="; check_double_hex(valhi, vallo, M_NINF_HI, M_NINF_LO); print ", ";
-		@dfloor M_NAN_HI M_NAN_LO vallo valhi;
+		@dfloor M_INF_hi M_INF_lo vallo valhi;
+		print "floor(Inf)="; check_double_hex(valhi, vallo, M_INF_hi, M_INF_lo); print ", ";
+		@dfloor M_NINF_hi M_NINF_lo vallo valhi;
+		print "floor(-Inf)="; check_double_hex(valhi, vallo, M_NINF_hi, M_NINF_lo); print ", ";
+		@dfloor M_NAN_hi M_NAN_lo vallo valhi;
 		print "floor(NaN)="; check_disnan(valhi, vallo); print "^";
 
 		new_line;
 		
-		@dceil M_0_HI M_0_LO vallo valhi;
+		@dceil M_0_hi M_0_lo vallo valhi;
 		print "ceil(0)="; check_double_hex(valhi, vallo, $>+0, $<+0); print ", ";
-		@dceil M_N0_HI M_N0_LO vallo valhi;
+		@dceil M_N0_hi M_N0_lo vallo valhi;
 		print "ceil(-0)="; check_double_hex(valhi, vallo, $>-0, $<-0); print ", ";
 		@dceil $>+0.9 $<+0.9 vallo valhi;
 		print "ceil(0.9)="; check_double_hex(valhi, vallo, $>+1, $<+1); print ", ";
@@ -11739,11 +11739,11 @@ TestDoubleClass DoubleRoundTest
 		@dceil $>+1.123e100 $<+1.123e100 vallo valhi;
 		print "ceil(1.123e100)="; check_double_hex(valhi, vallo, $>+1.123e100, $<+1.123e100); print ", ";
 		!### MAXFLOAT, MINFLOAT?
-		@dceil M_INF_HI M_INF_LO vallo valhi;
-		print "ceil(Inf)="; check_double_hex(valhi, vallo, M_INF_HI, M_INF_LO); print ", ";
-		@dceil M_NINF_HI M_NINF_LO vallo valhi;
-		print "ceil(-Inf)="; check_double_hex(valhi, vallo, M_NINF_HI, M_NINF_LO); print ", ";
-		@dceil M_NAN_HI M_NAN_LO vallo valhi;
+		@dceil M_INF_hi M_INF_lo vallo valhi;
+		print "ceil(Inf)="; check_double_hex(valhi, vallo, M_INF_hi, M_INF_lo); print ", ";
+		@dceil M_NINF_hi M_NINF_lo vallo valhi;
+		print "ceil(-Inf)="; check_double_hex(valhi, vallo, M_NINF_hi, M_NINF_lo); print ", ";
+		@dceil M_NAN_hi M_NAN_lo vallo valhi;
 		print "ceil(NaN)="; check_disnan(valhi, vallo); print "^";
 
 		new_line;
@@ -11787,15 +11787,15 @@ TestDoubleClass DoubleExpTest
 		@dsqrt $>-9e-50 $<-9e-50 vallo valhi;
 		print "sqrt(-9e-50)="; check_disnan(valhi, vallo); print "^";
 
-		@dsqrt M_0_HI M_0_LO vallo valhi;
+		@dsqrt M_0_hi M_0_lo vallo valhi;
 		print "sqrt(0)="; check_double_hex(valhi, vallo, $>+0, $<+0); print ", ";
-		@dsqrt M_N0_HI M_N0_LO vallo valhi;
+		@dsqrt M_N0_hi M_N0_lo vallo valhi;
 		print "sqrt(-0)="; check_double_hex(valhi, vallo, $>-0, $<-0); print ", ";
-		@dsqrt M_INF_HI M_INF_LO vallo valhi;
-		print "sqrt(Inf)="; check_double_hex(valhi, vallo, M_INF_HI, M_INF_LO); print ", ";
-		@dsqrt M_NINF_HI M_NINF_LO vallo valhi;
+		@dsqrt M_INF_hi M_INF_lo vallo valhi;
+		print "sqrt(Inf)="; check_double_hex(valhi, vallo, M_INF_hi, M_INF_lo); print ", ";
+		@dsqrt M_NINF_hi M_NINF_lo vallo valhi;
 		print "sqrt(-Inf)="; check_disnan(valhi, vallo); print ", ";
-		@dsqrt M_NAN_HI M_NAN_LO vallo valhi;
+		@dsqrt M_NAN_hi M_NAN_lo vallo valhi;
 		print "sqrt(NaN)="; check_disnan(valhi, vallo); print "^";
 
 		new_line;
@@ -11815,20 +11815,20 @@ TestDoubleClass DoubleExpTest
 		@dexp $>-750 $<-750 vallo valhi;
 		print "exp(-750)="; check_double_hex_ulp(valhi, vallo, $>+0, $<+0); print ", ";
 		@dexp $>+750 $<+750 vallo valhi;
-		print "exp(750)="; check_double_hex_ulp(valhi, vallo, M_INF_HI, M_INF_LO); print ", ";
-		@dexp M_INF_HI M_INF_LO vallo valhi;
-		print "exp(Inf)="; check_double_hex(valhi, vallo, M_INF_HI, M_INF_LO); print ", ";
-		@dexp M_NINF_HI M_NINF_LO vallo valhi;
-		print "exp(-Inf)="; check_double_hex(valhi, vallo, M_0_HI, M_0_LO); print ", ";
-		@dexp M_NAN_HI M_NAN_LO vallo valhi;
+		print "exp(750)="; check_double_hex_ulp(valhi, vallo, M_INF_hi, M_INF_lo); print ", ";
+		@dexp M_INF_hi M_INF_lo vallo valhi;
+		print "exp(Inf)="; check_double_hex(valhi, vallo, M_INF_hi, M_INF_lo); print ", ";
+		@dexp M_NINF_hi M_NINF_lo vallo valhi;
+		print "exp(-Inf)="; check_double_hex(valhi, vallo, M_0_hi, M_0_lo); print ", ";
+		@dexp M_NAN_hi M_NAN_lo vallo valhi;
 		print "exp(-NaN)="; check_disnan(valhi, vallo); print "^";
 
 		new_line;
 
 		@dlog $>+0 $<+0 vallo valhi;
-		print "log(0)="; check_double_hex(valhi, vallo, M_NINF_HI, M_NINF_LO); print ", ";
+		print "log(0)="; check_double_hex(valhi, vallo, M_NINF_hi, M_NINF_lo); print ", ";
 		@dlog $>-0 $<-0 vallo valhi;
-		print "log(-0)="; check_double_hex(valhi, vallo, M_NINF_HI, M_NINF_LO); print ", ";
+		print "log(-0)="; check_double_hex(valhi, vallo, M_NINF_hi, M_NINF_lo); print ", ";
 		@dlog $>+1 $<+1 vallo valhi;
 		print "log(1)="; check_double_hex(valhi, vallo, $>+0, $<+0); print ", ";
 		@dlog $>-1 $<-1 vallo valhi;
@@ -11841,11 +11841,11 @@ TestDoubleClass DoubleExpTest
 		print "log(1e200)="; check_double_hex_ulp(valhi, vallo, $>+460.51701859880916, $<+460.51701859880916); print ", ";
 		@dlog $>+1e-200 $<+1e-200 vallo valhi;
 		print "log(1e-200)="; check_double_hex_ulp(valhi, vallo, $>-460.51701859880916, $<-460.51701859880916); print ", ";
-		@dlog M_INF_HI M_INF_LO vallo valhi;
-		print "log(Inf)="; check_double_hex(valhi, vallo, M_INF_HI, M_INF_LO); print ", ";
-		@dlog M_NINF_HI M_NINF_LO vallo valhi;
+		@dlog M_INF_hi M_INF_lo vallo valhi;
+		print "log(Inf)="; check_double_hex(valhi, vallo, M_INF_hi, M_INF_lo); print ", ";
+		@dlog M_NINF_hi M_NINF_lo vallo valhi;
 		print "log(-Inf)="; check_disnan(valhi, vallo); print ", ";
-		@dlog M_NAN_HI M_NAN_LO vallo valhi;
+		@dlog M_NAN_hi M_NAN_lo vallo valhi;
 		print "log(-NaN)="; check_disnan(valhi, vallo); print "^";
 
 		new_line;
@@ -11889,9 +11889,9 @@ TestDoubleClass DoubleExpTest
 
 		new_line;
 
-		@dpow M_N1_HI M_N1_LO M_1_HI M_1_LO vallo valhi;
+		@dpow M_N1_hi M_N1_lo M_1_hi M_1_lo vallo valhi;
 		print "pow(-1,1)="; check_double_hex(valhi, vallo, $>-1, $<-1); print ", ";
-		@dpow M_N1_HI M_N1_LO M_N1_HI M_N1_LO vallo valhi;
+		@dpow M_N1_hi M_N1_lo M_N1_hi M_N1_lo vallo valhi;
 		print "pow(-1,-1)="; check_double_hex(valhi, vallo, $>-1, $<-1); print ", ";
 		@dpow $>-1 $<-1 $>+1.5 $<+1.5 vallo valhi;
 		print "pow(-1,1.5)="; check_disnan(valhi, vallo); print ", ";
@@ -11910,20 +11910,20 @@ TestDoubleClass DoubleExpTest
 		@dpow $>+2 $<+2 $>-1023 $<-1023 vallo valhi;
 		print "pow(2,-1023)="; check_double_hex_ulp(valhi, vallo, $>+1.1125369292535990e-308, $<+1.1125369292535990e-308); print ", ";
 		@dpow $>+2 $<+2 $>+1024 $<+1024 vallo valhi;
-		print "pow(2,1024)="; check_double_hex(valhi, vallo, M_INF_HI, M_INF_LO); print ", ";
+		print "pow(2,1024)="; check_double_hex(valhi, vallo, M_INF_hi, M_INF_lo); print ", ";
 		@dpow $>+2 $<+2 $>-1075 $<-1075 vallo valhi;
 		print "pow(2,-1075)="; check_double_hex(valhi, vallo, $>+0, $<+0); print ", ";
 		@dpow $>+2 $<+2 $>-1074 $<-1074 vallo valhi;
 		print "pow(2,-1074)="; check_double_hex(valhi, vallo, $00000000, $00000001); print ", ";
-		@dpow $>+2 $<+2 M_INF_HI M_INF_LO vallo valhi;
-		print "pow(2,Inf)="; check_double_hex(valhi, vallo, M_INF_HI, M_INF_LO); print ", ";
-		@dpow $>+2 $<+2 M_NINF_HI M_NINF_LO vallo valhi;
-		print "pow(2,-Inf)="; check_double_hex(valhi, vallo, M_0_HI, M_0_LO); print ", ";
-		@dpow $>+2 $<+2 M_NAN_HI M_NAN_LO vallo valhi;
+		@dpow $>+2 $<+2 M_INF_hi M_INF_lo vallo valhi;
+		print "pow(2,Inf)="; check_double_hex(valhi, vallo, M_INF_hi, M_INF_lo); print ", ";
+		@dpow $>+2 $<+2 M_NINF_hi M_NINF_lo vallo valhi;
+		print "pow(2,-Inf)="; check_double_hex(valhi, vallo, M_0_hi, M_0_lo); print ", ";
+		@dpow $>+2 $<+2 M_NAN_hi M_NAN_lo vallo valhi;
 		print "pow(2,NaN)="; check_disnan(valhi, vallo); print ", ";
-		@dpow M_NAN_HI M_NAN_LO $>+2 $<+2 vallo valhi;
+		@dpow M_NAN_hi M_NAN_lo $>+2 $<+2 vallo valhi;
 		print "pow(NaN,2)="; check_disnan(valhi, vallo); print ", ";
-		@dpow M_NAN_HI M_NAN_LO M_NAN_HI M_NAN_LO vallo valhi;
+		@dpow M_NAN_hi M_NAN_lo M_NAN_hi M_NAN_lo vallo valhi;
 		print "pow(NaN,NaN)="; check_disnan(valhi, vallo); print "^";
 		
 		count_failures();
@@ -12052,37 +12052,37 @@ TestDoubleClass DoubleModTest
 		print "mod(5.125,0.5): rem="; check_double_hex(remhi, remlo, $>+0.125, $<+0.125); 
 		print " quo="; check_double_hex(quohi, quolo, $>+10.0, $<+10.0); print ", ";
 		
-		valhi = M_0_HI;
-		vallo = M_0_LO;
-		val2hi = M_1_HI;
-		val2lo = M_1_LO;
+		valhi = M_0_hi;
+		vallo = M_0_lo;
+		val2hi = M_1_hi;
+		val2lo = M_1_lo;
 		@dmodr valhi vallo val2hi val2lo remlo remhi;
 		@dmodq valhi vallo val2hi val2lo quolo quohi;
 		print "mod(0,1): rem="; check_double_hex(remhi, remlo, $>+0, $<+0); 
 		print " quo="; check_double_hex(quohi, quolo, $>+0, $<+0); print ", ";
 		
-		valhi = M_0_HI;
-		vallo = M_0_LO;
-		val2hi = M_N1_HI;
-		val2lo = M_N1_LO;
+		valhi = M_0_hi;
+		vallo = M_0_lo;
+		val2hi = M_N1_hi;
+		val2lo = M_N1_lo;
 		@dmodr valhi vallo val2hi val2lo remlo remhi;
 		@dmodq valhi vallo val2hi val2lo quolo quohi;
 		print "mod(0,-1): rem="; check_double_hex(remhi, remlo, $>+0, $<+0); 
 		print " quo="; check_double_hex(quohi, quolo, $>-0, $<-0); print ", ";
 		
-		valhi = M_N0_HI;
-		vallo = M_N0_LO;
-		val2hi = M_1_HI;
-		val2lo = M_1_LO;
+		valhi = M_N0_hi;
+		vallo = M_N0_lo;
+		val2hi = M_1_hi;
+		val2lo = M_1_lo;
 		@dmodr valhi vallo val2hi val2lo remlo remhi;
 		@dmodq valhi vallo val2hi val2lo quolo quohi;
 		print "mod(-0,1): rem="; check_double_hex(remhi, remlo, $>-0, $<-0); 
 		print " quo="; check_double_hex(quohi, quolo, $>-0, $<-0); print ", ";
 		
-		valhi = M_N0_HI;
-		vallo = M_N0_LO;
-		val2hi = M_N1_HI;
-		val2lo = M_N1_LO;
+		valhi = M_N0_hi;
+		vallo = M_N0_lo;
+		val2hi = M_N1_hi;
+		val2lo = M_N1_lo;
 		@dmodr valhi vallo val2hi val2lo remlo remhi;
 		@dmodq valhi vallo val2hi val2lo quolo quohi;
 		print "mod(-0,-1): rem="; check_double_hex(remhi, remlo, $>-0, $<-0); 
@@ -12146,64 +12146,64 @@ TestDoubleClass DoubleModTest
 
 		new_line;
 
-		valhi = M_0_HI;
-		vallo = M_0_LO;
-		val2hi = M_0_HI;
-		val2lo = M_0_LO;
+		valhi = M_0_hi;
+		vallo = M_0_lo;
+		val2hi = M_0_hi;
+		val2lo = M_0_lo;
 		@dmodr valhi vallo val2hi val2lo remlo remhi;
 		@dmodq valhi vallo val2hi val2lo quolo quohi;
 		print "mod(0,0): rem="; check_disnan(remhi, remlo); 
 		print " quo="; check_disnan(quohi, quolo); print ", ";
 
-		valhi = M_N0_HI;
-		vallo = M_N0_LO;
-		val2hi = M_0_HI;
-		val2lo = M_0_LO;
+		valhi = M_N0_hi;
+		vallo = M_N0_lo;
+		val2hi = M_0_hi;
+		val2lo = M_0_lo;
 		@dmodr valhi vallo val2hi val2lo remlo remhi;
 		@dmodq valhi vallo val2hi val2lo quolo quohi;
 		print "mod(-0,0): rem="; check_disnan(remhi, remlo); 
 		print " quo="; check_disnan(quohi, quolo); print ", ";
 
-		valhi = M_1_HI;
-		vallo = M_1_LO;
-		val2hi = M_0_HI;
-		val2lo = M_0_LO;
+		valhi = M_1_hi;
+		vallo = M_1_lo;
+		val2hi = M_0_hi;
+		val2lo = M_0_lo;
 		@dmodr valhi vallo val2hi val2lo remlo remhi;
 		@dmodq valhi vallo val2hi val2lo quolo quohi;
 		print "mod(1,0): rem="; check_disnan(remhi, remlo); 
 		print " quo="; check_disnan(quohi, quolo); print ", ";
 
-		valhi = M_INF_HI;
-		vallo = M_INF_LO;
-		val2hi = M_1_HI;
-		val2lo = M_1_LO;
+		valhi = M_INF_hi;
+		vallo = M_INF_lo;
+		val2hi = M_1_hi;
+		val2lo = M_1_lo;
 		@dmodr valhi vallo val2hi val2lo remlo remhi;
 		@dmodq valhi vallo val2hi val2lo quolo quohi;
 		print "mod(Inf,1): rem="; check_disnan(remhi, remlo); 
 		print " quo="; check_disnan(quohi, quolo); print ", ";
 
-		valhi = M_NINF_HI;
-		vallo = M_NINF_LO;
-		val2hi = M_1_HI;
-		val2lo = M_1_LO;
+		valhi = M_NINF_hi;
+		vallo = M_NINF_lo;
+		val2hi = M_1_hi;
+		val2lo = M_1_lo;
 		@dmodr valhi vallo val2hi val2lo remlo remhi;
 		@dmodq valhi vallo val2hi val2lo quolo quohi;
 		print "mod(-Inf,1): rem="; check_disnan(remhi, remlo); 
 		print " quo="; check_disnan(quohi, quolo); print ", ";
 
-		valhi = M_INF_HI;
-		vallo = M_INF_LO;
-		val2hi = M_INF_HI;
-		val2lo = M_INF_LO;
+		valhi = M_INF_hi;
+		vallo = M_INF_lo;
+		val2hi = M_INF_hi;
+		val2lo = M_INF_lo;
 		@dmodr valhi vallo val2hi val2lo remlo remhi;
 		@dmodq valhi vallo val2hi val2lo quolo quohi;
 		print "mod(Inf,Inf): rem="; check_disnan(remhi, remlo); 
 		print " quo="; check_disnan(quohi, quolo); print ", ";
 
-		valhi = M_INF_HI;
-		vallo = M_INF_LO;
-		val2hi = M_NINF_HI;
-		val2lo = M_NINF_LO;
+		valhi = M_INF_hi;
+		vallo = M_INF_lo;
+		val2hi = M_NINF_hi;
+		val2lo = M_NINF_lo;
 		@dmodr valhi vallo val2hi val2lo remlo remhi;
 		@dmodq valhi vallo val2hi val2lo quolo quohi;
 		print "mod(Inf,-Inf): rem="; check_disnan(remhi, remlo); 
@@ -12213,81 +12213,81 @@ TestDoubleClass DoubleModTest
 
 		valhi = $>+2;
 		vallo = $<+2;
-		val2hi = M_INF_HI;
-		val2lo = M_INF_LO;
+		val2hi = M_INF_hi;
+		val2lo = M_INF_lo;
 		@dmodr valhi vallo val2hi val2lo remlo remhi;
 		@dmodq valhi vallo val2hi val2lo quolo quohi;
 		print "mod(2,Inf): rem="; check_double_hex(remhi, remlo, $>+2, $<+2); 
-		print " quo="; check_double_hex(quohi, quolo, M_0_HI, M_0_LO); print ", ";
+		print " quo="; check_double_hex(quohi, quolo, M_0_hi, M_0_lo); print ", ";
 
 		valhi = $>-12345678.1234567;
 		vallo = $<-12345678.1234567;
-		val2hi = M_INF_HI;
-		val2lo = M_INF_LO;
+		val2hi = M_INF_hi;
+		val2lo = M_INF_lo;
 		@dmodr valhi vallo val2hi val2lo remlo remhi;
 		@dmodq valhi vallo val2hi val2lo quolo quohi;
 		print "mod(-12345678.1234567,Inf): rem="; check_double_hex(remhi, remlo, $>-12345678.1234567, $<-12345678.1234567); 
-		print " quo="; check_double_hex(quohi, quolo, M_N0_HI, M_N0_LO); print ", ";
+		print " quo="; check_double_hex(quohi, quolo, M_N0_hi, M_N0_lo); print ", ";
 
 		valhi = $>+1.234e-20;
 		vallo = $<+1.234e-20;
-		val2hi = M_INF_HI;
-		val2lo = M_INF_LO;
+		val2hi = M_INF_hi;
+		val2lo = M_INF_lo;
 		@dmodr valhi vallo val2hi val2lo remlo remhi;
 		@dmodq valhi vallo val2hi val2lo quolo quohi;
 		print "mod(1.234e-20,Inf): rem="; check_double_hex(remhi, remlo, $>+1.234e-20, $<+1.234e-20); 
-		print " quo="; check_double_hex(quohi, quolo, M_0_HI, M_0_LO); print ", ";
+		print " quo="; check_double_hex(quohi, quolo, M_0_hi, M_0_lo); print ", ";
 
 		valhi = $>-0;
 		vallo = $<-0;
-		val2hi = M_INF_HI;
-		val2lo = M_INF_LO;
+		val2hi = M_INF_hi;
+		val2lo = M_INF_lo;
 		@dmodr valhi vallo val2hi val2lo remlo remhi;
 		@dmodq valhi vallo val2hi val2lo quolo quohi;
 		print "mod(-0,Inf): rem="; check_double_hex(remhi, remlo, $>-0, $<-0); 
-		print " quo="; check_double_hex(quohi, quolo, M_N0_HI, M_N0_LO); print ", ";
+		print " quo="; check_double_hex(quohi, quolo, M_N0_hi, M_N0_lo); print ", ";
 		valhi = $>+2;
 		vallo = $<+2;
-		val2hi = M_NINF_HI;
-		val2lo = M_NINF_LO;
+		val2hi = M_NINF_hi;
+		val2lo = M_NINF_lo;
 		@dmodr valhi vallo val2hi val2lo remlo remhi;
 		@dmodq valhi vallo val2hi val2lo quolo quohi;
 		print "mod(2,-Inf): rem="; check_double_hex(remhi, remlo, $>+2, $<+2); 
-		print " quo="; check_double_hex(quohi, quolo, M_N0_HI, M_N0_LO); print "^";
+		print " quo="; check_double_hex(quohi, quolo, M_N0_hi, M_N0_lo); print "^";
 
 		new_line;
 
-		valhi = M_1_HI;
-		vallo = M_1_LO;
-		val2hi = M_NAN_HI;
-		val2lo = M_NAN_LO;
+		valhi = M_1_hi;
+		vallo = M_1_lo;
+		val2hi = M_NAN_hi;
+		val2lo = M_NAN_lo;
 		@dmodr valhi vallo val2hi val2lo remlo remhi;
 		@dmodq valhi vallo val2hi val2lo quolo quohi;
 		print "mod(1,NaN): rem="; check_disnan(remhi, remlo); 
 		print " quo="; check_disnan(quohi, quolo); print ", ";
 
-		valhi = M_NAN_HI;
-		vallo = M_NAN_LO;
-		val2hi = M_1_HI;
-		val2lo = M_1_LO;
+		valhi = M_NAN_hi;
+		vallo = M_NAN_lo;
+		val2hi = M_1_hi;
+		val2lo = M_1_lo;
 		@dmodr valhi vallo val2hi val2lo remlo remhi;
 		@dmodq valhi vallo val2hi val2lo quolo quohi;
 		print "mod(NaN,1): rem="; check_disnan(remhi, remlo); 
 		print " quo="; check_disnan(quohi, quolo); print ", ";
 
-		valhi = M_NAN_HI;
-		vallo = M_NAN_LO;
-		val2hi = M_NAN_HI;
-		val2lo = M_NAN_LO;
+		valhi = M_NAN_hi;
+		vallo = M_NAN_lo;
+		val2hi = M_NAN_hi;
+		val2lo = M_NAN_lo;
 		@dmodr valhi vallo val2hi val2lo remlo remhi;
 		@dmodq valhi vallo val2hi val2lo quolo quohi;
 		print "mod(NaN,NaN): rem="; check_disnan(remhi, remlo); 
 		print " quo="; check_disnan(quohi, quolo); print ", ";
 
-		valhi = M_INF_HI;
-		vallo = M_INF_LO;
-		val2hi = M_NAN_HI;
-		val2lo = M_NAN_LO;
+		valhi = M_INF_hi;
+		vallo = M_INF_lo;
+		val2hi = M_NAN_hi;
+		val2lo = M_NAN_lo;
 		@dmodr valhi vallo val2hi val2lo remlo remhi;
 		@dmodq valhi vallo val2hi val2lo quolo quohi;
 		print "mod(Inf,NaN): rem="; check_disnan(remhi, remlo); 
