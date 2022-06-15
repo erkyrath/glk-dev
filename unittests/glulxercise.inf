@@ -12366,6 +12366,27 @@ TestDoubleClass DoubleTrigTest
 		@dsin M_NAN_hi M_NAN_lo vallo valhi;
 		print "sin(NaN)="; check_disnan(valhi, vallo); print "^";
 
+		new_line;
+
+		@dcos M_0_hi M_0_lo vallo valhi;
+		print "cos(0)="; check_double_hex(valhi, vallo, $>+1, $<+1); print ", ";
+		@dcos M_N0_hi M_N0_lo vallo valhi;
+		print "cos(-0)="; check_double_hex(valhi, vallo, $>+1, $<+1); print ", ";
+		@dcos M_PI_hi M_PI_lo vallo valhi;
+		print "cos(pi)="; check_double_hex_e(valhi, vallo, $>-1, $<-1, $>+1e-15, $<+1e-15); print ", ";
+		@dcos M_2PI_hi M_2PI_lo vallo valhi;
+		print "cos(2pi)="; check_double_hex_e(valhi, vallo, $>+1, $<+1, $>+1e-15, $<+1e-15); print ", ";
+		@dcos M_PI_2_hi M_PI_2_lo vallo valhi;
+		print "cos(pi/2)="; check_double_hex_e(valhi, vallo, $>+0, $<+0, $>+1e-15, $<+1e-15); print ", ";
+		@dcos M_PI_4_hi M_PI_4_lo vallo valhi;
+		print "cos(pi/4)="; check_double_hex_e(valhi, vallo, $>+0.7071067811865475, $<+0.7071067811865475, $>+1e-15, $<+1e-15); print ", ";
+		@dcos M_INF_hi M_INF_lo vallo valhi;
+		print "cos(Inf)="; check_disnan(valhi, vallo); print ", ";
+		@dcos M_NINF_hi M_NINF_lo vallo valhi;
+		print "cos(-Inf)="; check_disnan(valhi, vallo); print ", ";
+		@dcos M_NAN_hi M_NAN_lo vallo valhi;
+		print "cos(NaN)="; check_disnan(valhi, vallo); print "^";
+
 		count_failures();
 	];
 
