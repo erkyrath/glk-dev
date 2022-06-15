@@ -10577,6 +10577,10 @@ Constant M_NAN_hi     = $7FF80000;
 Constant M_NAN_lo     = $00000001;
 Constant M_NNAN_hi    = $FFF80000;
 Constant M_NNAN_lo    = $00000001;
+Constant M_MINDBL_hi  = $00000000; ! 4.9406565e-324
+Constant M_MINDBL_lo  = $00000001;
+Constant M_MAXDBL_hi  = $7FEFFFFF; ! 1.7976931e+308
+Constant M_MAXDBL_lo  = $FFFFFFFF;
 
 ! Print a double, given as two values (valhi, vallo). This uses exponential
 ! notation ("[-]N.NNNe[+-]NN") if the exponent is not between 6 and -5.
