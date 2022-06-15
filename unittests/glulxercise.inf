@@ -10586,6 +10586,10 @@ Constant M_PI_hi      = $400921FB;
 Constant M_PI_lo      = $54442D18;
 Constant M_2PI_hi     = $401921FB;
 Constant M_2PI_lo     = $54442D18;
+Constant M_PI_2_hi    = $3FF921FB;
+Constant M_PI_2_lo    = $54442D18;
+Constant M_PI_4_hi    = $3FE921FB;
+Constant M_PI_4_lo    = $54442D18;
 
 ! Print a double, given as two values (valhi, vallo). This uses exponential
 ! notation ("[-]N.NNNe[+-]NN") if the exponent is not between 6 and -5.
@@ -12351,6 +12355,10 @@ TestDoubleClass DoubleTrigTest
 		print "sin(pi)="; check_double_hex_e(valhi, vallo, $>+0, $<+0, $>+1e-15, $<+1e-15); print ", ";
 		@dsin M_2PI_hi M_2PI_lo vallo valhi;
 		print "sin(2pi)="; check_double_hex_e(valhi, vallo, $>+0, $<+0, $>+1e-15, $<+1e-15); print ", ";
+		@dsin M_PI_2_hi M_PI_2_lo vallo valhi;
+		print "sin(pi/2)="; check_double_hex_e(valhi, vallo, $>+1, $<+1, $>+1e-15, $<+1e-15); print ", ";
+		@dsin M_PI_4_hi M_PI_4_lo vallo valhi;
+		print "sin(pi/4)="; check_double_hex_e(valhi, vallo, $>+0.7071067811865475, $<+0.7071067811865475, $>+1e-15, $<+1e-15); print ", ";
 		@dsin M_INF_hi M_INF_lo vallo valhi;
 		print "sin(Inf)="; check_disnan(valhi, vallo); print ", ";
 		@dsin M_NINF_hi M_NINF_lo vallo valhi;
