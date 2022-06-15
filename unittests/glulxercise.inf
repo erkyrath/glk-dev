@@ -7347,6 +7347,7 @@ Array PowersOfTen --> 1 10 100 1000 10000 100000 1000000 10000000 100000000 1000
 	rfalse;
 ];
 
+! Allow a margin of eps
 [ check_float_e val wanted eps;
 	@jfne val wanted eps ?Bad;
 	if (1) { ! if (abs(val-wanted) <= eps)...
@@ -10581,6 +10582,10 @@ Constant M_MINDBL_hi  = $00000000; ! 4.9406565e-324
 Constant M_MINDBL_lo  = $00000001;
 Constant M_MAXDBL_hi  = $7FEFFFFF; ! 1.7976931e+308
 Constant M_MAXDBL_lo  = $FFFFFFFF;
+Constant M_PI_hi      = $400921FB;
+Constant M_PI_lo      = $54442D18;
+Constant M_2PI_hi     = $401921FB;
+Constant M_2PI_lo     = $54442D18;
 
 ! Print a double, given as two values (valhi, vallo). This uses exponential
 ! notation ("[-]N.NNNe[+-]NN") if the exponent is not between 6 and -5.
@@ -10814,6 +10819,19 @@ Constant M_MAXDBL_lo  = $FFFFFFFF;
 	}
 	failures++;
 	print (Hex) valhi, ":", (Hex8) vallo, " (should be ", (Hex) wantedhi, ":", (Hex8) wantedlo, " FAIL)";
+	rfalse;
+];
+
+! Allow a margin of eps
+[ check_double_hex_e valhi vallo wantedhi wantedlo epshi epslo;
+	@jdne valhi vallo wantedhi wantedlo epshi epslo ?Bad;
+	if (1) { ! if (abs(val-wanted) <= eps)...
+		print (char) '~', (Hex) valhi, ":", (Hex8) vallo;
+		rtrue;
+	}
+	.Bad;
+	failures++;
+	print (Hex) valhi, ":", (Hex8) vallo, " (should be near ", (Hex) wantedhi, ":", (Hex8) wantedlo, " FAIL)";
 	rfalse;
 ];
 
@@ -12308,6 +12326,37 @@ TestDoubleClass DoubleModTest
 		@dmodq valhi vallo val2hi val2lo quolo quohi;
 		print "mod(Inf,NaN): rem="; check_disnan(remhi, remlo); 
 		print " quo="; check_disnan(quohi, quolo); print "^";
+		
+		count_failures();
+	];
+
+TestDoubleClass DoubleTrigTest
+	with name 'dtrig' 'doubletrig',
+	short_name "doubletrig",
+	testfunc [ val valhi vallo;
+		print "Double-precision trig functions:^^";
+
+		@gestalt 13 0 val; ! Double
+		if (~~val) {
+			print "Interpreter claims to not support double-precision. Skipping test.^^";
+			count_failures();
+			return;
+		}
+
+		@dsin M_0_hi M_0_lo vallo valhi;
+		print "sin(0)="; check_double_hex(valhi, vallo, $>+0, $<+0); print ", ";
+		@dsin M_N0_hi M_N0_lo vallo valhi;
+		print "sin(-0)="; check_double_hex(valhi, vallo, $>-0, $<-0); print ", ";
+		@dsin M_PI_hi M_PI_lo vallo valhi;
+		print "sin(pi)="; check_double_hex_e(valhi, vallo, $>+0, $<+0, $>+1e-15, $<+1e-15); print ", ";
+		@dsin M_2PI_hi M_2PI_lo vallo valhi;
+		print "sin(2pi)="; check_double_hex_e(valhi, vallo, $>+0, $<+0, $>+1e-15, $<+1e-15); print ", ";
+		@dsin M_INF_hi M_INF_lo vallo valhi;
+		print "sin(Inf)="; check_disnan(valhi, vallo); print ", ";
+		@dsin M_NINF_hi M_NINF_lo vallo valhi;
+		print "sin(-Inf)="; check_disnan(valhi, vallo); print ", ";
+		@dsin M_NAN_hi M_NAN_lo vallo valhi;
+		print "sin(NaN)="; check_disnan(valhi, vallo); print "^";
 
 		count_failures();
 	];
