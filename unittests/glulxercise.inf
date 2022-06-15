@@ -11710,7 +11710,10 @@ TestDoubleClass DoubleRoundTest
 		print "floor(-9999.9999995)="; check_double_hex(valhi, vallo, $>-10000, $<-10000); print ", ";
 		@dfloor $>+1.123e100 $<+1.123e100 vallo valhi;
 		print "floor(1.123e100)="; check_double_hex(valhi, vallo, $>+1.123e100, $<+1.123e100); print ", ";
-		!### MAXFLOAT, MINFLOAT?
+		@dfloor M_MAXDBL_hi M_MAXDBL_lo vallo valhi;
+		print "floor(MaxDbl)="; check_double_hex(valhi, vallo, M_MAXDBL_hi, M_MAXDBL_lo); print ", ";
+		@dfloor M_MINDBL_hi M_MINDBL_lo vallo valhi;
+		print "floor(MinDbl)="; check_double_hex(valhi, vallo, M_0_hi, M_0_lo); print ", ";
 		@dfloor M_INF_hi M_INF_lo vallo valhi;
 		print "floor(Inf)="; check_double_hex(valhi, vallo, M_INF_hi, M_INF_lo); print ", ";
 		@dfloor M_NINF_hi M_NINF_lo vallo valhi;
@@ -11742,7 +11745,10 @@ TestDoubleClass DoubleRoundTest
 		print "ceil(-9999.9999995)="; check_double_hex(valhi, vallo, $>-9999, $<-9999); print ", ";
 		@dceil $>+1.123e100 $<+1.123e100 vallo valhi;
 		print "ceil(1.123e100)="; check_double_hex(valhi, vallo, $>+1.123e100, $<+1.123e100); print ", ";
-		!### MAXFLOAT, MINFLOAT?
+		@dceil M_MAXDBL_hi M_MAXDBL_lo vallo valhi;
+		print "ceil(MaxDbl)="; check_double_hex(valhi, vallo, M_MAXDBL_hi, M_MAXDBL_lo); print ", ";
+		@dceil M_MINDBL_hi M_MINDBL_lo vallo valhi;
+		print "ceil(MinDbl)="; check_double_hex(valhi, vallo, M_1_hi, M_1_lo); print ", ";
 		@dceil M_INF_hi M_INF_lo vallo valhi;
 		print "ceil(Inf)="; check_double_hex(valhi, vallo, M_INF_hi, M_INF_lo); print ", ";
 		@dceil M_NINF_hi M_NINF_lo vallo valhi;
