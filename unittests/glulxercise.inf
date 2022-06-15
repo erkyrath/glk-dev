@@ -11795,7 +11795,9 @@ TestDoubleClass DoubleExpTest
 		@dsqrt $>+9e-50 $<+9e-50 vallo valhi;
 		print "sqrt(9e-50)="; check_double_hex_ulp(valhi, vallo, $>+3e-25, $<+3e-25); print ", ";
 		@dsqrt $>-9e-50 $<-9e-50 vallo valhi;
-		print "sqrt(-9e-50)="; check_disnan(valhi, vallo); print "^";
+		print "sqrt(-9e-50)="; check_disnan(valhi, vallo); print ", ";
+		@dsqrt M_MINDBL_hi M_MINDBL_lo vallo valhi;
+		print "sqrt(MinDbl)="; check_double_hex_ulp(valhi, vallo, $>+2.2227587494850760e-162, $<+2.2227587494850760e-162); print "^";
 
 		@dsqrt M_0_hi M_0_lo vallo valhi;
 		print "sqrt(0)="; check_double_hex(valhi, vallo, $>+0, $<+0); print ", ";
@@ -11826,6 +11828,8 @@ TestDoubleClass DoubleExpTest
 		print "exp(-750)="; check_double_hex_ulp(valhi, vallo, $>+0, $<+0); print ", ";
 		@dexp $>+750 $<+750 vallo valhi;
 		print "exp(750)="; check_double_hex_ulp(valhi, vallo, M_INF_hi, M_INF_lo); print ", ";
+		@dexp M_MINDBL_hi M_MINDBL_lo vallo valhi;
+		print "exp(MinDbl)="; check_double_hex_ulp(valhi, vallo, M_1_hi, M_1_lo); print ", ";
 		@dexp M_INF_hi M_INF_lo vallo valhi;
 		print "exp(Inf)="; check_double_hex(valhi, vallo, M_INF_hi, M_INF_lo); print ", ";
 		@dexp M_NINF_hi M_NINF_lo vallo valhi;
@@ -11924,7 +11928,9 @@ TestDoubleClass DoubleExpTest
 		@dpow $>+2 $<+2 $>-1075 $<-1075 vallo valhi;
 		print "pow(2,-1075)="; check_double_hex(valhi, vallo, $>+0, $<+0); print ", ";
 		@dpow $>+2 $<+2 $>-1074 $<-1074 vallo valhi;
-		print "pow(2,-1074)="; check_double_hex(valhi, vallo, $00000000, $00000001); print ", ";
+		print "pow(2,-1074)="; check_double_hex(valhi, vallo, M_MINDBL_hi, M_MINDBL_lo); print ", ";
+		@dpow M_MINDBL_hi M_MINDBL_lo $>+2 $<+2 vallo valhi;
+		print "pow(MinDbl, 2)="; check_double_hex(valhi, vallo, M_0_hi, M_0_lo); print ", ";
 		@dpow $>+2 $<+2 M_INF_hi M_INF_lo vallo valhi;
 		print "pow(2,Inf)="; check_double_hex(valhi, vallo, M_INF_hi, M_INF_lo); print ", ";
 		@dpow $>+2 $<+2 M_NINF_hi M_NINF_lo vallo valhi;
