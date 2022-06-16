@@ -12510,8 +12510,47 @@ TestDoubleClass DoubleAtan2Test
 
 		new_line;
 
-
+		@datan2 M_0_hi M_0_lo M_0_hi M_0_lo vallo valhi;
+		print "atan2(0,0)="; check_double_hex(valhi, vallo, $>+0, $<+0); print ", ";
+		@datan2 M_N0_hi M_N0_lo M_0_hi M_0_lo vallo valhi;
+		print "atan2(-0,0)="; check_double_hex(valhi, vallo, $>-0, $<-0); print ", ";
+		@datan2 M_0_hi M_0_lo M_N0_hi M_N0_lo vallo valhi;
+		print "atan2(0,-0)="; check_double_hex(valhi, vallo, M_PI_hi, M_PI_lo); print ", ";
+		@datan2 M_N0_hi M_N0_lo M_N0_hi M_N0_lo vallo valhi;
+		print "atan2(-0,-0)="; check_double_hex(valhi, vallo, M_PI_hi|$80000000, M_PI_lo); print ", ";
+		@datan2 M_0_hi M_0_lo M_1_hi M_1_lo vallo valhi;
+		print "atan2(0,1)="; check_double_hex(valhi, vallo, $>+0, $<+0); print ", ";
+		@datan2 M_N0_hi M_N0_lo M_1_hi M_1_lo vallo valhi;
+		print "atan2(-0,1)="; check_double_hex(valhi, vallo, $>-0, $<-0); print ", ";
+		@datan2 M_0_hi M_0_lo M_N1_hi M_N1_lo vallo valhi;
+		print "atan2(0,-1)="; check_double_hex(valhi, vallo, M_PI_hi, M_PI_lo); print ", ";
+		@datan2 M_N0_hi M_N0_lo M_N1_hi M_N1_lo vallo valhi;
+		print "atan2(-0,-1)="; check_double_hex(valhi, vallo, M_PI_hi|$80000000, M_PI_lo); print ", ";
+		@datan2 M_1_hi M_1_lo M_0_hi M_0_lo vallo valhi;
+		print "atan2(1,0)="; check_double_hex(valhi, vallo, M_PI_2_hi, M_PI_2_lo); print ", ";
+		@datan2 M_1_hi M_1_lo M_N0_hi M_N0_lo vallo valhi;
+		print "atan2(1,-0)="; check_double_hex(valhi, vallo, M_PI_2_hi, M_PI_2_lo); print ", ";
+		@datan2 M_N1_hi M_N1_lo M_0_hi M_0_lo vallo valhi;
+		print "atan2(-1,0)="; check_double_hex(valhi, vallo, M_PI_2_hi|$80000000, M_PI_2_lo); print ", ";
+		@datan2 M_N1_hi M_N1_lo M_N0_hi M_N0_lo vallo valhi;
+		print "atan2(-1,-0)="; check_double_hex(valhi, vallo, M_PI_2_hi|$80000000, M_PI_2_lo); print ", ";
+		@datan2 M_1_hi M_1_lo M_INF_hi M_INF_lo vallo valhi;
+		print "atan2(1,Inf)="; check_double_hex(valhi, vallo, $>+0, $<+0); print ", ";
+		@datan2 M_INF_hi M_INF_lo M_1_hi M_1_lo vallo valhi;
+		print "atan2(Inf,1)="; check_double_hex(valhi, vallo, M_PI_2_hi, M_PI_2_lo); print ", ";
+		@datan2 M_NINF_hi M_NINF_lo M_INF_hi M_INF_lo vallo valhi;
+		print "atan2(-Inf,Inf)="; check_double_hex(valhi, vallo, $>-0.7853981633974483, $<-0.7853981633974483); print "^";
 		
+		@datan2 M_1_hi M_1_lo M_NAN_hi M_NAN_lo vallo valhi;
+		print "atan2(1,NaN)="; check_disnan(valhi, vallo); print ", ";
+		@datan2 M_NAN_hi M_NAN_lo M_0_hi M_0_lo vallo valhi;
+		print "atan2(NaN,0)="; check_disnan(valhi, vallo); print ", ";
+		@datan2 M_INF_hi M_INF_lo M_NAN_hi M_NAN_lo vallo valhi;
+		print "atan2(Inf,NaN)="; check_disnan(valhi, vallo); print ", ";
+		@datan2 M_NAN_hi M_NAN_lo M_NINF_hi M_NINF_lo vallo valhi;
+		print "atan2(NaN,-Inf)="; check_disnan(valhi, vallo); print ", ";
+		@datan2 M_NAN_hi M_NAN_lo M_NAN_hi M_NAN_lo vallo valhi;
+		print "atan2(NaN,NaN)="; check_disnan(valhi, vallo); print "^";
 
 		count_failures();
 	];
