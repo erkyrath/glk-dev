@@ -12465,6 +12465,53 @@ TestDoubleClass DoubleTrigTest
 		print "atan(-Inf)="; check_double_hex(valhi, vallo, M_PI_2_hi|$80000000, M_PI_2_lo); print ", ";
 		@datan M_NAN_hi M_NAN_lo vallo valhi;
 		print "atan(NaN)="; check_disnan(valhi, vallo); print "^";
+		
+		count_failures();
+	];
+
+TestDoubleClass DoubleAtan2Test
+	with name 'datan2' 'doubleatan2',
+	short_name "doubleatan2",
+	testfunc [ val valhi vallo;
+		print "Double-precision atan2 function:^^";
+
+		@gestalt 13 0 val; ! Double
+		if (~~val) {
+			print "Interpreter claims to not support double-precision. Skipping test.^^";
+			count_failures();
+			return;
+		}
+		
+		@datan2 M_1_hi M_1_lo M_1_hi M_1_lo vallo valhi;
+		print "atan2(1,1)="; check_double_hex(valhi, vallo, $>+0.7853981633974483, $<+0.7853981633974483); print ", ";
+
+		valhi = M_1_hi;
+		vallo = M_1_lo;
+		testglobal = M_N1_hi;
+		testglobal2 = M_N1_lo;
+		@datan2 valhi vallo testglobal testglobal2 vallo valhi;
+		print "atan2(1,-1)="; check_double_hex(valhi, vallo, $>+2.356194490192345, $<+2.356194490192345); print ", ";
+
+		testglobal = M_N1_hi;
+		testglobal2 = M_N1_lo;
+		@datan2 testglobal testglobal2 testglobal testglobal2 vallo valhi;
+		print "atan2(-1,-1)="; check_double_hex(valhi, vallo, $>-2.356194490192345, $<-2.356194490192345); print ", ";
+
+		@push M_1_lo;
+		@push M_1_hi;
+		@push M_N1_lo;
+		@push M_N1_hi;
+		noop();
+		@datan2 sp sp sp sp sp sp;
+		noop();
+		@pull valhi;
+		@pull vallo;
+		print "atan2(-1,1)="; check_double_hex(valhi, vallo, $>-0.7853981633974483, $<-0.7853981633974483); print "^";
+
+		new_line;
+
+
+		
 
 		count_failures();
 	];
