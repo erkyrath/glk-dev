@@ -12407,6 +12407,65 @@ TestDoubleClass DoubleTrigTest
 		@dtan M_NAN_hi M_NAN_lo vallo valhi;
 		print "tan(NaN)="; check_disnan(valhi, vallo); print "^";
 
+		new_line;
+
+		@dasin M_0_hi M_0_lo vallo valhi;
+		print "asin(0)="; check_double_hex(valhi, vallo, $>+0, $<+0); print ", ";
+		@dasin M_N0_hi M_N0_lo vallo valhi;
+		print "asin(-0)="; check_double_hex(valhi, vallo, $>-0, $<-0); print ", ";
+		@dasin M_1_hi M_1_lo vallo valhi;
+		print "asin(1)="; check_double_hex(valhi, vallo, M_PI_2_hi, M_PI_2_lo); print ", ";
+		@dasin M_N1_hi M_N1_lo vallo valhi;
+		print "asin(-1)="; check_double_hex(valhi, vallo, M_PI_2_hi|$80000000, M_PI_2_lo); print ", ";
+		@dasin $>+2 $<+2 vallo valhi;
+		print "asin(2)="; check_disnan(valhi, vallo); print ", ";
+		@dasin $>-2 $<-2 vallo valhi;
+		print "asin(-2)="; check_disnan(valhi, vallo); print ", ";
+		@dasin M_INF_hi M_INF_lo vallo valhi;
+		print "asin(Inf)="; check_disnan(valhi, vallo); print ", ";
+		@dasin M_NINF_hi M_NINF_lo vallo valhi;
+		print "asin(-Inf)="; check_disnan(valhi, vallo); print ", ";
+		@dasin M_NAN_hi M_NAN_lo vallo valhi;
+		print "asin(NaN)="; check_disnan(valhi, vallo); print "^";
+
+		new_line;
+
+		@dacos M_0_hi M_0_lo vallo valhi;
+		print "acos(0)="; check_double_hex(valhi, vallo, M_PI_2_hi, M_PI_2_lo); print ", ";
+		@dacos M_N0_hi M_N0_lo vallo valhi;
+		print "acos(-0)="; check_double_hex(valhi, vallo, M_PI_2_hi, M_PI_2_lo); print ", ";
+		@dacos M_1_hi M_1_lo vallo valhi;
+		print "acos(1)="; check_double_hex(valhi, vallo, M_0_hi, M_0_lo); print ", ";
+		@dacos M_N1_hi M_N1_lo vallo valhi;
+		print "acos(-1)="; check_double_hex(valhi, vallo, M_PI_hi, M_PI_lo); print ", ";
+		@dacos $>+2 $<+2 vallo valhi;
+		print "acos(2)="; check_disnan(valhi, vallo); print ", ";
+		@dacos $>-2 $<-2 vallo valhi;
+		print "acos(-2)="; check_disnan(valhi, vallo); print ", ";
+		@dacos M_INF_hi M_INF_lo vallo valhi;
+		print "acos(Inf)="; check_disnan(valhi, vallo); print ", ";
+		@dacos M_NINF_hi M_NINF_lo vallo valhi;
+		print "acos(-Inf)="; check_disnan(valhi, vallo); print ", ";
+		@dacos M_NAN_hi M_NAN_lo vallo valhi;
+		print "acos(NaN)="; check_disnan(valhi, vallo); print "^";
+
+		new_line;
+
+		@datan M_0_hi M_0_lo vallo valhi;
+		print "atan(0)="; check_double_hex(valhi, vallo, $>+0, $<+0); print ", ";
+		@datan M_N0_hi M_N0_lo vallo valhi;
+		print "atan(-0)="; check_double_hex(valhi, vallo, $>-0, $<-0); print ", ";
+		@datan M_1_hi M_1_lo vallo valhi;
+		print "atan(1)="; check_double_hex(valhi, vallo, $>+0.7853981633974483, $<+0.7853981633974483); print ", ";
+		@datan M_N1_hi M_N1_lo vallo valhi;
+		print "atan(-1)="; check_double_hex(valhi, vallo, $>-0.7853981633974483, $<-0.7853981633974483); print ", ";
+		@datan M_INF_hi M_INF_lo vallo valhi;
+		print "atan(Inf)="; check_double_hex(valhi, vallo, M_PI_2_hi, M_PI_2_lo); print ", ";
+		@datan M_NINF_hi M_NINF_lo vallo valhi;
+		print "atan(-Inf)="; check_double_hex(valhi, vallo, M_PI_2_hi|$80000000, M_PI_2_lo); print ", ";
+		@datan M_NAN_hi M_NAN_lo vallo valhi;
+		print "atan(NaN)="; check_disnan(valhi, vallo); print "^";
+
 		count_failures();
 	];
 
