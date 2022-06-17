@@ -12606,6 +12606,50 @@ TestDoubleClass DoubleJumpTest
 		val = test_jdisinf($FFFFFFFF, $FFFFFFFF);
 		print "jdisinf(other -NaN)="; check(val, 0); print "^";
 
+		val = test_jdlt(M_0_hi, M_0_lo, M_0_hi, M_0_lo);
+		print "jdlt(0,0)="; check(val, 0); print ", ";
+		val = test_jdlt(M_N0_hi, M_N0_lo, M_0_hi, M_0_lo);
+		print "jdlt(-0,0)="; check(val, 0); print ", ";
+		val = test_jdlt(M_0_hi, M_0_lo, M_1_hi, M_1_lo);
+		print "jdlt(0,1)="; check(val, 1); print ", ";
+		val = test_jdlt(M_1_hi, M_1_lo, M_0_hi, M_0_lo);
+		print "jdlt(1,0)="; check(val, 0); print ", ";
+		val = test_jdlt(M_N1_hi, M_N1_lo, M_0_hi, M_0_lo);
+		print "jdlt(-1,0)="; check(val, 1); print ", ";
+		val = test_jdlt(M_1_hi, M_1_lo, M_N1_hi, M_N1_lo);
+		print "jdlt(1,-1)="; check(val, 0); print ", ";
+		val = test_jdlt(M_0_hi, M_0_lo, M_MINDBL_hi, M_MINDBL_lo);
+		print "jdlt(0,MinDbl)="; check(val, 1); print ", ";
+		val = test_jdlt(M_0_hi, M_0_lo, M_MAXDBL_hi, M_MAXDBL_lo);
+		print "jdlt(0,MaxDbl)="; check(val, 1); print ", ";
+		val = test_jdlt($>+9e-9, $<+9e-9, $>+1e+3, $<+1e+3);
+		print "jdlt(9e-9,1e3)="; check(val, 1); print ", ";
+		val = test_jdlt($>+9e-9, $<+9e-9, $>-1e+3, $<-1e+3);
+		print "jdlt(9e-9,-1e3)="; check(val, 0); print ", ";
+		val = test_jdlt($>+9e-9, $<+9e-9, $>+9e-9, $<+9e-9);
+		print "jdlt(9e-9,9e-9)="; check(val, 0); print ", ";
+		val = test_jdlt(M_0_hi, M_0_lo, M_INF_hi, M_INF_lo);
+		print "jdlt(0,Inf)="; check(val, 1); print ", ";
+		val = test_jdlt(M_0_hi, M_0_lo, M_NINF_hi, M_NINF_lo);
+		print "jdlt(0,-Inf)="; check(val, 0); print ", ";
+		val = test_jdlt(M_INF_hi, M_INF_lo, M_INF_hi, M_INF_lo);
+		print "jdlt(Inf,Inf)="; check(val, 0); print ", ";
+		val = test_jdlt(M_NINF_hi, M_NINF_lo, M_INF_hi, M_INF_lo);
+		print "jdlt(-Inf,Inf)="; check(val, 1); print ", ";
+		val = test_jdlt(M_INF_hi, M_INF_lo, M_NINF_hi, M_NINF_lo);
+		print "jdlt(Inf,-Inf)="; check(val, 0); print ", ";
+		val = test_jdlt(M_NINF_hi, M_NINF_lo, M_NINF_hi, M_NINF_lo);
+		print "jdlt(-Inf,-Inf)="; check(val, 0); print ", ";
+		val = test_jdlt(M_NAN_hi, M_NAN_lo, M_INF_hi, M_INF_lo);
+		print "jdlt(NaN,Inf)="; check(val, 0); print ", ";
+		val = test_jdlt(M_NAN_hi, M_NAN_lo, M_NINF_hi, M_NINF_lo);
+		print "jdlt(NaN,-Inf)="; check(val, 0); print ", ";
+		val = test_jdlt(M_INF_hi, M_INF_lo, M_NAN_hi, M_NAN_lo);
+		print "jdlt(Inf,NaN)="; check(val, 0); print ", ";
+		val = test_jdlt(M_NAN_hi, M_NAN_lo, M_NAN_hi, M_NAN_lo);
+		print "jdlt(NaN,NaN)="; check(val, 0); print "^";
+
+
 		count_failures();
 	];
 
@@ -12618,6 +12662,34 @@ TestDoubleClass DoubleJumpTest
 
 [ test_jdisnan valhi vallo;
 	@jdisnan valhi vallo ?Yes;
+	rfalse;
+	.Yes;
+	rtrue;
+];
+
+[ test_jdlt val1hi val1lo val2hi val2lo;
+	@jdlt val1hi val1lo val2hi val2lo ?Yes;
+	rfalse;
+	.Yes;
+	rtrue;
+];
+
+[ test_jdgt val1hi val1lo val2hi val2lo;
+	@jdgt val1hi val1lo val2hi val2lo ?Yes;
+	rfalse;
+	.Yes;
+	rtrue;
+];
+
+[ test_jdle val1hi val1lo val2hi val2lo;
+	@jdle val1hi val1lo val2hi val2lo ?Yes;
+	rfalse;
+	.Yes;
+	rtrue;
+];
+
+[ test_jdge val1hi val1lo val2hi val2lo;
+	@jdge val1hi val1lo val2hi val2lo ?Yes;
 	rfalse;
 	.Yes;
 	rtrue;
