@@ -12551,9 +12551,78 @@ TestDoubleClass DoubleAtan2Test
 		print "atan2(NaN,-Inf)="; check_disnan(valhi, vallo); print ", ";
 		@datan2 M_NAN_hi M_NAN_lo M_NAN_hi M_NAN_lo vallo valhi;
 		print "atan2(NaN,NaN)="; check_disnan(valhi, vallo); print "^";
+		
+		count_failures();
+	];
+
+TestDoubleClass DoubleJumpTest
+	with name 'djump' 'doublejump',
+	short_name "doublejump",
+	testfunc [ val;
+		print "Double-precision equality comparisons:^^";
+
+		@gestalt 13 0 val; ! Double
+		if (~~val) {
+			print "Interpreter claims to not support double-precision. Skipping test.^^";
+			count_failures();
+			return;
+		}
+
+		val = test_jdisnan(M_0_hi, M_0_lo);
+		print "jdisnan(0)="; check(val, 0); print ", ";
+		val = test_jdisnan(M_N0_hi, M_N0_lo);
+		print "jdisnan(-0)="; check(val, 0); print ", ";
+		val = test_jdisnan(M_1_hi, M_1_lo);
+		print "jdisnan(1)="; check(val, 0); print ", ";
+		val = test_jdisnan(M_MAXDBL_hi, M_MAXDBL_lo);
+		print "jdisnan(MaxDbl)="; check(val, 0); print ", ";
+		val = test_jdisnan(M_INF_hi, M_INF_lo);
+		print "jdisnan(Inf)="; check(val, 0); print ", ";
+		val = test_jdisnan(M_NINF_hi, M_NINF_lo);
+		print "jdisnan(-Inf)="; check(val, 0); print ", ";
+		val = test_jdisnan(M_NAN_hi, M_NAN_lo);
+		print "jdisnan(NaN)="; check(val, 1); print ", ";
+		val = test_jdisnan($7FFFFFFF, $FFFFFFFF);
+		print "jdisnan(other NaN)="; check(val, 1); print ", ";
+		val = test_jdisnan($FFFFFFFF, $FFFFFFFF);
+		print "jdisnan(other -NaN)="; check(val, 1); print "^";
+
+		val = test_jdisinf(M_0_hi, M_0_lo);
+		print "jdisinf(0)="; check(val, 0); print ", ";
+		val = test_jdisinf(M_N0_hi, M_N0_lo);
+		print "jdisinf(-0)="; check(val, 0); print ", ";
+		val = test_jdisinf(M_1_hi, M_1_lo);
+		print "jdisinf(1)="; check(val, 0); print ", ";
+		val = test_jdisinf(M_MAXDBL_hi, M_MAXDBL_lo);
+		print "jdisinf(MaxDbl)="; check(val, 0); print ", ";
+		val = test_jdisinf(M_INF_hi, M_INF_lo);
+		print "jdisinf(Inf)="; check(val, 1); print ", ";
+		val = test_jdisinf(M_NINF_hi, M_NINF_lo);
+		print "jdisinf(-Inf)="; check(val, 1); print ", ";
+		val = test_jdisinf(M_NAN_hi, M_NAN_lo);
+		print "jdisinf(NaN)="; check(val, 0); print ", ";
+		val = test_jdisinf($7FFFFFFF, $FFFFFFFF);
+		print "jdisinf(other NaN)="; check(val, 0); print ", ";
+		val = test_jdisinf($FFFFFFFF, $FFFFFFFF);
+		print "jdisinf(other -NaN)="; check(val, 0); print "^";
 
 		count_failures();
 	];
+
+[ test_jdisinf valhi vallo;
+	@jdisinf valhi vallo ?Yes;
+	rfalse;
+	.Yes;
+	rtrue;
+];
+
+[ test_jdisnan valhi vallo;
+	@jdisnan valhi vallo ?Yes;
+	rfalse;
+	.Yes;
+	rtrue;
+];
+
 
 TestDoubleClass DoublePrintTest
 	with name 'dprint' 'doubleprint',
