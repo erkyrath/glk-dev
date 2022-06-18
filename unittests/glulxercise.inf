@@ -3,7 +3,7 @@
 Constant Story "Glulxercise";
 Constant Headline "A Glulx interpreter unit test^";
 Release 10;
-Serial "220522";
+Serial "220718";
 ! Written by Andrew Plotkin (erkyrath@eblong.com).
 ! This unit test suite, and its functions, are in the public domain.
 
