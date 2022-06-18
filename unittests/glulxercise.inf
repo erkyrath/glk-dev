@@ -12858,6 +12858,47 @@ TestDoubleClass DoubleHypotTest
 		dhypot(hypovals, hypovals+2*WORDSIZE, hypovals+4*WORDSIZE);
 		print "hypot(-3,4)="; check_double_hex(hypovals-->4, hypovals-->5, $>+5, $<+5); print ", ";
 
+		hypovals-->0 = $>+1.5;
+		hypovals-->1 = $<+1.5;
+		hypovals-->2 = $>-2;
+		hypovals-->3 = $<-2;
+		dhypot(hypovals, hypovals+2*WORDSIZE, hypovals+4*WORDSIZE);
+		print "hypot(1.5,-2)="; check_double_hex(hypovals-->4, hypovals-->5, $>+2.5, $<+2.5); print ", ";
+
+		hypovals-->0 = $>+2.5;
+		hypovals-->1 = $<+2.5;
+		hypovals-->2 = $>+7.1;
+		hypovals-->3 = $<+7.1;
+		dhypot(hypovals, hypovals+2*WORDSIZE, hypovals+4*WORDSIZE);
+		print "hypot(3,4)="; check_double_hex_ulp(hypovals-->4, hypovals-->5, $>+7.527283706623526, $<+7.527283706623526); print ", ";
+
+		hypovals-->0 = M_0_hi;
+		hypovals-->1 = M_0_lo;
+		hypovals-->2 = M_N0_hi;
+		hypovals-->3 = M_N0_lo;
+		dhypot(hypovals, hypovals+2*WORDSIZE, hypovals+4*WORDSIZE);
+		print "hypot(0,-0)="; check_double_hex(hypovals-->4, hypovals-->5, $>+0, $<+0); print ", ";
+
+		hypovals-->0 = M_0_hi;
+		hypovals-->1 = M_0_lo;
+		hypovals-->2 = M_NINF_hi;
+		hypovals-->3 = M_NINF_lo;
+		dhypot(hypovals, hypovals+2*WORDSIZE, hypovals+4*WORDSIZE);
+		print "hypot(0,-Inf)="; check_double_hex(hypovals-->4, hypovals-->5, M_INF_hi, M_INF_lo); print ", ";
+
+		hypovals-->0 = M_0_hi;
+		hypovals-->1 = M_0_lo;
+		hypovals-->2 = M_NAN_hi;
+		hypovals-->3 = M_NAN_lo;
+		dhypot(hypovals, hypovals+2*WORDSIZE, hypovals+4*WORDSIZE);
+		print "hypot(0,NaN)="; check_disnan(hypovals-->4, hypovals-->5); print ", ";
+		hypovals-->0 = M_NAN_hi;
+		hypovals-->1 = M_NAN_lo;
+		hypovals-->2 = M_NAN_hi;
+		hypovals-->3 = M_NAN_lo;
+		dhypot(hypovals, hypovals+2*WORDSIZE, hypovals+4*WORDSIZE);
+		print "hypot(NaN,NaN)="; check_disnan(hypovals-->4, hypovals-->5); print "^";
+
 		count_failures();
 	];
 
@@ -12868,12 +12909,12 @@ Array hypovals --> 6;
 ! (An array-->2, or two elements in a longer array-->N.)
 [ dhypot xpair ypair respair;
 	@dload xpair sp sp;
-	@dload xpair sp sp;
+	@stkcopy 2;
 	! now stack contains: x, x
 	@dmul sp sp sp sp sp sp;
 	! now stack contains: x^2
 	@dload ypair sp sp;
-	@dload ypair sp sp;
+	@stkcopy 2;
 	! now stack contains: y, y, x^2
 	@dmul sp sp sp sp sp sp;
 	! now stack contains: y^2, x^2
