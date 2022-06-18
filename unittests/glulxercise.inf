@@ -12778,8 +12778,12 @@ TestDoubleClass DoubleJumpTest
 		val = test_jdge(M_NAN_hi, M_NAN_lo, M_NAN_hi, M_NAN_lo);
 		print "jdge(NaN,NaN)="; check(val, 0); print "^";
 
+		!### jdeq, jdne
+
 		count_failures();
 	];
+
+!### do a hypot test
 
 [ test_jdisinf valhi vallo;
 	@jdisinf valhi vallo ?Yes;
@@ -12823,6 +12827,61 @@ TestDoubleClass DoubleJumpTest
 	rtrue;
 ];
 
+
+TestDoubleClass DoubleHypotTest
+	with name 'dhypot' 'doublehypot',
+	short_name "doublehypot",
+	testfunc [ val;
+		print "Double-precision hypot function:^^";
+
+		@gestalt 13 0 val; ! Double
+		if (~~val) {
+			print "Interpreter claims to not support double-precision. Skipping test.^^";
+			count_failures();
+			return;
+		}
+
+		! We will always pass in our arguments as X=hypovals-->0:1,
+		! Y=hypovals-->2:3; the result will come out as hypovals-->4:5.
+
+		hypovals-->0 = $>+3;
+		hypovals-->1 = $<+3;
+		hypovals-->2 = $>+4;
+		hypovals-->3 = $<+4;
+		dhypot(hypovals, hypovals+2*WORDSIZE, hypovals+4*WORDSIZE);
+		print "hypot(3,4)="; check_double_hex(hypovals-->4, hypovals-->5, $>+5, $<+5); print ", ";
+
+		hypovals-->0 = $>-3;
+		hypovals-->1 = $<-3;
+		hypovals-->2 = $>+4;
+		hypovals-->3 = $<+4;
+		dhypot(hypovals, hypovals+2*WORDSIZE, hypovals+4*WORDSIZE);
+		print "hypot(-3,4)="; check_double_hex(hypovals-->4, hypovals-->5, $>+5, $<+5); print ", ";
+
+		count_failures();
+	];
+
+Array hypovals --> 6;
+
+! Implements sqrt(x^2+y^2) for double-precision values.
+! Each argument (x, y, res) is the *address* of a pair of words in memory.
+! (An array-->2, or two elements in a longer array-->N.)
+[ dhypot xpair ypair respair;
+	@dload xpair sp sp;
+	@dload xpair sp sp;
+	! now stack contains: x, x
+	@dmul sp sp sp sp sp sp;
+	! now stack contains: x^2
+	@dload ypair sp sp;
+	@dload ypair sp sp;
+	! now stack contains: y, y, x^2
+	@dmul sp sp sp sp sp sp;
+	! now stack contains: y^2, x^2
+	@dadd sp sp sp sp sp sp;
+	! now stack contains: (y^2+x^2)
+	@dsqrt sp sp sp sp;
+	@dstore respair sp sp;
+];
 
 TestDoubleClass DoublePrintTest
 	with name 'dprint' 'doubleprint',
