@@ -12778,7 +12778,87 @@ TestDoubleClass DoubleJumpTest
 		val = test_jdge(M_NAN_hi, M_NAN_lo, M_NAN_hi, M_NAN_lo);
 		print "jdge(NaN,NaN)="; check(val, 0); print "^";
 
-		!### jdeq, jdne
+		val = test_jdeq(M_0_hi, M_0_lo, M_0_hi, M_0_lo, M_0_hi, M_0_lo);
+		print "jdeq(0,0,0)="; check(val, 1); print ", ";
+		val = test_jdeq(M_0_hi, M_0_lo, M_0_hi, M_0_lo, M_N0_hi, M_N0_lo);
+		print "jdeq(0,0,-0)="; check(val, 1); print ", ";
+		val = test_jdeq(M_0_hi, M_0_lo, M_N0_hi, M_N0_lo, M_0_hi, M_0_lo);
+		print "jdeq(0,-0,0)="; check(val, 1); print ", ";
+		
+		val = test_jdeq(M_1_hi, M_1_lo, M_0_hi, M_0_lo, M_0_hi, M_0_lo);
+		print "jdeq(1,0,0)="; check(val, 0); print ", ";
+		val = test_jdeq(M_1_hi, M_1_lo, M_0_hi, M_0_lo, M_N0_hi, M_N0_lo);
+		print "jdeq(1,0,-0)="; check(val, 0); print ", ";
+		val = test_jdeq(M_1_hi, M_1_lo, M_1_hi, M_1_lo, M_0_hi, M_0_lo);
+		print "jdeq(1,1,0)="; check(val, 1); print ", ";
+		val = test_jdeq(M_1_hi, M_1_lo, M_0_hi, M_0_lo, M_1_hi, M_1_lo);
+		print "jdeq(1,0,1)="; check(val, 1); print ", ";
+		val = test_jdeq(M_1_hi, M_1_lo, M_0_hi, M_0_lo, M_N1_hi, M_N1_lo);
+		print "jdeq(1,0,-1)="; check(val, 1); print ", ";
+		val = test_jdeq(M_1_hi, M_1_lo, M_0_hi, M_0_lo, $>+2, $<+2);
+		print "jdeq(1,0,2)="; check(val, 1); print ", ";
+		val = test_jdeq(M_1_hi, M_1_lo, M_0_hi, M_0_lo, $>+0.5, $<+0.5);
+		print "jdeq(1,0,0.5)="; check(val, 0); print ", ";
+		val = test_jdeq(M_0_hi, M_0_lo, M_1_hi, M_1_lo, $>+2, $<+2);
+		print "jdeq(0,1,2)="; check(val, 1); print ", ";
+		val = test_jdeq(M_0_hi, M_0_lo, M_1_hi, M_1_lo, $>+0.5, $<+0.5);
+		print "jdeq(0,1,0.5)="; check(val, 0); print ", ";
+
+		val = test_jdeq(M_MINDBL_hi, M_MINDBL_lo, M_MINDBL_hi, M_MINDBL_lo, M_0_hi, M_0_lo);
+		print "jdeq(MinDbl,MinDbl,0)="; check(val, 1); print ", ";
+		val = test_jdeq(M_MINDBL_hi, M_MINDBL_lo, M_MINDBL_hi, M_MINDBL_lo+1, M_0_hi, M_0_lo);
+		print "jdeq(MinDbl,MinDbl+1,0)="; check(val, 0); print ", ";
+		val = test_jdeq(M_MINDBL_hi, M_MINDBL_lo, M_MINDBL_hi, M_MINDBL_lo+1, M_MINDBL_hi, M_MINDBL_lo);
+		print "jdeq(MinDbl,MinDbl+1,MinDbl)="; check(val, 1); print ", ";
+
+		val = test_jdeq(M_0_hi, M_0_lo, M_MAXDBL_hi, M_MAXDBL_lo, M_MAXDBL_hi, M_MAXDBL_lo);
+		print "jdeq(0,MaxDbl,MaxDbl)="; check(val, 1); print ", ";
+		val = test_jdeq(M_MAXDBL_hi|$80000000, M_MAXDBL_lo, M_MAXDBL_hi, M_MAXDBL_lo, M_MAXDBL_hi, M_MAXDBL_lo);
+		print "jdeq(-MaxDbl,MaxDbl,MaxDbl)="; check(val, 0); print ", ";
+
+		val = test_jdeq(M_0_hi, M_0_lo, M_1_hi, M_1_lo, M_NINF_hi, M_NINF_lo);
+		print "jdeq(0,1,-Inf)="; check(val, 1); print ", ";
+		val = test_jdeq(M_0_hi, M_0_lo, M_MAXDBL_hi, M_MAXDBL_lo, M_INF_hi, M_INF_lo);
+		print "jdeq(0,MaxDbl,Inf)="; check(val, 1); print ", ";
+		val = test_jdeq(M_MAXDBL_hi|$80000000, M_MAXDBL_lo, M_MAXDBL_hi, M_MAXDBL_lo, M_INF_hi, M_INF_lo);
+		print "jdeq(-MaxDbl,MaxDbl,Inf)="; check(val, 1); print ", ";
+
+		val = test_jdeq(M_INF_hi, M_INF_lo, M_INF_hi, M_INF_lo, M_0_hi, M_0_lo);
+		print "jdeq(Inf,Inf,0)="; check(val, 1); print ", ";
+		val = test_jdeq(M_NINF_hi, M_NINF_lo, M_NINF_hi, M_NINF_lo, M_0_hi, M_0_lo);
+		print "jdeq(-Inf,-Inf,0)="; check(val, 1); print ", ";
+		val = test_jdeq(M_INF_hi, M_INF_lo, M_NINF_hi, M_NINF_lo, M_0_hi, M_0_lo);
+		print "jdeq(Inf,-Inf,0)="; check(val, 0); print ", ";
+		val = test_jdeq(M_INF_hi, M_INF_lo, M_INF_hi, M_INF_lo, M_INF_hi, M_INF_lo);
+		print "jdeq(Inf,Inf,Inf)="; check(val, 1); print ", ";
+		val = test_jdeq(M_INF_hi, M_INF_lo, M_0_hi, M_0_lo, M_INF_hi, M_INF_lo);
+		print "jdeq(Inf,0,Inf)="; check(val, 1); print ", ";
+		val = test_jdeq(M_INF_hi, M_INF_lo, M_NINF_hi, M_NINF_lo, M_INF_hi, M_INF_lo);
+		print "jdeq(Inf,-Inf,Inf)="; check(val, 0); print ", ";
+
+		val = test_jdeq(M_NAN_hi, M_NAN_lo, M_0_hi, M_0_lo, M_0_hi, M_0_lo);
+		print "jdeq(NaN,0,0)="; check(val, 0); print ", ";
+		val = test_jdeq(M_0_hi, M_0_lo, M_NAN_hi, M_NAN_lo, M_0_hi, M_0_lo);
+		print "jdeq(0,NaN,0)="; check(val, 0); print ", ";
+		val = test_jdeq(M_0_hi, M_0_lo, M_0_hi, M_0_lo, M_NAN_hi, M_NAN_lo);
+		print "jdeq(0,0,NaN)="; check(val, 0); print ", ";
+		val = test_jdeq(M_NAN_hi, M_NAN_lo, M_NAN_hi, M_NAN_lo, M_0_hi, M_0_lo);
+		print "jdeq(NaN,NaN,0)="; check(val, 0); print ", ";
+		val = test_jdeq(M_NAN_hi, M_NAN_lo, M_0_hi, M_0_lo, M_NAN_hi, M_NAN_lo);
+		print "jdeq(NaN,0,NaN)="; check(val, 0); print ", ";
+		val = test_jdeq(M_NAN_hi, M_NAN_lo, M_NAN_hi, M_NAN_lo, M_NAN_hi, M_NAN_lo);
+		print "jdeq(NaN,NaN,NaN)="; check(val, 0); print ", ";
+
+		val = test_jdeq(M_INF_hi, M_INF_lo, M_INF_hi, M_INF_lo, M_NAN_hi, M_NAN_lo);
+		print "jdeq(Inf,Inf,NaN)="; check(val, 0); print ", ";
+		val = test_jdeq(M_INF_hi, M_INF_lo, M_NAN_hi, M_NAN_lo, M_INF_hi, M_INF_lo);
+		print "jdeq(Inf,NaN,Inf)="; check(val, 0); print ", ";
+		val = test_jdeq(M_NAN_hi, M_NAN_lo, M_INF_hi, M_INF_lo, M_INF_hi, M_INF_lo);
+		print "jdeq(NaN,Inf,Inf)="; check(val, 0); print ", ";
+		val = test_jdeq(M_0_hi, M_0_lo, M_NAN_hi, M_NAN_lo, M_INF_hi, M_INF_lo);
+		print "jdeq(0,NaN,Inf)="; check(val, 0); print ", ";
+		val = test_jdeq(M_0_hi, M_0_lo, M_INF_hi, M_INF_lo, M_NAN_hi, M_NAN_lo);
+		print "jdeq(0,Inf,NaN)="; check(val, 0); print "^";
 
 		count_failures();
 	];
@@ -12820,6 +12900,13 @@ TestDoubleClass DoubleJumpTest
 
 [ test_jdge val1hi val1lo val2hi val2lo;
 	@jdge val1hi val1lo val2hi val2lo ?Yes;
+	rfalse;
+	.Yes;
+	rtrue;
+];
+
+[ test_jdeq val1hi val1lo val2hi val2lo diffhi difflo;
+	@jdeq val1hi val1lo val2hi val2lo diffhi difflo ?Yes;
 	rfalse;
 	.Yes;
 	rtrue;
