@@ -12783,8 +12783,6 @@ TestDoubleClass DoubleJumpTest
 		count_failures();
 	];
 
-!### do a hypot test
-
 [ test_jdisinf valhi vallo;
 	@jdisinf valhi vallo ?Yes;
 	rfalse;
