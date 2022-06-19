@@ -13010,8 +13010,8 @@ TestDoubleClass DoubleJumpTest
 
 		new_line;
 
-		print "jdeq(3.0,3.75,0.5)=";
-		@jdeq $>+3.0 $<+3.0 $>+3.75 $<+3.75 $>+0.5 $<+0.5 ?JumpJEQ1;
+		print "jdeq(13.0,13.75,0.5)=";
+		@jdeq $>+13.0 $<+13.0 $>+13.75 $<+13.75 $>+0.5 $<+0.5 ?JumpJEQ1;
 		print "false";
 		jump DoneJEQ1;
 		.JumpJEQ1;
@@ -13020,8 +13020,8 @@ TestDoubleClass DoubleJumpTest
 		.DoneJEQ1;
 		print ", ";
 
-		print "jdeq(3.0,3.75,1.0)=";
-		@jdeq $>+3.0 $<+3.0 $>+3.75 $<+3.75 $>+1 $<+1 ?JumpJEQ2;
+		print "jdeq(23.0,23.75,1.0)=";
+		@jdeq $>+23.0 $<+23.0 $>+23.75 $<+23.75 $>+1 $<+1 ?JumpJEQ2;
 		print "false (FAIL)";
 		failures++;
 		jump DoneJEQ2;
@@ -13030,13 +13030,13 @@ TestDoubleClass DoubleJumpTest
 		.DoneJEQ2;
 		print ", ";
 
-		print "jdeq(3.0,3.75,0.5)=";
+		print "jdeq(33.0,33.75,0.5)=";
 		@push $<+0.5;
 		@push $>+0.5;
-		@push $<+3.75;
-		@push $>+3.75;
-		@push $<+3.0;
-		@push $>+3.0;
+		@push $<+33.75;
+		@push $>+33.75;
+		@push $<+33.0;
+		@push $>+33.0;
 		@jdeq sp sp sp sp sp sp ?JumpJEQ3;
 		print "false";
 		jump DoneJEQ3;
@@ -13046,13 +13046,13 @@ TestDoubleClass DoubleJumpTest
 		.DoneJEQ3;
 		print ", ";
 
-		print "jdeq(3.0,3.75,1.0)=";
+		print "jdeq(43.0,43.75,1.0)=";
 		@push $<+1;
 		@push $>+1;
-		@push $<+3.75;
-		@push $>+3.75;
-		@push $<+3.0;
-		@push $>+3.0;
+		@push $<+43.75;
+		@push $>+43.75;
+		@push $<+43.0;
+		@push $>+43.0;
 		@jdeq sp sp sp sp sp sp ?JumpJEQ4;
 		print "false (FAIL)";
 		failures++;
@@ -13060,8 +13060,61 @@ TestDoubleClass DoubleJumpTest
 		.JumpJEQ4;
 		print "true";
 		.DoneJEQ4;
+		print "^";
+
+		new_line;
+
+		print "jdne(53.0,53.75,0.5)=";
+		@jdne $>+53.0 $<+53.0 $>+53.75 $<+53.75 $>+0.5 $<+0.5 ?JumpJNE1;
+		print "false (FAIL)";
+		failures++;
+		jump DoneJNE1;
+		.JumpJNE1;
+		print "true";
+		.DoneJNE1;
 		print ", ";
 
+		print "jdne(63.0,63.75,1.0)=";
+		@jdne $>+63.0 $<+63.0 $>+63.75 $<+63.75 $>+1 $<+1 ?JumpJNE2;
+		print "false";
+		jump DoneJNE2;
+		.JumpJNE2;
+		print "true (FAIL)";
+		failures++;
+		.DoneJNE2;
+		print ", ";
+
+		print "jdne(73.0,73.75,0.5)=";
+		@push $<+0.5;
+		@push $>+0.5;
+		@push $<+73.75;
+		@push $>+73.75;
+		@push $<+73.0;
+		@push $>+73.0;
+		@jdne sp sp sp sp sp sp ?JumpJNE3;
+		print "false (FAIL)";
+		failures++;
+		jump DoneJNE3;
+		.JumpJNE3;
+		print "true";
+		.DoneJNE3;
+		print ", ";
+
+		print "jdne(83.0,83.75,1.0)=";
+		@push $<+1;
+		@push $>+1;
+		@push $<+83.75;
+		@push $>+83.75;
+		@push $<+83.0;
+		@push $>+83.0;
+		@jdne sp sp sp sp sp sp ?JumpJNE4;
+		print "false";
+		jump DoneJNE4;
+		.JumpJNE4;
+		print "true (FAIL)";
+		failures++;
+		.DoneJNE4;
+		print "^";
 
 		new_line;
 
