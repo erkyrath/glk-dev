@@ -9635,7 +9635,13 @@ TestFloatClass FloatJumpFormTest
 		@jisinf sp ?A5;
 		val = 44;
 		.A5;
-		print "Test A5="; check(val, 44); print "^";
+		print "Test A5="; check(val, 44); print ", ";
+		@push M_NAN;
+		val = 33;
+		@jisinf sp ?A6;
+		val = 44;
+		.A6;
+		print "Test A6="; check(val, 44); print "^";
 		
 
 		val = 11;
@@ -9740,6 +9746,25 @@ TestFloatClass FloatJumpFormTest
 		val = test_push_computed_jfeq(M_0, M_0, M_0, 0);
 		print "F6="; check(val, 0); print "^";
 
+		@push M_INF;
+		val = 33;
+		@jisnan sp ?G0;
+		val = 44;
+		.G0;
+		print "Test G0="; check(val, 44); print ", ";
+		@push M_NAN;
+		val = 33;
+		@jisnan sp ?G1;
+		val = 44;
+		.G1;
+		print "Test G1="; check(val, 33); print ", ";
+		@push M_0;
+		val = 33;
+		@jisnan sp ?G2;
+		val = 44;
+		.G2;
+		print "Test G2="; check(val, 44); print "^";
+		
 		count_failures();
 	];
 
@@ -12986,6 +13011,8 @@ TestDoubleClass DoubleJumpTest
 		new_line;
 
 		!### operand tests for jdeq, jdne
+
+		new_line;
 
 		val = test_jdisnan(M_0_hi, M_0_lo);
 		print "jdisnan(0)="; check(val, 0); print ", ";
