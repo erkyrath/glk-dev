@@ -11948,6 +11948,15 @@ TestDoubleClass DoubleExpTest
 		@pull vallo;
 		print "pow(1.5,2)="; check_double_hex(valhi, vallo, $>+2.25, $<+2.25); print ", ";
 
+		@push $<+2.2;
+		@push $>+2.2;
+		@push $<+1.7;
+		@push $>+1.7;
+		@dpow sp sp sp sp sp sp;
+		@pull valhi;
+		@pull vallo;
+		print "pow(1.7,2.2)="; check_double_hex_ulp(valhi, vallo, $>+3.2135689833624936, $<+3.2135689833624936); print ", ";
+
 		testglobal = $>-1.5;
 		testglobal2 = $<-1.5;
 		valhi = $>+3;
@@ -11963,7 +11972,15 @@ TestDoubleClass DoubleExpTest
 		@push $<+2;
 		@dpow testglobal vallo valhi sp sp valhi;
 		@pull vallo;
-		print "pow(2.5,2)="; check_double_hex(valhi, vallo, $>+6.25, $<+6.25); print "^";
+		print "pow(2.5,2)="; check_double_hex(valhi, vallo, $>+6.25, $<+6.25); print ", ";
+
+		vallo = $<+2.6;
+		valhi = $>+3.7;
+		@push $<+3.7;
+		@push $>+2.6; ! from above
+		@dpow sp vallo valhi sp sp valhi;
+		@pull vallo;
+		print "pow(2.6,3.7)="; check_double_hex_ulp(valhi, vallo, $>+34.308472886662344, $<+34.308472886662344); print "^";
 
 		new_line;
 
