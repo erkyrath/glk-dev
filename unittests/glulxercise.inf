@@ -11952,7 +11952,9 @@ TestDoubleClass DoubleExpTest
 		@push $>+2.2;
 		@push $<+1.7;
 		@push $>+1.7;
+		noop();
 		@dpow sp sp sp sp sp sp;
+		noop();
 		@pull valhi;
 		@pull vallo;
 		print "pow(1.7,2.2)="; check_double_hex_ulp(valhi, vallo, $>+3.2135689833624936, $<+3.2135689833624936); print ", ";
@@ -12042,6 +12044,7 @@ TestDoubleClass DoubleModTest
 		! Various arrangements of operands
 		@dmodr $>+2.5 $<+2.5 $>+1.0 $<+1.0 vallo valhi;
 		print "modr(2.5,1.0)="; check_double_hex(valhi, vallo, $>+0.5, $<+0.5); print ", ";
+		
 		valhi = $>-3.5;
 		vallo = $<-3.5;
 		val2hi = $>+1.5;
@@ -12073,16 +12076,65 @@ TestDoubleClass DoubleModTest
 		@push $<-1.0;
 		@dmodr testglobal vallo valhi sp sp valhi;
 		@pull vallo;
-		print "modr(-4.5,-1.0)="; check_double_hex(valhi, vallo, $>-0.5, $<-0.5); print "^";
+		print "modr(-4.5,-1.0)="; check_double_hex(valhi, vallo, $>-0.5, $<-0.5); print ", ";
 
+		valhi = $>+11.0;
+		vallo = $<+11.0;
+		testglobal = $>+3.5;
+		testglobal2 = $<+3.5;
+		@dmodr valhi vallo testglobal testglobal2 sp sp;
+		@pull valhi;
+		@pull vallo;
+		print "modr(11,3.5)="; check_double_hex(valhi, vallo, $>+0.5, $<+0.5); print ", ";
+
+		valhi = $>+11.3;
+		vallo = $<+11.3;
+		testglobal = $>+3.4;
+		testglobal2 = $<+3.4;
+		@dmodr valhi vallo testglobal testglobal2 sp sp;
+		noop();
+		@pull valhi;
+		@pull vallo;
+		print "modr(11.3,3.4)="; check_double_hex_e(valhi, vallo, $>+1.1, $<+1.1, $>+1e-15, $<+1e-15); print "^";
+
+		new_line;
+
+		@dmodq $>+7.5 $<+7.5 $>+1.0 $<+1.0 vallo valhi;
+		print "modq(7.5,1.0)="; check_double_hex(valhi, vallo, $>+7, $<+7); print ", ";
+
+		valhi = $>+2;
+		vallo = $<+2;
+		@dmodq $>+7.5 $<+7.5 valhi vallo vallo valhi;
+		print "modq(7.5,2.0)="; check_double_hex(valhi, vallo, $>+3, $<+3); print ", ";
+		
 		@push $<+1.0;
 		@push $>+1.0;
 		@push $<+4.5;
 		@push $>+4.5;
+		noop();
 		@dmodq sp sp sp sp sp sp;
+		noop();
 		@pull valhi;
 		@pull vallo;
-		print "modq(4.5,1.0)="; check_double_hex_ulp(valhi, vallo, $>+4.0, $<+4.0); print "^";
+		print "modq(4.5,1.0)="; check_double_hex_ulp(valhi, vallo, $>+4.0, $<+4.0); print ", ";
+
+		valhi = $>+11.3;
+		vallo = $<+11.3;
+		testglobal = $>+3.7;
+		testglobal2 = $<+3.7;
+		@dmodq valhi vallo testglobal testglobal2 sp sp;
+		@pull valhi;
+		@pull vallo;
+		print "modq(11.3,3.7)="; check_double_hex_ulp(valhi, vallo, $>+3, $<+3); print ", ";
+
+		vallo = $<+12.6;
+		valhi = $>+3.7;
+		@push $<+3.7;
+		@push $>+12.6; ! from above
+		@dmodq sp vallo valhi sp sp valhi;
+		noop();
+		@pull vallo;
+		print "modq(12.6,3.7)="; check_double_hex_ulp(valhi, vallo, $>+3, $<+3); print "^";
 
 		new_line;
 
