@@ -12931,7 +12931,7 @@ TestDoubleClass DoubleJumpTest
 TestDoubleClass DoubleCompTest
 	with name 'dcomp' 'doublecomp',
 	short_name "doublecomp",
-	testfunc [ val;
+	testfunc [ val valhi vallo;
 		print "Double-precision inequality comparisons:^^";
 
 		@gestalt 13 0 val; ! Double
@@ -12940,6 +12940,84 @@ TestDoubleClass DoubleCompTest
 			count_failures();
 			return;
 		}
+
+		print "jdlt(4,3.5)=";
+		@jdlt $>+4.0 $<+4.0 $>+3.5 $<+3.5 ?JumpLT1;
+		print "false";
+		jump DoneLT1;
+		.JumpLT1;
+		print "true (FAIL)";
+		failures++;
+		.DoneLT1;
+		print ", ";
+
+		print "jdlt(3,3.5)=";
+		@jdlt $>+3.0 $<+3.0 $>+3.5 $<+3.5 ?JumpLT2;
+		print "false (FAIL)";
+		failures++;
+		jump DoneLT2;
+		.JumpLT2;
+		print "true";
+		.DoneLT2;
+		print ", ";
+
+		print "jdlt(4,3.5)=";
+		valhi = $>+4.0;
+		vallo = $<+4.0;
+		testglobal = $>+3.5;
+		testglobal2 = $<+3.5;
+		@jdlt valhi vallo testglobal testglobal2 ?JumpLT3;
+		print "false";
+		jump DoneLT3;
+		.JumpLT3;
+		print "true (FAIL)";
+		failures++;
+		.DoneLT3;
+		print ", ";
+
+		print "jdlt(2,3.5)=";
+		valhi = $>+2.0;
+		vallo = $<+2.0;
+		testglobal = $>+3.5;
+		testglobal2 = $<+3.5;
+		@jdlt valhi vallo testglobal testglobal2 ?JumpLT4;
+		print "false (FAIL)";
+		failures++;
+		jump DoneLT4;
+		.JumpLT4;
+		print "true";
+		.DoneLT4;
+		print ", ";
+
+		print "jdlt(4,3.5)=";
+		@push $<+3.5;
+		@push $>+3.5;
+		@push $<+4.0;
+		@push $>+4.0;
+		@jdlt sp sp sp sp ?JumpLT5;
+		print "false";
+		jump DoneLT5;
+		.JumpLT5;
+		print "true (FAIL)";
+		failures++;
+		.DoneLT5;
+		print ", ";
+
+		print "jdlt(2,3.5)=";
+		@push $<+3.5;
+		@push $>+3.5;
+		@push $<+2.0;
+		@push $>+2.0;
+		@jdlt sp sp sp sp ?JumpLT6;
+		print "false (FAIL)";
+		failures++;
+		jump DoneLT6;
+		.JumpLT6;
+		print "true";
+		.DoneLT6;
+		print "^";
+
+		new_line;
 
 		val = test_jdlt(M_0_hi, M_0_lo, M_0_hi, M_0_lo);
 		print "jdlt(0,0)="; check(val, 0); print ", ";
