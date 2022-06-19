@@ -12717,6 +12717,72 @@ TestDoubleClass DoubleJumpTest
 			return;
 		}
 
+		print "jdisnan(-2)=";
+		@jdisnan $>-2.0 $<-2.0 ?JumpJNAN1;
+		print "false";
+		jump DoneJNAN1;
+		.JumpJNAN1;
+		print "true (FAIL)";
+		failures++;
+		.DoneJNAN1;
+		print ", ";
+
+		print "jdisnan(MaxDbl)=";
+		@jdisnan M_MAXDBL_hi M_MAXDBL_lo ?JumpJNAN2;
+		print "false";
+		jump DoneJNAN2;
+		.JumpJNAN2;
+		print "true (FAIL)";
+		failures++;
+		.DoneJNAN2;
+		print ", ";
+
+		print "jdisnan(Inf)=";
+		@jdisnan M_INF_hi M_INF_lo ?JumpJNAN3;
+		print "false";
+		jump DoneJNAN3;
+		.JumpJNAN3;
+		print "true (FAIL)";
+		failures++;
+		.DoneJNAN3;
+		print ", ";
+
+		print "jdisnan(-Inf)=";
+		@jdisnan M_NINF_hi M_NINF_lo ?JumpJNAN4;
+		print "false";
+		jump DoneJNAN4;
+		.JumpJNAN4;
+		print "true (FAIL)";
+		failures++;
+		.DoneJNAN4;
+		print ", ";
+
+		print "jdisnan(NaN)=";
+		@jdisnan M_NAN_hi M_NAN_lo ?JumpJNAN5;
+		print "false (FAIL)";
+		failures++;
+		jump DoneJNAN5;
+		.JumpJNAN5;
+		print "true";
+		.DoneJNAN5;
+		print ", ";
+
+		print "jdisnan(NaN)=";
+		@jdisnan $FFFFFFFF $FFFFFFFF ?JumpJNAN6;
+		print "false (FAIL)";
+		failures++;
+		jump DoneJNAN6;
+		.JumpJNAN6;
+		print "true";
+		.DoneJNAN6;
+		print "^";
+
+		
+
+		new_line;
+
+		!### operand tests for jdisnan, jdisinf, jdeq, jdne
+
 		val = test_jdisnan(M_0_hi, M_0_lo);
 		print "jdisnan(0)="; check(val, 0); print ", ";
 		val = test_jdisnan(M_N0_hi, M_N0_lo);
