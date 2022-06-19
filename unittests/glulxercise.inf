@@ -12849,11 +12849,143 @@ TestDoubleClass DoubleJumpTest
 		.DoneSpJNAN6;
 		print "^";
 
-		
+		new_line;
+
+		print "jdisinf(-2)=";
+		@jdisinf $>-2.0 $<-2.0 ?JumpJINF1;
+		print "false";
+		jump DoneJINF1;
+		.JumpJINF1;
+		print "true (FAIL)";
+		failures++;
+		.DoneJINF1;
+		print ", ";
+
+		print "jdisinf(MaxDbl)=";
+		@jdisinf M_MAXDBL_hi M_MAXDBL_lo ?JumpJINF2;
+		print "false";
+		jump DoneJINF2;
+		.JumpJINF2;
+		print "true (FAIL)";
+		failures++;
+		.DoneJINF2;
+		print ", ";
+
+		print "jdisinf(Inf)=";
+		@jdisinf M_INF_hi M_INF_lo ?JumpJINF3;
+		print "false (FAIL)";
+		failures++;
+		jump DoneJINF3;
+		.JumpJINF3;
+		print "true";
+		.DoneJINF3;
+		print ", ";
+
+		print "jdisinf(-Inf)=";
+		@jdisinf M_NINF_hi M_NINF_lo ?JumpJINF4;
+		print "false (FAIL)";
+		failures++;
+		jump DoneJINF4;
+		.JumpJINF4;
+		print "true";
+		.DoneJINF4;
+		print ", ";
+
+		print "jdisinf(NaN)=";
+		@jdisinf M_NAN_hi M_NAN_lo ?JumpJINF5;
+		print "false";
+		jump DoneJINF5;
+		.JumpJINF5;
+		print "true (FAIL)";
+		failures++;
+		.DoneJINF5;
+		print ", ";
+
+		print "jdisinf(NaN)=";
+		@jdisinf $FFFFFFFF $FFFFFFFF ?JumpJINF6;
+		print "false";
+		jump DoneJINF6;
+		.JumpJINF6;
+		print "true (FAIL)";
+		failures++;
+		.DoneJINF6;
+		print "^";
+
+		print "jdisinf(-2)=";
+		@push $<-2.0;
+		@push $>-2.0;
+		@jdisinf sp sp ?JumpSpJINF1;
+		print "false";
+		jump DoneSpJINF1;
+		.JumpSpJINF1;
+		print "true (FAIL)";
+		failures++;
+		.DoneSpJINF1;
+		print ", ";
+
+		print "jdisinf(MaxDbl)=";
+		@push M_MAXDBL_lo;
+		@push M_MAXDBL_hi;
+		@jdisinf sp sp ?JumpSpJINF2;
+		print "false";
+		jump DoneSpJINF2;
+		.JumpSpJINF2;
+		print "true (FAIL)";
+		failures++;
+		.DoneSpJINF2;
+		print ", ";
+
+		print "jdisinf(Inf)=";
+		@push M_INF_lo;
+		@push M_INF_hi;
+		@jdisinf sp sp ?JumpSpJINF3;
+		print "false (FAIL)";
+		failures++;
+		jump DoneSpJINF3;
+		.JumpSpJINF3;
+		print "true";
+		.DoneSpJINF3;
+		print ", ";
+
+		print "jdisinf(-Inf)=";
+		@push M_NINF_lo;
+		@push M_NINF_hi;
+		@jdisinf sp sp ?JumpSpJINF4;
+		print "false (FAIL)";
+		failures++;
+		jump DoneSpJINF4;
+		.JumpSpJINF4;
+		print "true";
+		.DoneSpJINF4;
+		print ", ";
+
+		print "jdisinf(NaN)=";
+		@push M_NAN_lo;
+		@push M_NAN_hi;
+		@jdisinf sp sp ?JumpSpJINF5;
+		print "false";
+		jump DoneSpJINF5;
+		.JumpSpJINF5;
+		print "true (FAIL)";
+		failures++;
+		.DoneSpJINF5;
+		print ", ";
+
+		print "jdisinf(NaN)=";
+		@push $FFFFFFFF;
+		@push $FFFFFFFF;
+		@jdisinf sp sp ?JumpSpJINF6;
+		print "false";
+		jump DoneSpJINF6;
+		.JumpSpJINF6;
+		print "true (FAIL)";
+		failures++;
+		.DoneSpJINF6;
+		print "^";
 
 		new_line;
 
-		!### operand tests for jdisnan, jdisinf, jdeq, jdne
+		!### operand tests for jdeq, jdne
 
 		val = test_jdisnan(M_0_hi, M_0_lo);
 		print "jdisnan(0)="; check(val, 0); print ", ";
