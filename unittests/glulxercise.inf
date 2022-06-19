@@ -11438,7 +11438,49 @@ TestDoubleClass DoubleArithTest
 		@dsub sp sp sp sp sp sp;
 		@pull valhi;
 		@pull vallo;
-		print "sub(4.4,1.1)="; check_double_hex_ulp(valhi, vallo, $>+3.3, $<+3.3); print "^";
+		print "sub(4.4,1.1)="; check_double_hex_ulp(valhi, vallo, $>+3.3, $<+3.3); print ", ";
+
+		testglobal = $>-5.5;
+		vallo = $<-5.5;
+		valhi = $>-3.3;
+		@push $<-3.3;
+		@dsub testglobal vallo valhi sp sp valhi;
+		@pull vallo;
+		print "sub(-5.5,-3.3)="; check_double_hex(valhi, vallo, $>-2.2, $<-2.2); print ", ";
+
+		vallo = $<-5.5;
+		valhi = $>-2.2;
+		@push $<-2.2;
+		@push $>-5.5; ! from above
+		@dsub sp vallo valhi sp sp valhi;
+		@pull vallo;
+		print "sub(-5.5,-2.2)="; check_double_hex(valhi, vallo, $>-3.3, $<-3.3); print "^";
+
+		@push $<+1.1;
+		@push $>+1.1;
+		@push $<+4.4;
+		@push $>+4.4;
+		@ddiv sp sp sp sp sp sp;
+		@pull valhi;
+		@pull vallo;
+		print "div(4.4,1.1)="; check_double_hex_ulp(valhi, vallo, $>+4.0, $<+4,0); print ", ";
+
+		testglobal = $>+3.3;
+		testglobal2 = $<+3.3;
+		valhi = $>+1.1;
+		vallo = $<+1.1;
+		@ddiv testglobal testglobal2 valhi vallo sp sp;
+		@pull valhi;
+		@pull vallo;
+		print "div(3.3,1.1)="; check_double_hex_ulp(valhi, vallo, $>+3.0, $<+3.0); print ", ";
+
+		vallo = $<-5.5;
+		valhi = $>+2.2;
+		@push $<+2.2;
+		@push $>-5.5; ! from above
+		@ddiv sp vallo valhi sp sp valhi;
+		@pull vallo;
+		print "div(-5.5,2.2)="; check_double_hex(valhi, vallo, $>-2.5, $<-2.5); print "^";
 
 		new_line;
 
