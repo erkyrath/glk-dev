@@ -13010,7 +13010,58 @@ TestDoubleClass DoubleJumpTest
 
 		new_line;
 
-		!### operand tests for jdeq, jdne
+		print "jdeq(3.0,3.75,0.5)=";
+		@jdeq $>+3.0 $<+3.0 $>+3.75 $<+3.75 $>+0.5 $<+0.5 ?JumpJEQ1;
+		print "false";
+		jump DoneJEQ1;
+		.JumpJEQ1;
+		print "true (FAIL)";
+		failures++;
+		.DoneJEQ1;
+		print ", ";
+
+		print "jdeq(3.0,3.75,1.0)=";
+		@jdeq $>+3.0 $<+3.0 $>+3.75 $<+3.75 $>+1 $<+1 ?JumpJEQ2;
+		print "false (FAIL)";
+		failures++;
+		jump DoneJEQ2;
+		.JumpJEQ2;
+		print "true";
+		.DoneJEQ2;
+		print ", ";
+
+		print "jdeq(3.0,3.75,0.5)=";
+		@push $<+0.5;
+		@push $>+0.5;
+		@push $<+3.75;
+		@push $>+3.75;
+		@push $<+3.0;
+		@push $>+3.0;
+		@jdeq sp sp sp sp sp sp ?JumpJEQ3;
+		print "false";
+		jump DoneJEQ3;
+		.JumpJEQ3;
+		print "true (FAIL)";
+		failures++;
+		.DoneJEQ3;
+		print ", ";
+
+		print "jdeq(3.0,3.75,1.0)=";
+		@push $<+1;
+		@push $>+1;
+		@push $<+3.75;
+		@push $>+3.75;
+		@push $<+3.0;
+		@push $>+3.0;
+		@jdeq sp sp sp sp sp sp ?JumpJEQ4;
+		print "false (FAIL)";
+		failures++;
+		jump DoneJEQ4;
+		.JumpJEQ4;
+		print "true";
+		.DoneJEQ4;
+		print ", ";
+
 
 		new_line;
 
