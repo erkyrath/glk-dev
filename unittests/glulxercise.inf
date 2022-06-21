@@ -12027,6 +12027,10 @@ TestDoubleClass DoubleExpTest
 		print "pow(-1,Inf)="; check_double_hex(valhi, vallo, M_1_hi, M_1_lo); print ", ";
 		@dpow M_N1_hi M_N1_lo M_NINF_hi M_NINF_lo vallo valhi;
 		print "pow(-1,-Inf)="; check_double_hex(valhi, vallo, M_1_hi, M_1_lo); print ", ";
+		@dpow M_NAN_hi M_NAN_lo M_0_hi M_0_lo vallo valhi;
+		print "pow(NaN,0)="; check_double_hex(valhi, vallo, M_1_hi, M_1_lo); print ", ";
+		@dpow M_NAN_hi M_NAN_lo M_N0_hi M_N0_lo vallo valhi;
+		print "pow(NaN,-0)="; check_double_hex(valhi, vallo, M_1_hi, M_1_lo); print ", ";
 		
 		@dpow M_N1_hi M_N1_lo M_1_hi M_1_lo vallo valhi;
 		print "pow(-1,1)="; check_double_hex(valhi, vallo, $>-1, $<-1); print ", ";
