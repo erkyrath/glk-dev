@@ -12011,6 +12011,23 @@ TestDoubleClass DoubleExpTest
 
 		new_line;
 
+		@dpow M_1_hi M_1_lo M_1_hi M_1_lo vallo valhi;
+		print "pow(1,1)="; check_double_hex(valhi, vallo, M_1_hi, M_1_lo); print ", ";
+		@dpow M_1_hi M_1_lo M_N1_hi M_N1_lo vallo valhi;
+		print "pow(1,-1)="; check_double_hex(valhi, vallo, M_1_hi, M_1_lo); print ", ";
+		@dpow M_1_hi M_1_lo M_0_hi M_0_lo vallo valhi;
+		print "pow(1,0)="; check_double_hex(valhi, vallo, M_1_hi, M_1_lo); print ", ";
+		@dpow M_1_hi M_1_lo M_INF_hi M_INF_lo vallo valhi;
+		print "pow(1,Inf)="; check_double_hex(valhi, vallo, M_1_hi, M_1_lo); print ", ";
+		@dpow M_1_hi M_1_lo M_NINF_hi M_NINF_lo vallo valhi;
+		print "pow(1,-Inf)="; check_double_hex(valhi, vallo, M_1_hi, M_1_lo); print ", ";
+		@dpow M_1_hi M_1_lo M_NAN_hi M_NAN_lo vallo valhi;
+		print "pow(1,NaN)="; check_double_hex(valhi, vallo, M_1_hi, M_1_lo); print ", ";
+		@dpow M_N1_hi M_N1_lo M_INF_hi M_INF_lo vallo valhi;
+		print "pow(-1,Inf)="; check_double_hex(valhi, vallo, M_1_hi, M_1_lo); print ", ";
+		@dpow M_N1_hi M_N1_lo M_NINF_hi M_NINF_lo vallo valhi;
+		print "pow(-1,-Inf)="; check_double_hex(valhi, vallo, M_1_hi, M_1_lo); print ", ";
+		
 		@dpow M_N1_hi M_N1_lo M_1_hi M_1_lo vallo valhi;
 		print "pow(-1,1)="; check_double_hex(valhi, vallo, $>-1, $<-1); print ", ";
 		@dpow M_N1_hi M_N1_lo M_N1_hi M_N1_lo vallo valhi;
@@ -12043,6 +12060,8 @@ TestDoubleClass DoubleExpTest
 		print "pow(2,Inf)="; check_double_hex(valhi, vallo, M_INF_hi, M_INF_lo); print ", ";
 		@dpow $>+2 $<+2 M_NINF_hi M_NINF_lo vallo valhi;
 		print "pow(2,-Inf)="; check_double_hex(valhi, vallo, M_0_hi, M_0_lo); print ", ";
+		@dpow $>-1 $<-1 M_NAN_hi M_NAN_lo vallo valhi;
+		print "pow(-1,NaN)="; check_disnan(valhi, vallo); print ", ";
 		@dpow $>+2 $<+2 M_NAN_hi M_NAN_lo vallo valhi;
 		print "pow(2,NaN)="; check_disnan(valhi, vallo); print ", ";
 		@dpow M_NAN_hi M_NAN_lo $>+2 $<+2 vallo valhi;
