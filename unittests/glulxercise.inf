@@ -13941,7 +13941,13 @@ TestDoubleClass DoublePrintTest
 		val = func_to_array(bigbuffer, BIGBUFSIZE, Double, $3EE2DFD6, $94CCAB3F);
 		check_str("9.000000e-06", val); print ", ";
 		val = func_to_array(bigbuffer, BIGBUFSIZE, Double, $BEE2DFD6, $94CCAB3F);
-		check_str("-9.000000e-06", val); print "^";
+		check_str("-9.000000e-06", val); print ", ";
+		val = func_to_array(bigbuffer, BIGBUFSIZE, Double, $>+123e25, $<+123e25);
+		check_str("1.230000e+27", val); print ", ";
+		val = func_to_array(bigbuffer, BIGBUFSIZE, Double, $>+123456789, $<+123456789);
+		check_str("1.234568e+08", val); print ", ";
+		val = func_to_array(bigbuffer, BIGBUFSIZE, Double, $>+123456789, $<+123456789, 8);
+		check_str("1.23456789e+08", val); print "^";
 
 
 		count_failures();
