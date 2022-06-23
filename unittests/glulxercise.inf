@@ -11856,8 +11856,6 @@ TestDoubleClass DoubleRoundTest
 		print "ceil(-Inf)="; check_double_hex(valhi, vallo, M_NINF_hi, M_NINF_lo); print ", ";
 		@dceil M_NAN_hi M_NAN_lo vallo valhi;
 		print "ceil(NaN)="; check_disnan(valhi, vallo); print "^";
-
-		new_line;
 		
 		count_failures();
 	];
