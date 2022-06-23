@@ -10941,9 +10941,17 @@ TestDoubleClass DoubleConvTest
 		@dadd testglobal testglobal2 M_0_hi M_0_lo vallo valhi;
 		print "1="; check_double_hex(valhi, vallo, M_1_hi, M_1_lo); print ", ";
 		testglobal = $00000000;
+		testglobal2 = $00000001;
+		@dadd testglobal testglobal2 M_0_hi M_0_lo vallo valhi;
+		print "4.94e-324="; check_double_hex(valhi, vallo, $00000000, $00000001); print ", ";
+		testglobal = $00000000;
 		testglobal2 = $00010000;
 		@dadd testglobal testglobal2 M_0_hi M_0_lo vallo valhi;
 		print "3.23e-319="; check_double_hex(valhi, vallo, $00000000, $00010000); print ", ";
+		testglobal = $80000001;
+		testglobal2 = $00000000;
+		@dadd testglobal testglobal2 M_0_hi M_0_lo vallo valhi;
+		print "-2.12e-314="; check_double_hex(valhi, vallo, $80000001, $00000000); print ", ";
 		testglobal = $000FFFFF;
 		testglobal2 = $FFFFFFFE;
 		@dadd testglobal testglobal2 M_0_hi M_0_lo vallo valhi;
@@ -10956,6 +10964,10 @@ TestDoubleClass DoubleConvTest
 		testglobal2 = $00000000;
 		@dadd testglobal testglobal2 M_0_hi M_0_lo vallo valhi;
 		print "3.78e-270="; check_double_hex(valhi, vallo, $08000000, $00000000); print ", ";
+		testglobal = $76543210;
+		testglobal2 = $01234567;
+		@dadd testglobal testglobal2 M_0_hi M_0_lo vallo valhi;
+		print "9.93e+261="; check_double_hex(valhi, vallo, $76543210, $01234567); print ", ";
 		testglobal = $7FEFFFFF;
 		testglobal2 = $FFFFFFFF;
 		@dadd testglobal testglobal2 M_0_hi M_0_lo vallo valhi;
