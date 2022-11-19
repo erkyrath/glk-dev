@@ -616,7 +616,7 @@ class BlorbTool:
         filestart = None
         formtype = None
         dat = fl.read(5)
-        if (dat[0:4] == b'FORM' and ord(dat[4]) < 0x20):
+        if (dat[0:4] == b'FORM' and bytes_to_intarray(dat)[4] < 0x20):
             # This is an AIFF file, and must be embedded
             filestart = 8
             fl.seek(8, 0)
