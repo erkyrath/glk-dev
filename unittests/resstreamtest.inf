@@ -550,7 +550,7 @@ Constant ROM_GAMESERIAL    $36;     ! six ASCII characters
     glk($0084, buffer, len); ! put_buffer_stream
     new_line;
 
-    print "Opening Data 1 for get/set position:^";
+    print "Opening Data 1 for set position:^";
     str = glk($013A, 1, 11); ! stream_open_resource_uni
     glk($0045, str, 4, 0); ! stream_set_position
     val = glk($0090, str); ! get_char_stream
@@ -753,5 +753,80 @@ Constant ROM_GAMESERIAL    $36;     ! six ASCII characters
         check_value(val-->1, $0004); print ", ";
         check_value(val-->2, $54455354); new_line;
     }
-    
+	new_line;
+
+
+    print "* getpos at end to measure length^";
+	
+    str = glk($0049, 1, 11); ! stream_open_resource
+    glk($0045, str, 0, 2); ! stream_set_position
+    val = glk($0046, str);
+    glk($0044, str, gg_result); ! stream_close
+    check_result_counts(0, 0);
+	print "Data 1, byte: ";
+	check_value(val, 26); new_line;
+
+    str = glk($0049, 3, 11); ! stream_open_resource
+    glk($0045, str, 0, 2); ! stream_set_position
+    val = glk($0046, str);
+    glk($0044, str, gg_result); ! stream_close
+    check_result_counts(0, 0);
+	print "Data 3, byte: ";
+	check_value(val, 9); new_line;
+
+    str = glk($0049, 6, 11); ! stream_open_resource
+    glk($0045, str, 0, 2); ! stream_set_position
+    val = glk($0046, str);
+    glk($0044, str, gg_result); ! stream_close
+    check_result_counts(0, 0);
+	print "Data 6, byte: ";
+	check_value(val, 42); new_line;
+
+    str = glk($0049, 7, 11); ! stream_open_resource
+    glk($0045, str, 0, 2); ! stream_set_position
+    val = glk($0046, str);
+    glk($0044, str, gg_result); ! stream_close
+    check_result_counts(0, 0);
+	print "Data 7, byte: ";
+	check_value(val, 44); new_line;
+
+    str = glk($0049, 8, 11); ! stream_open_resource
+    glk($0045, str, 0, 2); ! stream_set_position
+    val = glk($0046, str);
+    glk($0044, str, gg_result); ! stream_close
+    check_result_counts(0, 0);
+	print "Data 8, byte: ";
+	check_value(val, 12); new_line;
+
+    str = glk($013A, 1, 12); ! stream_open_resource_uni
+    glk($0045, str, 0, 2); ! stream_set_position
+    val = glk($0046, str);
+    glk($0044, str, gg_result); ! stream_close
+    check_result_counts(0, 0);
+	print "Data 1, uni: ";
+	check_value(val, 26); new_line;
+
+    str = glk($013A, 4, 12); ! stream_open_resource_uni
+    glk($0045, str, 0, 2); ! stream_set_position
+    val = glk($0046, str);
+    glk($0044, str, gg_result); ! stream_close
+    check_result_counts(0, 0);
+	print "Data 4, uni: ";
+	check_value(val, 60); new_line;
+
+    str = glk($013A, 6, 12); ! stream_open_resource_uni
+    glk($0045, str, 0, 2); ! stream_set_position
+    val = glk($0046, str);
+    glk($0044, str, gg_result); ! stream_close
+    check_result_counts(0, 0);
+	print "Data 6, uni: ";
+	check_value(val, 42); new_line;
+
+    str = glk($013A, 7, 12); ! stream_open_resource_uni
+    glk($0045, str, 0, 2); ! stream_set_position
+    val = glk($0046, str);
+    glk($0044, str, gg_result); ! stream_close
+    check_result_counts(0, 0);
+	print "Data 7, uni: ";
+	check_value(val, 44); new_line;
 ];
