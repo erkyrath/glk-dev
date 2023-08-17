@@ -13166,10 +13166,15 @@ TestDoubleClass DoubleJumpTest
 		val = test_jdisnan(M_NAN_hi, M_NAN_lo);
 		print "jdisnan(NaN)="; check(val, 1); print ", ";
 		val = test_jdisnan($7FFFFFFF, $FFFFFFFF);
-		print "jdisnan(other NaN)="; check(val, 1); print ", ";
+		print "jdisnan(other NaN a)="; check(val, 1); print ", ";
 		val = test_jdisnan($FFFFFFFF, $FFFFFFFF);
-		print "jdisnan(other -NaN)="; check(val, 1); print "^";
-		!### more NaNs?
+		print "jdisnan(other -NaN a)="; check(val, 1); print ", ";
+		val = test_jdisnan($7FF00000, $00000001);
+		print "jdisnan(other NaN b)="; check(val, 1); print ", ";
+		val = test_jdisnan($FFF00000, $80000000);
+		print "jdisnan(other -NaN b)="; check(val, 1); print ", ";
+		val = test_jdisnan($7FF80000, $00000000);
+		print "jdisnan(other NaN c)="; check(val, 1); print "^";
 
 		new_line;
 
@@ -13190,7 +13195,13 @@ TestDoubleClass DoubleJumpTest
 		val = test_jdisinf($7FFFFFFF, $FFFFFFFF);
 		print "jdisinf(other NaN)="; check(val, 0); print ", ";
 		val = test_jdisinf($FFFFFFFF, $FFFFFFFF);
-		print "jdisinf(other -NaN)="; check(val, 0); print "^";
+		print "jdisinf(other -NaN)="; check(val, 0); print ", ";
+		val = test_jdisinf($7FF00000, $00000001);
+		print "jdisinf(other NaN b)="; check(val, 0); print ", ";
+		val = test_jdisinf($FFF00000, $80000000);
+		print "jdisinf(other -NaN b)="; check(val, 0); print ", ";
+		val = test_jdisinf($7FF80000, $00000000);
+		print "jdisinf(other NaN c)="; check(val, 0); print "^";
 
 		new_line;
 
