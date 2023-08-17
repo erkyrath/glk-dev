@@ -2,8 +2,8 @@
 
 Constant Story "Glulxercise";
 Constant Headline "A Glulx interpreter unit test^";
-Release 10;
-Serial "220722";
+Release 11;
+Serial "230817";
 ! Written by Andrew Plotkin (erkyrath@eblong.com).
 ! This unit test suite, and its functions, are in the public domain.
 
@@ -12523,10 +12523,10 @@ TestDoubleClass DoubleTrigTest
 		}
 
 		! Various arrangements of operands
-		valhi = $>+1.1;
-		vallo = $<+1.1;
+		valhi = $>+1.2;
+		vallo = $<+1.2;
 		@dsin valhi vallo vallo valhi;
-		print "sin(1.1)="; check_double_hex_ulp(valhi, vallo, $>+0.8912073600614354, $<+0.8912073600614354); print ", ";
+		print "sin(1.2)="; check_double_hex_ulp(valhi, vallo, $>+0.9320390859672263, $<+0.9320390859672263); print ", ";
 
 		testglobal = $>+1.7;
 		testglobal2 = $<+1.7;
@@ -13169,6 +13169,7 @@ TestDoubleClass DoubleJumpTest
 		print "jdisnan(other NaN)="; check(val, 1); print ", ";
 		val = test_jdisnan($FFFFFFFF, $FFFFFFFF);
 		print "jdisnan(other -NaN)="; check(val, 1); print "^";
+		!### more NaNs?
 
 		new_line;
 
