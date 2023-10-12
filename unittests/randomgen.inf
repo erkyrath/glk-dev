@@ -1,0 +1,213 @@
+Constant Story "RandomGenTest";
+Constant Headline "Not a game.^";
+
+Release 1;
+
+Global mainwin = 0;
+Array gg_event --> 4;
+Constant BUFLEN = 240;
+Array input_buffer -> 4+BUFLEN;
+Array gg_tokenbuf -> DICT_WORD_SIZE;
+Constant MAX_BUFFER_WORDS = 20;
+Constant PARSE_BUFFER_LEN = 244;    ! 4 + MAX_BUFFER_WORDS*4;
+Array parse_buffer --> PARSE_BUFFER_LEN/WORDSIZE;
+
+Global found_num;
+
+Constant HDR_GLULXVERSION  $04;     ! long word
+Constant ROM_GAMERELEASE   $34;     ! short word
+Constant ROM_GAMESERIAL    $36;     ! six ASCII characters
+
+Constant MAINWIN_ROCK 100;
+
+[ Main;
+  @setiosys 2 0; ! select Glk I/O system
+  mainwin = glk($0023, 0, 0, 0, 3, MAINWIN_ROCK); ! glk_window_open
+  glk($002F, mainwin); ! glk_set_window
+
+  new_line;
+  Banner();
+  new_line;
+
+  RoomDesc();
+
+  mainloop();
+];
+
+[ mainloop numwords wd addr ix val count;
+
+  while (true) {
+    print "^>";
+    readline();
+
+    addr = input_buffer;
+    if (addr-->0 == 0) {
+      continue;
+    }
+
+    tokenise(input_buffer, parse_buffer);
+    numwords = parse_buffer-->0;
+    if (numwords == 0) {
+      continue;
+    }
+
+    wd = parse_buffer-->1;  ! the first word
+    if (wd == 'look' or 'l//' or 'help' or '?//') {
+      RoomDesc();
+    }
+    else if (wd == 'version') {
+      Banner();
+    }
+    else if (wd == 'quit' or 'q//') {
+      print "Goodbye!^";
+      quit;
+    }
+    else if (wd == 'print' or 'p//') {
+	  count = 20;
+	  if (numwords >= 2 && parse_buffer-->4 == ',number') {
+	    count = found_num;
+	  }
+	  print "Here are ", count, " random numbers...^";
+	  for (ix=0 : ix<count : ix++) {
+	    @random 0 val;
+		print val, "^";
+	  }
+	}
+    else if (wd == 'set' or 'seed') {
+	  if (numwords >= 2 && parse_buffer-->4 == ',number') {
+	    print "Setting RNG seed to ", found_num, ".^";
+	    @setrandom found_num;
+	  }
+	  else {
+	    print "You must set a number.^";
+	  }
+	}
+    else {
+      print "I didn't understand that.^";
+    }
+  }
+];
+
+[ readline count   addr;
+  glk($00D0, mainwin, input_buffer+4, BUFLEN, 0); ! request_line_event
+  while (true) {
+    glk($00C0, gg_event); ! select
+    if (gg_event-->0 == 3 && gg_event-->1 == mainwin) {
+      count = gg_event-->2;
+      break;
+    }
+  }
+  addr = input_buffer;
+  addr-->0 = count;
+];
+
+[ tokenise buf tab
+    cx ch numwords len bx ix wx wpos wlen val res dictlen entrylen;
+    len = buf-->0;
+    buf = buf+WORDSIZE;
+	found_num = -1;
+
+    ! First, split the buffer up into words. We use the standard Infocom
+    ! list of word separators (comma, period, double-quote).
+
+    cx = 0;
+    numwords = 0;
+    while (cx < len) {
+        while (cx < len && buf->cx == ' ') cx++;
+        if (cx >= len) break;
+        bx = cx;
+        if (buf->cx == '.' or ',' or '"') cx++;
+        else {
+            while (cx < len && buf->cx ~= ' ' or '.' or ',' or '"') cx++;
+        }
+        tab-->(numwords*3+2) = (cx-bx);
+        tab-->(numwords*3+3) = WORDSIZE+bx;
+        numwords++;
+        if (numwords >= MAX_BUFFER_WORDS) break;
+    }
+    tab-->0 = numwords;
+
+    ! Now we look each word up in the dictionary.
+
+    dictlen = #dictionary_table-->0;
+    entrylen = DICT_WORD_SIZE + 7;
+
+    for (wx=0 : wx<numwords : wx++) {
+        wlen = tab-->(wx*3+2);
+        wpos = tab-->(wx*3+3);
+
+		! Special case: If the word is all digits, record it in found_num.
+		! (This doesn't catch negative numbers, and it can only return
+		! one number per input line.)
+        cx = wpos - WORDSIZE;
+		res = true;
+		bx = 0;
+		for (ix=0 : ix<wlen : ix++) {
+			ch = buf->(cx+ix);
+			if (ch < '0' || ch > '9') {
+				res = false;
+				break;
+			}
+			bx = 10*bx + (ch-'0');
+		}
+		if (res) {
+			tab-->(wx*3+1) = ',number';
+			found_num = bx;
+			continue;
+		}
+
+        ! Copy the word into the gg_tokenbuf array, clipping to DICT_WORD_SIZE
+        ! characters and lower case.
+        if (wlen > DICT_WORD_SIZE) wlen = DICT_WORD_SIZE;
+        cx = wpos - WORDSIZE;
+        for (ix=0 : ix<wlen : ix++) gg_tokenbuf->ix = glk($00A0, buf->(cx+ix));
+        for (: ix<DICT_WORD_SIZE : ix++) gg_tokenbuf->ix = 0;
+
+        val = #dictionary_table + WORDSIZE;
+        @binarysearch gg_tokenbuf DICT_WORD_SIZE val entrylen dictlen 1 1 res;
+        tab-->(wx*3+1) = res;
+    }
+];
+
+[ Banner  i ix;
+   if (Story ~= 0) {
+    glk($0086, 3); ! set header style
+    print (string) Story;
+    glk($0086, 0); ! set normal style
+  }
+  if (Headline ~= 0) print ": ", (string) Headline;
+  print "Release ";
+  @aloads ROM_GAMERELEASE 0 i;
+  print i;
+  print " / Serial number ";
+  for (i=0 : i<6 : i++) print (char) ROM_GAMESERIAL->i;
+  print " / Inform v"; inversion;
+  print ", compiler options ";
+  i = false;
+  #Ifdef STRICT_MODE;
+  print "S"; i++;
+  #Endif; ! STRICT_MODE
+  #Ifdef INFIX;
+  print "X"; i++;
+  #Ifnot;
+  #Ifdef DEBUG;
+  print "D"; i++;
+  #Endif; ! DEBUG
+  #Endif; ! INFIX
+  if (~~i) print "(none)";
+  new_line;
+
+  @gestalt 1 0 ix;
+  print "Interpreter version ", ix / $10000, ".", (ix & $FF00) / $100,
+  ".", ix & $FF, " / ";
+  @gestalt 0 0 ix;
+  print "VM ", ix / $10000, ".", (ix & $FF00) / $100, ".", ix & $FF, " / ";
+  ix = HDR_GLULXVERSION-->0;
+  print "game file format ", ix / $10000, ".", (ix & $FF00) / $100, ".", ix & $FF, "^";
+];
+
+[ RoomDesc;
+  print "A voice booooms out: Welcome to the test chamber.^^";
+  print "Type ~help~ to repeat this message, ~quit~ to exit, ~seed N~ to set the RNG seed, or ~print~ to print some random numbers. (~print N~ will print that many; otherwise you get twenty of them.)^";
+];
+
