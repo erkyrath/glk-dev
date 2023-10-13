@@ -73,6 +73,31 @@ Constant MAINWIN_ROCK 100;
 		print val, "^";
 	  }
 	}
+    else if (wd == 'range') {
+	  if (numwords >= 2 && parse_buffer-->4 == ',number') {
+	    print "Here are 20 numbers from 0 to ", found_num, ".^";
+	    for (ix=0 : ix<20 : ix++) {
+	      @random found_num val;
+		  print val, "^";
+	    }
+	  }
+	  else {
+	    print "You must give a range number.^";
+	  }
+	}
+    else if (wd == 'nrange') {
+	  if (numwords >= 2 && parse_buffer-->4 == ',number') {
+	    found_num = -found_num;
+	    print "Here are 20 numbers from 0 to ", found_num, ".^";
+	    for (ix=0 : ix<20 : ix++) {
+	      @random found_num val;
+		  print val, "^";
+	    }
+	  }
+	  else {
+	    print "You must give a range number.^";
+	  }
+	}
     else if (wd == 'set' or 'seed') {
 	  if (numwords >= 2 && parse_buffer-->4 == ',number') {
 	    print "Setting RNG seed to ", found_num, ".^";
@@ -208,6 +233,6 @@ Constant MAINWIN_ROCK 100;
 
 [ RoomDesc;
   print "A voice booooms out: Welcome to the test chamber.^^";
-  print "Type ~help~ to repeat this message, ~quit~ to exit, ~seed N~ to set the RNG seed, or ~print~ to print some random numbers. (~print N~ will print that many; otherwise you get twenty of them.)^";
+  print "Type ~help~ to repeat this message, ~quit~ to exit, ~seed N~ to set the RNG seed, or ~print~ to print some random numbers. (~print N~ will print that many; otherwise you get twenty of them.) You can also say ~range N~ to print twenty numbers in the range 0 to -1, or ~nrange N~ to print in the range -N+1 to 0. (~range 0~ or ~nrange 0~ are the same as ~print~.)^";
 ];
 
