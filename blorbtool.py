@@ -41,41 +41,42 @@ try:
 except:
     pass
 
-try:
-    # Python 3.3 and up
-    os_replace = os.replace
-except AttributeError:
-    if (os.name != 'nt'):
-        # Older Python (on Unix)
-        os_replace = os.rename
-    else:
-        # On Windows, os.rename can't replace an existing file.
-        def os_replace(src, dst):
-            try:
-                os.remove(dst)
-            except:
-                pass
-            os.rename(src, dst)
+if __name__ == "__main__":
+    try:
+        # Python 3.3 and up
+        os_replace = os.replace
+    except AttributeError:
+        if (os.name != 'nt'):
+            # Older Python (on Unix)
+            os_replace = os.rename
+        else:
+            # On Windows, os.rename can't replace an existing file.
+            def os_replace(src, dst):
+                try:
+                    os.remove(dst)
+                except:
+                    pass
+                os.rename(src, dst)
 
-popt = optparse.OptionParser(usage='blorbtool.py BLORBFILE [ command ]')
+    popt = optparse.OptionParser(usage='blorbtool.py BLORBFILE [ command ]')
 
-popt.add_option('-n', '--new',
-                action='store_true', dest='newfile',
-                help='create a new blorb file instead of loading one in')
-popt.add_option('-o', '--output',
-                action='store', dest='output', metavar='BLORBFILE',
-                help='blorb file to write to (if requested)')
-popt.add_option('-f', '--force',
-                action='store_true', dest='force',
-                help='overwrite files without confirming')
-popt.add_option('-v', '--verbose',
-                action='store_true', dest='verbose',
-                help='verbose stack traces on error')
-popt.add_option('-l', '--commands',
-                action='store_true', dest='listcommands',
-                help='list all commands (and exit)')
+    popt.add_option('-n', '--new',
+                    action='store_true', dest='newfile',
+                    help='create a new blorb file instead of loading one in')
+    popt.add_option('-o', '--output',
+                    action='store', dest='output', metavar='BLORBFILE',
+                    help='blorb file to write to (if requested)')
+    popt.add_option('-f', '--force',
+                    action='store_true', dest='force',
+                    help='overwrite files without confirming')
+    popt.add_option('-v', '--verbose',
+                    action='store_true', dest='verbose',
+                    help='verbose stack traces on error')
+    popt.add_option('-l', '--commands',
+                    action='store_true', dest='listcommands',
+                    help='list all commands (and exit)')
 
-(opts, args) = popt.parse_args()
+    (opts, args) = popt.parse_args()
 
 def dict_append(map, key, val):
     ls = map.get(key)
@@ -876,49 +877,50 @@ def parse_jpeg(dat):
 
 # Actual work begins here.
 
-if (opts.listcommands):
-    BlorbTool.show_commands()
-    sys.exit(-1)
-    
-if (not args and not opts.newfile):
-    popt.print_help()
-    sys.exit(-1)
+if __name__ == "__main__":
+    if (opts.listcommands):
+        BlorbTool.show_commands()
+        sys.exit(-1)
 
-filename = None
-if (args):
-    filename = args.pop(0)
-    if (opts.newfile and not opts.output):
-        opts.output = filename
-        filename = None
-        
-try:
-    blorbfile = BlorbFile(filename, opts.output)
-except Exception as ex:
-    print(ex.__class__.__name__+':', str(ex))
-    if (opts.verbose):
-        raise
-    sys.exit(-1)
-    
-# If args exist, execute them as a command. If not, loop grabbing and
-# executing commands until we discover that the user has executed Quit.
-# (The handler catches all exceptions except KeyboardInterrupt.)
-try:
-    tool = BlorbTool()
+    if (not args and not opts.newfile):
+        popt.print_help()
+        sys.exit(-1)
+
+    filename = None
     if (args):
-        tool.set_interactive(False)
-        tool.handle(args)
-        blorbfile.sanity_check()
-        blorbfile.save_if_needed()
-    else:
-        tool.set_interactive(True)
-        while (not tool.quit_yet()):
-            tool.handle()
-            blorbfile.sanity_check()
-        blorbfile.save_if_needed()
-        print('<exiting>')
-except KeyboardInterrupt:
-    print('<interrupted>')
-except EOFError:
-    print('<eof>')
+        filename = args.pop(0)
+        if (opts.newfile and not opts.output):
+            opts.output = filename
+            filename = None
 
-blorbfile.close()
+    try:
+        blorbfile = BlorbFile(filename, opts.output)
+    except Exception as ex:
+        print(ex.__class__.__name__+':', str(ex))
+        if (opts.verbose):
+            raise
+        sys.exit(-1)
+
+    # If args exist, execute them as a command. If not, loop grabbing and
+    # executing commands until we discover that the user has executed Quit.
+    # (The handler catches all exceptions except KeyboardInterrupt.)
+    try:
+        tool = BlorbTool()
+        if (args):
+            tool.set_interactive(False)
+            tool.handle(args)
+            blorbfile.sanity_check()
+            blorbfile.save_if_needed()
+        else:
+            tool.set_interactive(True)
+            while (not tool.quit_yet()):
+                tool.handle()
+                blorbfile.sanity_check()
+            blorbfile.save_if_needed()
+            print('<exiting>')
+    except KeyboardInterrupt:
+        print('<interrupted>')
+    except EOFError:
+        print('<eof>')
+
+    blorbfile.close()
