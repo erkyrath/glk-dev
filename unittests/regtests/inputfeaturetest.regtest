@@ -1,0 +1,36 @@
+** game: inputfeaturetest.ulx
+** remformat: yes
+
+# Not a complete test, but it does check the functions can be run
+
+* basic
+
+InputLineFeatureTest
+
+> noecho
+The library has been set to no-echo mode for line input.
+
+> look
+look
+A voice booooms out: Welcome to the test chamber.
+
+> echo
+The library has been set to echo mode for line input (the normal behavior).
+
+> interrupt
+Your input will be interrupted in two seconds by a timer event.
+
+>{timer}
+The timer went off! (The command line was empty, though. You should see an empty prompt on the line above. Try typing something during those two seconds.)
+
+> terminate
+There are now 13 special line input terminator keys.
+
+> even
+There are now 6 special line input terminator keys.
+
+> odd
+There are now 6 special line input terminator keys.
+
+> none
+There are now 0 special line input terminator keys.
