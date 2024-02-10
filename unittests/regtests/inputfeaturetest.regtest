@@ -1,4 +1,5 @@
 ** game: inputfeaturetest.ulx
+** interpreter: glulxer
 ** remformat: yes
 
 # Not a complete test, but it does check the functions can be run
@@ -23,14 +24,14 @@ Your input will be interrupted in two seconds by a timer event.
 >{timer}
 The timer went off! (The command line was empty, though. You should see an empty prompt on the line above. Try typing something during those two seconds.)
 
-> terminate
-There are now 13 special line input terminator keys.
+#> terminate
+#There are now 13 special line input terminator keys.
 
-> even
-There are now 6 special line input terminator keys.
+#> even
+#There are now 6 special line input terminator keys.
 
-> odd
-There are now 6 special line input terminator keys.
+#> odd
+#There are now 6 special line input terminator keys.
 
-> none
-There are now 0 special line input terminator keys.
+#> none
+#There are now 0 special line input terminator keys.
