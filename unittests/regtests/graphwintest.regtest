@@ -71,3 +71,12 @@ You erase the window.
 >{refresh}
 {graphics} {json special:'fill'}
 !{graphics} {json special:'image'}
+
+
+* mouse
+
+>{mouse} 1 2
+Mouse event at 1, 2!
+
+>{mouse} 41 45
+Mouse event at 41, 45!
