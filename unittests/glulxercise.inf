@@ -901,7 +901,9 @@ TestClass ArithTest
 		@mod $80000000 (-2) val;
 		print "$80000000%-2="; check(val, 0); print ", ";
 		@mod $80000000 1 val;
-		print "$80000000%1="; check(val, 0); print "^";
+		print "$80000000%1="; check(val, 0); print ", ";
+		@mod $80000000 (-1) val;
+		print "$80000000%-1="; check(val, 0); print "^";
 		
 		testglobal = 49; testglobal2 = 8;
 		@mod testglobal testglobal2 val;
@@ -10545,8 +10547,11 @@ TestFloatClass FloatPrintTest
 		check_str("6.8", val); print ", ";
 		val = func_to_array(bigbuffer, BIGBUFSIZE, FloatDec, $40D945F4, 4);
 		check_str("6.7898", val); print ", ";
-		val = func_to_array(bigbuffer, BIGBUFSIZE, FloatDec, $40D945F4, 8);
-		check_str("6.78978832", val); print "^";
+		val = func_to_array(bigbuffer, BIGBUFSIZE, FloatDec, $40D945F4, 6);
+		check_str("6.789789", val); print "^";
+		! $40D945F4 at 8 digits falls prey to an Intel/ARM math difference.
+		val = func_to_array(bigbuffer, BIGBUFSIZE, FloatDec, $40D945F5, 8);
+		check_str("6.78978984", val); print "^";
 		
 		val = func_to_array(bigbuffer, BIGBUFSIZE, FloatDec, M_INF);
 		check_str("Inf", val); print ", ";
