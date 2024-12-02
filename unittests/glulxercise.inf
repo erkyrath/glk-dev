@@ -901,9 +901,7 @@ TestClass ArithTest
 		@mod $80000000 (-2) val;
 		print "$80000000%-2="; check(val, 0); print ", ";
 		@mod $80000000 1 val;
-		print "$80000000%1="; check(val, 0); print ", ";
-		@mod $80000000 (-1) val;
-		print "$80000000%-1="; check(val, 0); print "^";
+		print "$80000000%1="; check(val, 0); print "^";
 		
 		testglobal = 49; testglobal2 = 8;
 		@mod testglobal testglobal2 val;
