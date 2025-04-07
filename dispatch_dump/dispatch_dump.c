@@ -1,7 +1,9 @@
 /* dispatch_dump: A quick hack to dump the gi_dispa data (the Glk API
    description) out as a text or XML file.
 
-   Link this with cheapglk, and run "dispatch_dump" or "dispatch_dump --xml".
+   Link this with cheapglk, and run:
+
+   ./dispatch_dump -q --xml > dispatch_dump.xml
 
    This program is in the public domain.
 */
