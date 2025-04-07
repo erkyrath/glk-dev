@@ -39,6 +39,7 @@ Constant gestalt_CharOutput_CannotPrint = 0;
 Constant gestalt_CharOutput_ExactPrint = 2;
 Constant gestalt_DateTime = 20;
 Constant gestalt_DrawImage = 7;
+Constant gestalt_DrawImageScale = 24;
 Constant gestalt_Graphics = 6;
 Constant gestalt_GraphicsCharInput = 23;
 Constant gestalt_GraphicsTransparency = 14;
@@ -61,9 +62,18 @@ Constant gestalt_UnicodeNorm = 16;
 Constant gestalt_Version = 0;
 Constant imagealign_InlineCenter = 3;
 Constant imagealign_InlineDown = 2;
+Constant imagealign_InlineUp = 1;
 Constant imagealign_MarginLeft = 4;
 Constant imagealign_MarginRight = 5;
-Constant imagealign_InlineUp = 1;
+Constant imagerule_AspectRatio = 12;
+Constant imagerule_HeightFixed = 8;
+Constant imagerule_HeightMask = 12;
+Constant imagerule_HeightOrig = 4;
+Constant imagerule_WidthFixed = 2;
+Constant imagerule_WidthMask = 3;
+Constant imagerule_WidthOrig = 1;
+Constant imagerule_WidthRatio = 3;
+Constant imagerule_WidthWindowMax = 16;
 Constant keycode_Delete = 4294967289;
 Constant keycode_Down = 4294967291;
 Constant keycode_End = 4294967283;
@@ -574,6 +584,12 @@ Constant wintype_TextGrid = 4;
   ! glk_window_set_background_color(window, uint)
   @glk 235 _vararg_count 0;
   return 0;
+];
+
+[ glk_image_draw_scaled_ext _vararg_count ret;
+  ! glk_image_draw_scaled_ext(window, uint, int, int, uint, uint, uint) => uint
+  @glk 236 _vararg_count ret;
+  return ret;
 ];
 
 [ glk_schannel_iterate _vararg_count ret;
