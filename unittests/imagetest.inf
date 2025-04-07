@@ -355,9 +355,6 @@ Array info_array --> 2;
 [ graphics_supported;
 	return glk_gestalt(6, 0); ! gestalt_Graphics
 ];
-[ extgraphics_supported;
-	return glk_gestalt(24, 0); ! gestalt_DrawImageScale
-];
 
 [ bufgraphics_supported;
 	if (~~glk_gestalt(6, 0)) ! gestalt_Graphics
@@ -365,6 +362,11 @@ Array info_array --> 2;
 	if (~~glk_gestalt(7, 3)) ! gestalt_DrawImage, wintype_TextBuffer
 		return false;
 	rtrue;
+];
+[ extgraphics_supported;
+	if (~~glk_gestalt(6, 0)) ! gestalt_Graphics
+		return false;
+	return glk_gestalt(24, 3); ! gestalt_DrawImageScale, wintype_TextBuffer
 ];
 
 [ glk_gestalt _vararg_count ret;
