@@ -26,6 +26,10 @@ Object Kitchen "Image Room"
 			mix some text on the line. Throw in ~link~ to make the image
 			a hyperlink. Adding a term like ~100x200~
 			will scale the image to those dimensions.^^
+			For scaling images, use ~wfix~, ~worig~, ~wratio~,
+			~hfix~, ~horig~, ~hratio~. Ratio scales are written like
+			~1/1x3/2~. (Note that ~1/1~ is interpreted as $10000,
+			not 1 -- ratios are 16x16 fixed-point.)^^
 			You can also type ~size NUMBER~ to check an image size.
 			Type ~text~ for a long text paragraph,
 			~clear~ to clear the text buffer, and
