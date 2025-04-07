@@ -12,8 +12,7 @@ GLKLIBDIR = ../cheapglk
 GLKMAKEFILE = Make.cheapglk
 
 # Pick a C compiler.
-#CC = cc
-CC = gcc
+CC = cc
 
 OPTIONS = -g -Wall -Wmissing-prototypes -Wstrict-prototypes -Wno-unused -DOS_UNIX
 

@@ -65,7 +65,7 @@ static char *xml_encode(char *str) {
     return buf;
 }
 
-void glk_main()
+void glk_main(void)
 {
     winid_t mainwin;
     int count, ix;
