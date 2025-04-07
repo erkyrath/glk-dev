@@ -216,6 +216,31 @@ Global parsed_flags;
 			continue;
 		}
 
+		if (wd == 'wfix') {
+			parsed_flags = (parsed_flags & (~3)) | 2;
+			continue;
+		}
+		if (wd == 'worig') {
+			parsed_flags = (parsed_flags & (~3)) | 1;
+			continue;
+		}
+		if (wd == 'wratio' or 'waspect') {
+			parsed_flags = (parsed_flags & (~3)) | 3;
+			continue;
+		}
+		if (wd == 'hfix') {
+			parsed_flags = (parsed_flags & (~12)) | 8;
+			continue;
+		}
+		if (wd == 'horig') {
+			parsed_flags = (parsed_flags & (~12)) | 4;
+			continue;
+		}
+		if (wd == 'hratio' or 'haspect') {
+			parsed_flags = (parsed_flags & (~12)) | 12;
+			continue;
+		}
+
 		if (1)
 			return GPR_FAIL;
 	}
@@ -270,17 +295,23 @@ Array info_array --> 2;
 	if (parsed_hyperlink)
 		glk_set_hyperlink(1000+parsed_number);
 
-	if (parsed_dimensions == 0) {
+	if (parsed_flags == 0 && parsed_dimensions == 0) {
 		if (parsed_verbose) {
 			print "Drawing image ", parsed_number, " align ", parsed_alignment, ".^";
 		}
 		glk_image_draw(gg_mainwin, parsed_number, parsed_alignment, 0);
 	}
-	else {
+	else if (parsed_flags == 0) {
 		if (parsed_verbose) {
 			print "Drawing image ", parsed_number, " align ", parsed_alignment, " size ", (PrintNum) parsed_dimwidth, "x", (PrintNum) parsed_dimheight, ".^";
 		}
 		glk_image_draw_scaled(gg_mainwin, parsed_number, parsed_alignment, 0, parsed_dimwidth, parsed_dimheight);
+	}
+	else {
+		if (parsed_verbose) {
+			print "Drawing image ", parsed_number, " align ", parsed_alignment, " size ", (PrintNum) parsed_dimwidth, "x", (PrintNum) parsed_dimheight, " flags ", (Hex) parsed_flags, ".^";
+		}
+		!###
 	}
 	
 	if (parsed_hyperlink)
