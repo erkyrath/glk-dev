@@ -287,6 +287,12 @@ Array info_array --> 2;
   return ret;
 ];
 
+[ glk_image_draw_scaled_ext _vararg_count ret;
+  ! glk_image_draw_scaled_ext(window, uint, int, int, uint, uint, uint) => uint
+  @glk 236 _vararg_count ret;
+  return ret;
+];
+
 [ glk_window_flow_break _vararg_count;
   ! glk_window_flow_break(window)
   @glk 232 _vararg_count 0;
