@@ -241,7 +241,7 @@ Global parsed_flags;
 			continue;
 		}
 
-		if (wd == 'winmax' or 'winwid' or 'maxwid') {
+		if (wd == 'winmax' or 'winwid' or 'maxwid' or 'maxwidth') {
 			parsed_flags = parsed_flags | 16;
 			continue;
 		}
