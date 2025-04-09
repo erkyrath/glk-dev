@@ -73,7 +73,6 @@ Constant imagerule_WidthFixed = 2;
 Constant imagerule_WidthMask = 3;
 Constant imagerule_WidthOrig = 1;
 Constant imagerule_WidthRatio = 3;
-Constant imagerule_WidthWindowMax = 16;
 Constant keycode_Delete = 4294967289;
 Constant keycode_Down = 4294967291;
 Constant keycode_End = 4294967283;
@@ -587,7 +586,7 @@ Constant wintype_TextGrid = 4;
 ];
 
 [ glk_image_draw_scaled_ext _vararg_count ret;
-  ! glk_image_draw_scaled_ext(window, uint, int, int, uint, uint, uint) => uint
+  ! glk_image_draw_scaled_ext(window, uint, int, int, uint, uint, uint, uint) => uint
   @glk 236 _vararg_count ret;
   return ret;
 ];

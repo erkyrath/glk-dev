@@ -6,7 +6,7 @@
     <class name="window" value="0" />
   </classes>
 
-  <constants count="136">
+  <constants count="135">
     <constant name="evtype_Arrange" value="5" />
     <constant name="evtype_CharInput" value="2" />
     <constant name="evtype_Hyperlink" value="8" />
@@ -69,7 +69,6 @@
     <constant name="imagerule_WidthMask" value="3" />
     <constant name="imagerule_WidthOrig" value="1" />
     <constant name="imagerule_WidthRatio" value="3" />
-    <constant name="imagerule_WidthWindowMax" value="16" />
     <constant name="keycode_Delete" value="4294967289" />
     <constant name="keycode_Down" value="4294967291" />
     <constant name="keycode_End" value="4294967283" />
@@ -220,7 +219,7 @@
     <function id="233" name="window_erase_rect" proto="5QaIsIsIuIu:" />
     <function id="234" name="window_fill_rect" proto="6QaIuIsIsIuIu:" />
     <function id="235" name="window_set_background_color" proto="2QaIu:" />
-    <function id="236" name="image_draw_scaled_ext" proto="8QaIuIsIsIuIuIu:Iu" />
+    <function id="236" name="image_draw_scaled_ext" proto="9QaIuIsIsIuIuIuIu:Iu" />
     <function id="240" name="schannel_iterate" proto="3Qd&lt;Iu:Qd" />
     <function id="241" name="schannel_get_rock" proto="2Qd:Iu" />
     <function id="242" name="schannel_create" proto="2Iu:Qd" />
