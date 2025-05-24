@@ -1,6 +1,6 @@
 Constant Story "ImageTest";
 Constant Headline "^Not a game.^";
-Release 4;
+Release 5;
 
 Include "Parser";
 Include "VerbLib";
@@ -20,13 +20,15 @@ Include "VerbLib";
 Object Kitchen "Image Room"
   with
     description [;
-		print "A voice booooms out: Try ~image~, or ~image NUMBER~,
-			or ~image NUMBER ALIGN~. Alignment are ~up~, ~down~,
-			~center~, ~left~, ~right~. Throw in the word ~caption~ to
-			mix some text on the line. Throw in ~link~ to make the image
-			a hyperlink. Adding a term like ~100x200~
+		print "A voice booooms out: Try ~image~ for a sample of alignments,
+			or ~image NUMBER~, or ~image NUMBER ALIGN~.
+			Alignments are ~up~, ~down~, ~center~, ~left~, ~right~.
+			Throw in the word ~caption~ to mix some text on the line.
+			Throw in ~link~ to make the image a hyperlink.
+			Adding a term like ~100x200~
 			will scale the image to those dimensions.^^
-			For scaling images, use ~wfix~, ~worig~, ~wratio~,
+			Try ~scales~ for a sample of scaling options.
+			For more control, use ~image~ with ~wfix~, ~worig~, ~wratio~,
 			~hfix~, ~horig~, ~hratio~. Ratio scales are written
 			like ~1/1x3/2~. (Note that ~1/1~ is interpreted as $10000,
 			not 1 -- ratios are 16x16 fixed-point.)^^
@@ -265,6 +267,9 @@ Verb 'size'
 Verb 'image'
 	* ImageSpec -> Image;
 
+Verb 'scales'
+	* -> ScaleSample;
+
 Verb 'text'
 	* -> Text;
 
@@ -337,6 +342,47 @@ Array info_array --> 2;
 
 	if (parsed_caption)
 		print " -- that is an image.^";
+];
+
+[ ScaleSampleSub;
+	if (~~bufgraphics_supported())
+		print_ret "This window does not support image display.";
+	if (~~extgraphics_supported()) {
+		print_ret "This window does not support image scale flags.";
+	}
+
+	print "50x50 fixed, no maxwidth:^";
+	glk_image_draw_scaled_ext(gg_mainwin, 1, 1, 0, 50, 50, 2|8, 0);
+	new_line; new_line;
+	
+	print "800x50 fixed, no maxwidth:^";
+	glk_image_draw_scaled_ext(gg_mainwin, 1, 1, 0, 800, 50, 2|8, 0);
+	new_line; new_line;
+	
+	print "800x50 fixed, 100% maxwidth:^";
+	glk_image_draw_scaled_ext(gg_mainwin, 1, 1, 0, 800, 50, 2|8, $10000);
+	new_line; new_line;
+	
+	print "800x50 fixed, 50% maxwidth:^";
+	glk_image_draw_scaled_ext(gg_mainwin, 1, 1, 0, 800, 50, 2|8, $8000);
+	new_line; new_line;
+	
+	print "50% width, 100 fixed height, no maxwidth:^";
+	glk_image_draw_scaled_ext(gg_mainwin, 1, 1, 0, $8000, 100, 3|8, 0);
+	new_line; new_line;
+	
+	print "300 fixed width, orig aspect ratio, no maxwidth:^";
+	glk_image_draw_scaled_ext(gg_mainwin, 1, 1, 0, 300, $10000, 2|12, 0);
+	new_line; new_line;
+	
+	print "300 fixed width, 25% orig aspect ratio, no maxwidth:^";
+	glk_image_draw_scaled_ext(gg_mainwin, 1, 1, 0, 300, $4000, 2|12, 0);
+	new_line; new_line;
+	
+	print "25% width, orig aspect ratio, no maxwidth:^";
+	glk_image_draw_scaled_ext(gg_mainwin, 1, 1, 0, $4000, $10000, 3|12, 0);
+	new_line;
+	
 ];
 
 [ TextSub ix val;
