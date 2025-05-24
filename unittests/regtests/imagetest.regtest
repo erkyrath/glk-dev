@@ -82,6 +82,42 @@ You erase history.
 !{image=10}
 
 
+* scales
+
+> image 1 worig horig
+{image=1 width=150 height=180 winmaxwidth=null}
+
+> image 1 wfix hfix 40x60
+{image=1 width=40 height=60 winmaxwidth=null}
+
+> image 1 wratio hfix 1/1x60
+{image=1 widthratio=1 height=60 winmaxwidth=null}
+
+> image 1 worig horig maxwidth
+{image=1 width=150 height=180 winmaxwidth=1}
+
+> image 1 worig horig halfwidth
+{image=1 width=150 height=180 winmaxwidth=0.5}
+
+> image 1 wfix hratio 50x1/1
+{image=1 width=50 aspectwidth=150 aspectheight=180 winmaxwidth=null}
+
+> image 1 wfix hratio 50x2/1
+{image=1 width=50 aspectwidth=150 aspectheight=360 winmaxwidth=null}
+
+> image 1 wfix hratio 50x1/2 maxwidth
+{image=1 width=50 aspectwidth=150 aspectheight=90 winmaxwidth=1}
+
+> image 1 wratio hratio 1/1x1/1
+{image=1 widthratio=1 aspectwidth=150 aspectheight=180 winmaxwidth=null}
+
+> image 1 wratio hratio 1/2x1/1 maxwidth
+{image=1 widthratio=0.5 aspectwidth=150 aspectheight=180 winmaxwidth=null}
+
+> image 1 wratio hratio 1/1x1/1 halfwidth
+{image=1 widthratio=0.5 aspectwidth=150 aspectheight=180 winmaxwidth=null}
+
+
 * realloccrash
 
 > image
