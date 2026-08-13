@@ -254,6 +254,15 @@ Array utf8form2 string 'X' $C3 $A6 'Y' $CE $B4 'a' $C3 $A4 $C2 $A9 $0A
 	'b' $C3 $A5 $D0 $94 $E2 $82 $AC $E4 $B8 $82 $0A;
 Array utableform3 table 'H' $DF $3C9 $416 $A06 $10B4 $2026 $5009 $AC07 $1F600 $0A;
 
+! These are "Windows" versions of the above arrays, containing Windows style newlines.
+Array utf8form_windows string 'T' 'e' 's' 't' ' ' $CE $B1 $CE $B2 $CE $B3
+	' ' $E3 $82 $AA $E3 $82 $B9 $E3 $83 $A2
+	' ' $E2 $80 $9C 'x' $E2 $80 $9D '.' $0D $0A
+	'R' 'e' $C3 $AB 'l' $C3 $AE 't' 'y' '-' $C2 $A9 '.' $0D $0A
+	$F0 $9F $98 $87 $0D $0A;
+Array utf8form2_windows string 'X' $C3 $A6 'Y' $CE $B4 'a' $C3 $A4 $C2 $A9 $0D $0A
+	'b' $C3 $A5 $D0 $94 $E2 $82 $AC $E4 $B8 $82 $0D $0A;
+
 [ RunTest freftext frefbin name str len ix val;
 	name = "binfile";
 	freftext = make_fref(name, false);
@@ -336,8 +345,12 @@ Array utableform3 table 'H' $DF $3C9 $416 $A06 $10B4 $2026 $5009 $AC07 $1F600 $0
 	str = open_file(frefbin, name, filemode_Read);
 	len = glk($0092, str, buffer, BUFLEN); ! get_buffer_stream
     glk($0044, str, gg_result); ! stream_close
-    check_result_counts(utf8form->0, 0);
-    compare_buffer(buffer, len, utf8form);
+    if (gg_result-->0 == utf8form_windows->0) {
+        compare_buffer(buffer, len, utf8form_windows);
+    } else {
+        check_result_counts(utf8form->0, 0);
+        compare_buffer(buffer, len, utf8form);
+    }
 
 	print "* Write in word/text mode, using various calls.^";
 	! We will see UTF-8.
@@ -363,8 +376,12 @@ Array utableform3 table 'H' $DF $3C9 $416 $A06 $10B4 $2026 $5009 $AC07 $1F600 $0
 	str = open_file(frefbin, name, filemode_Read);
 	len = glk($0092, str, buffer, BUFLEN); ! get_buffer_stream
     glk($0044, str, gg_result); ! stream_close
-    check_result_counts(utf8form2->0, 0);
-    compare_buffer(buffer, len, utf8form2);
+    if (gg_result-->0 == utf8form2_windows->0) {
+        compare_buffer(buffer, len, utf8form2_windows);
+    } else {
+        check_result_counts(utf8form2->0, 0);
+        compare_buffer(buffer, len, utf8form2);
+    }
 
 	print "* Write in word/text mode, then read it back.^";
 	! Should be identical.
